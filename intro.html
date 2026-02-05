@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Kerala - Interactive Wall Games</title>
+    <title>Welcome - Interactive Wall Games</title>
     <style>
         * {
             margin: 0;
@@ -15,7 +15,7 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
@@ -25,67 +25,53 @@
             left: 0;
             width: 100%;
             height: 100%;
-            will-change: transform;
-            transform: translate3d(0, 0, 0);
         }
 
-        #ribbon-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 100;
-            cursor: crosshair;
-            will-change: opacity;
-            transform: translate3d(0, 0, 0);
-        }
-
-        #instruction {
+        .intro-text {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) scale(0);
             color: white;
-            font-size: 42px;
-            font-weight: 600;
+            font-size: 80px;
+            font-weight: 700;
             text-align: center;
-            z-index: 99;
-            text-shadow: 0 4px 30px rgba(255,255,255,0.3);
-            pointer-events: none;
-            letter-spacing: 0.5px;
+            z-index: 100;
             opacity: 0;
-            animation: fadeInInstruction 1.5s ease forwards;
-            animation-delay: 0.5s;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.5);
+            letter-spacing: 3px;
+            white-space: nowrap;
         }
 
-        @keyframes fadeInInstruction {
-            0% { opacity: 0; transform: translate(-50%, -50%) translateY(20px); }
-            100% { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
+        .intro-text.small {
+            font-size: 48px;
+            font-weight: 400;
+            letter-spacing: 2px;
         }
 
-        #instruction .emoji {
-            font-size: 36px;
-            margin-top: 15px;
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
+        .logo-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            z-index: 100;
+            text-align: center;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .fade-out {
-            animation: fadeOut 0.8s ease forwards !important;
-        }
-
-        @keyframes fadeOut {
-            to { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-        }
-
-        .hidden {
-            display: none !important;
+        .logo-placeholder {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 20px 80px rgba(102, 126, 234, 0.6);
+            letter-spacing: 2px;
         }
 
         #startButton {
@@ -106,6 +92,13 @@
             transition: all 0.3s ease;
             box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
             letter-spacing: 2px;
+            pointer-events: none;
+        }
+
+        #startButton.show {
+            opacity: 1;
+            pointer-events: all;
+            animation: pulse 2s ease infinite;
         }
 
         #startButton:hover {
@@ -118,592 +111,106 @@
             transform: translateX(-50%) scale(0.98);
         }
 
-        @keyframes fadeInButton {
-            to { opacity: 1; }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 15px 60px rgba(102, 126, 234, 0.7); }
         }
 
-        .show-button {
-            animation: fadeInButton 1s ease forwards;
+        @keyframes zoomIn {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.3);
+            }
+            50% {
+                opacity: 1;
+            }
+            70% {
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
         }
 
-        #sparkles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 101;
-            will-change: contents;
-            transform: translate3d(0, 0, 0);
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+
+        .animate-in {
+            animation: zoomIn 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .animate-out {
+            animation: fadeOut 0.8s ease forwards;
         }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
-    <canvas id="ribbon-canvas"></canvas>
-    <canvas id="sparkles"></canvas>
-    <div id="instruction">
-        <div>Swipe to Open the Ceremony</div>
-        <div class="emoji">✨</div>
+
+    <div id="text1" class="intro-text">Experience the New Vision</div>
+    <div id="text2" class="intro-text small">that is</div>
+    <div id="text3" class="intro-text">Bigger</div>
+    <div id="text4" class="intro-text">Brighter</div>
+    <div id="logo" class="logo-container">
+        <div class="logo-placeholder">AUTICARE</div>
     </div>
-    <button id="startButton">START</button>
+
+    <button id="startButton">GET STARTED</button>
 
     <script>
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
-        const ribbonCanvas = document.getElementById('ribbon-canvas');
-        const ribbonCtx = ribbonCanvas.getContext('2d', { alpha: true });
-        const sparklesCanvas = document.getElementById('sparkles');
-        const sparklesCtx = sparklesCanvas.getContext('2d', { alpha: true });
-        const instruction = document.getElementById('instruction');
-        const startButton = document.getElementById('startButton');
+        const ctx = canvas.getContext('2d', { alpha: false });
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        ribbonCanvas.width = window.innerWidth;
-        ribbonCanvas.height = window.innerHeight;
-        sparklesCanvas.width = window.innerWidth;
-        sparklesCanvas.height = window.innerHeight;
 
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ribbonCtx.imageSmoothingEnabled = true;
-        ribbonCtx.imageSmoothingQuality = 'high';
-
-        class Sparkle {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.size = Math.random() * 5 + 3;
-                this.speedX = (Math.random() - 0.5) * 6;
-                this.speedY = (Math.random() - 0.5) * 6 - 2;
-                this.life = 1;
-                this.decay = Math.random() * 0.015 + 0.008;
-                this.rotation = Math.random() * Math.PI * 2;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.2;
-                this.colorHue = Math.random() * 60 + 340;
-            }
-
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.life -= this.decay;
-                this.speedY += 0.15;
-                this.speedX *= 0.99;
-                this.rotation += this.rotationSpeed;
-            }
-
-            draw() {
-                sparklesCtx.save();
-                sparklesCtx.translate(this.x, this.y);
-                sparklesCtx.rotate(this.rotation);
-                sparklesCtx.globalAlpha = this.life * this.life;
-
-                const gradient = sparklesCtx.createRadialGradient(0, 0, 0, 0, 0, this.size * 2);
-                gradient.addColorStop(0, `hsla(${this.colorHue}, 100%, 80%, ${this.life})`);
-                gradient.addColorStop(0.5, `hsla(${this.colorHue}, 100%, 60%, ${this.life * 0.5})`);
-                gradient.addColorStop(1, `hsla(${this.colorHue}, 100%, 50%, 0)`);
-
-                sparklesCtx.fillStyle = gradient;
-                sparklesCtx.fillRect(-this.size * 2, -this.size * 2, this.size * 4, this.size * 4);
-
-                sparklesCtx.fillStyle = '#ffffff';
-                sparklesCtx.shadowBlur = 15;
-                sparklesCtx.shadowColor = `hsla(${this.colorHue}, 100%, 70%, ${this.life})`;
-
-                sparklesCtx.beginPath();
-                for (let i = 0; i < 4; i++) {
-                    const angle = (Math.PI / 2) * i;
-                    const x = Math.cos(angle) * this.size;
-                    const y = Math.sin(angle) * this.size;
-                    if (i === 0) {
-                        sparklesCtx.moveTo(x, y);
-                    } else {
-                        sparklesCtx.lineTo(x, y);
-                    }
-                }
-                sparklesCtx.closePath();
-                sparklesCtx.fill();
-
-                sparklesCtx.restore();
-            }
-        }
-
-        const sparkles = [];
-
-        class RibbonPoint {
-            constructor(x, y, locked = false) {
-                this.x = x;
-                this.y = y;
-                this.oldX = x;
-                this.oldY = y;
-                this.locked = locked;
-                this.cut = false;
-            }
-
-            update() {
-                if (this.locked || this.cut) return;
-
-                const velX = (this.x - this.oldX) * 0.98;
-                const velY = (this.y - this.oldY) * 0.98;
-
-                this.oldX = this.x;
-                this.oldY = this.y;
-
-                this.x += velX;
-                this.y += velY;
-                this.y += 0.8;
-            }
-
-            constrain() {
-                if (this.x < 0) this.x = 0;
-                if (this.x > ribbonCanvas.width) this.x = ribbonCanvas.width;
-                if (this.y > ribbonCanvas.height + 100) {
-                    this.y = ribbonCanvas.height + 100;
-                }
-            }
-        }
-
-        class RibbonSegment {
-            constructor(p1, p2) {
-                this.p1 = p1;
-                this.p2 = p2;
-                this.length = Math.sqrt(
-                    Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
-                );
-                this.cut = false;
-            }
-
-            update() {
-                if (this.cut || this.p1.cut || this.p2.cut) return;
-
-                const dx = this.p2.x - this.p1.x;
-                const dy = this.p2.y - this.p1.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                const difference = this.length - distance;
-                const percent = difference / distance / 2;
-
-                const offsetX = dx * percent;
-                const offsetY = dy * percent;
-
-                if (!this.p1.locked) {
-                    this.p1.x -= offsetX;
-                    this.p1.y -= offsetY;
-                }
-
-                if (!this.p2.locked) {
-                    this.p2.x += offsetX;
-                    this.p2.y += offsetY;
-                }
-            }
-
-            draw() {
-                if (this.cut || this.p1.cut || this.p2.cut) return;
-
-                const gradient = ribbonCtx.createLinearGradient(this.p1.x, this.p1.y - 15, this.p1.x, this.p1.y + 15);
-                gradient.addColorStop(0, '#ff1744');
-                gradient.addColorStop(0.3, '#dc143c');
-                gradient.addColorStop(0.5, '#c41e3a');
-                gradient.addColorStop(0.7, '#dc143c');
-                gradient.addColorStop(1, '#8b0000');
-
-                ribbonCtx.beginPath();
-                ribbonCtx.moveTo(this.p1.x, this.p1.y);
-                ribbonCtx.lineTo(this.p2.x, this.p2.y);
-                ribbonCtx.strokeStyle = gradient;
-                ribbonCtx.lineWidth = 30;
-                ribbonCtx.lineCap = 'round';
-                ribbonCtx.shadowBlur = 15;
-                ribbonCtx.shadowColor = 'rgba(220, 20, 60, 0.5)';
-                ribbonCtx.stroke();
-
-                ribbonCtx.shadowBlur = 0;
-                ribbonCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                ribbonCtx.lineWidth = 8;
-                ribbonCtx.stroke();
-            }
-        }
-
-        const ribbonPoints = [];
-        const ribbonSegments = [];
-        const numPoints = 60;
-        const ribbonY = canvas.height / 2;
-        const ribbonStartX = 50;
-        const ribbonEndX = canvas.width - 50;
-
-        for (let i = 0; i < numPoints; i++) {
-            const x = ribbonStartX + (ribbonEndX - ribbonStartX) * (i / (numPoints - 1));
-            const locked = i === 0 || i === numPoints - 1;
-            const sag = Math.sin((i / (numPoints - 1)) * Math.PI) * 30;
-            ribbonPoints.push(new RibbonPoint(x, ribbonY + sag, locked));
-        }
-
-        for (let i = 0; i < ribbonPoints.length - 1; i++) {
-            ribbonSegments.push(new RibbonSegment(ribbonPoints[i], ribbonPoints[i + 1]));
-        }
-
-        function drawCeremonialBow() {
-            const centerX = canvas.width / 2;
-            const centerY = ribbonY;
-
-            ribbonCtx.save();
-
-            const gradient1 = ribbonCtx.createRadialGradient(centerX - 40, centerY - 50, 10, centerX - 40, centerY - 50, 35);
-            gradient1.addColorStop(0, '#ff6b9d');
-            gradient1.addColorStop(0.5, '#ff1744');
-            gradient1.addColorStop(1, '#c41e3a');
-
-            ribbonCtx.beginPath();
-            ribbonCtx.arc(centerX - 45, centerY - 55, 35, 0, Math.PI * 2);
-            ribbonCtx.fillStyle = gradient1;
-            ribbonCtx.fill();
-
-            const gradient2 = ribbonCtx.createRadialGradient(centerX + 40, centerY - 50, 10, centerX + 40, centerY - 50, 35);
-            gradient2.addColorStop(0, '#ff6b9d');
-            gradient2.addColorStop(0.5, '#ff1744');
-            gradient2.addColorStop(1, '#c41e3a');
-
-            ribbonCtx.beginPath();
-            ribbonCtx.arc(centerX + 45, centerY - 55, 35, 0, Math.PI * 2);
-            ribbonCtx.fillStyle = gradient2;
-            ribbonCtx.fill();
-
-            const centerGradient = ribbonCtx.createLinearGradient(centerX - 20, centerY - 70, centerX + 20, centerY - 30);
-            centerGradient.addColorStop(0, '#ff1744');
-            centerGradient.addColorStop(0.5, '#dc143c');
-            centerGradient.addColorStop(1, '#c41e3a');
-
-            ribbonCtx.fillStyle = centerGradient;
-            ribbonCtx.fillRect(centerX - 20, centerY - 70, 40, 50);
-
-            ribbonCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ribbonCtx.lineWidth = 3;
-            ribbonCtx.strokeRect(centerX - 20, centerY - 70, 40, 50);
-
-            ribbonCtx.restore();
-        }
-
-        let ribbonCut = false;
-        let cutAnimationProgress = 0;
-
-        function updateRibbon() {
-            if (ribbonCut) {
-                for (let i = 0; i < 5; i++) {
-                    ribbonSegments.forEach(seg => seg.update());
-                }
-                ribbonPoints.forEach(point => {
-                    point.update();
-                    point.constrain();
-                });
-                cutAnimationProgress += 0.016;
-            }
-        }
-
-        function drawRibbon() {
-            ribbonCtx.clearRect(0, 0, ribbonCanvas.width, ribbonCanvas.height);
-            ribbonSegments.forEach(seg => seg.draw());
-
-            if (!ribbonCut) {
-                drawCeremonialBow();
-            }
-        }
-
-        let isDrawing = false;
-        let cutPath = [];
-
-        function handleCut(x, y) {
-            if (ribbonCut) return;
-
-            cutPath.push({ x, y });
-
-            let hitCount = 0;
-            const centerX = canvas.width / 2;
-            const tolerance = 80;
-
-            if (Math.abs(x - centerX) < tolerance && Math.abs(y - ribbonY) < tolerance) {
-                ribbonCut = true;
-
-                const cutIndex = Math.floor(ribbonPoints.length / 2);
-                for (let i = Math.max(0, cutIndex - 5); i < Math.min(ribbonPoints.length, cutIndex + 5); i++) {
-                    ribbonPoints[i].cut = true;
-                }
-
-                for (let i = 0; i < 60; i++) {
-                    sparkles.push(new Sparkle(
-                        centerX + (Math.random() - 0.5) * 150,
-                        ribbonY + (Math.random() - 0.5) * 80
-                    ));
-                }
-
-                instruction.classList.add('fade-out');
-                setTimeout(() => {
-                    instruction.classList.add('hidden');
-                    startParticleSequence();
-                }, 800);
-            }
-        }
-
-        ribbonCanvas.addEventListener('mousedown', (e) => {
-            isDrawing = true;
-            cutPath = [];
-            handleCut(e.clientX, e.clientY);
-        });
-
-        ribbonCanvas.addEventListener('mousemove', (e) => {
-            if (isDrawing) {
-                handleCut(e.clientX, e.clientY);
-            }
-        });
-
-        ribbonCanvas.addEventListener('mouseup', () => {
-            isDrawing = false;
-            cutPath = [];
-        });
-
-        ribbonCanvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            isDrawing = true;
-            cutPath = [];
-            const touch = e.touches[0];
-            handleCut(touch.clientX, touch.clientY);
-        });
-
-        ribbonCanvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            if (isDrawing) {
-                const touch = e.touches[0];
-                handleCut(touch.clientX, touch.clientY);
-            }
-        });
-
-        ribbonCanvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            isDrawing = false;
-            cutPath = [];
-        });
+        const text1 = document.getElementById('text1');
+        const text2 = document.getElementById('text2');
+        const text3 = document.getElementById('text3');
+        const text4 = document.getElementById('text4');
+        const logo = document.getElementById('logo');
+        const startButton = document.getElementById('startButton');
 
         class Particle {
             constructor() {
-                this.pos = { x: 0, y: 0 };
-                this.vel = { x: 0, y: 0 };
-                this.acc = { x: 0, y: 0 };
-                this.target = { x: 0, y: 0 };
-                this.closeEnoughTarget = 100;
-                this.maxSpeed = 8;
-                this.maxForce = 0.2;
-                this.particleSize = 4;
-                this.isKilled = false;
-                this.startColor = { r: 0, g: 0, b: 0 };
-                this.targetColor = { r: 255, g: 255, b: 255 };
-                this.colorWeight = 0;
-                this.colorBlendRate = 0.02;
-                this.trail = [];
-                this.maxTrailLength = 3;
-                this.rotation = Math.random() * Math.PI * 2;
-                this.rotationSpeed = (Math.random() - 0.5) * 0.1;
-                this.depth = Math.random();
-                this.arrived = false;
-            }
-
-            easeOutCubic(t) {
-                return 1 - Math.pow(1 - t, 3);
-            }
-
-            easeInOutCubic(t) {
-                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-            }
-
-            move() {
-                const distance = Math.sqrt(
-                    Math.pow(this.pos.x - this.target.x, 2) +
-                    Math.pow(this.pos.y - this.target.y, 2)
-                );
-
-                if (distance < 2) {
-                    this.arrived = true;
-                    this.vel.x *= 0.8;
-                    this.vel.y *= 0.8;
-                    this.trail.length = 0;
-                    return;
-                }
-
-                if (!this.arrived && this.maxTrailLength > 0) {
-                    this.trail.unshift({ x: this.pos.x, y: this.pos.y });
-                    if (this.trail.length > this.maxTrailLength) {
-                        this.trail.pop();
-                    }
-                }
-
-                let proximityMult = 1;
-                if (distance < this.closeEnoughTarget) {
-                    proximityMult = this.easeInOutCubic(distance / this.closeEnoughTarget);
-                }
-
-                const towardsTarget = {
-                    x: this.target.x - this.pos.x,
-                    y: this.target.y - this.pos.y
-                };
-
-                const magnitude = Math.sqrt(towardsTarget.x * towardsTarget.x + towardsTarget.y * towardsTarget.y);
-                if (magnitude > 0) {
-                    towardsTarget.x = (towardsTarget.x / magnitude) * this.maxSpeed * proximityMult;
-                    towardsTarget.y = (towardsTarget.y / magnitude) * this.maxSpeed * proximityMult;
-                }
-
-                const steer = {
-                    x: towardsTarget.x - this.vel.x,
-                    y: towardsTarget.y - this.vel.y
-                };
-
-                const steerMagnitude = Math.sqrt(steer.x * steer.x + steer.y * steer.y);
-                if (steerMagnitude > 0) {
-                    const dynamicForce = this.maxForce * (1 + (1 - proximityMult) * 0.5);
-                    steer.x = (steer.x / steerMagnitude) * dynamicForce;
-                    steer.y = (steer.y / steerMagnitude) * dynamicForce;
-                }
-
-                this.acc.x += steer.x;
-                this.acc.y += steer.y;
-
-                this.vel.x += this.acc.x;
-                this.vel.y += this.acc.y;
-
-                const currentSpeed = Math.sqrt(this.vel.x * this.vel.x + this.vel.y * this.vel.y);
-                if (currentSpeed > this.maxSpeed) {
-                    this.vel.x = (this.vel.x / currentSpeed) * this.maxSpeed;
-                    this.vel.y = (this.vel.y / currentSpeed) * this.maxSpeed;
-                }
-
-                this.pos.x += this.vel.x;
-                this.pos.y += this.vel.y;
-                this.acc.x = 0;
-                this.acc.y = 0;
-
-                this.rotation += this.rotationSpeed * (currentSpeed / this.maxSpeed);
-            }
-
-            draw(ctx) {
-                if (this.colorWeight < 1.0) {
-                    this.colorWeight = Math.min(this.colorWeight + this.colorBlendRate, 1.0);
-                }
-
-                const easedWeight = this.easeOutCubic(this.colorWeight);
-
-                const currentColor = {
-                    r: Math.round(this.startColor.r + (this.targetColor.r - this.startColor.r) * easedWeight),
-                    g: Math.round(this.startColor.g + (this.targetColor.g - this.startColor.g) * easedWeight),
-                    b: Math.round(this.startColor.b + (this.targetColor.b - this.startColor.b) * easedWeight)
-                };
-
-                const depthScale = 0.7 + this.depth * 0.6;
-                const size = this.particleSize * depthScale;
-
-                if (this.trail.length > 0 && !this.arrived) {
-                    for (let i = this.trail.length - 1; i >= 0; i--) {
-                        const trailAlpha = ((i + 1) / this.trail.length) * easedWeight * 0.3;
-                        const trailSize = size * ((i + 1) / this.trail.length) * 0.6;
-
-                        ctx.save();
-                        ctx.globalAlpha = trailAlpha;
-                        ctx.fillStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
-                        ctx.fillRect(
-                            this.trail[i].x - trailSize / 2,
-                            this.trail[i].y - trailSize / 2,
-                            trailSize,
-                            trailSize
-                        );
-                        ctx.restore();
-                    }
-                }
-
-                ctx.save();
-                ctx.translate(this.pos.x, this.pos.y);
-                ctx.rotate(this.rotation);
-
-                ctx.globalAlpha = easedWeight;
-
-                if (!this.arrived) {
-                    const glowSize = size * 2;
-                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
-                    gradient.addColorStop(0, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${0.6 * easedWeight})`);
-                    gradient.addColorStop(0.5, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${0.2 * easedWeight})`);
-                    gradient.addColorStop(1, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, 0)`);
-
-                    ctx.fillStyle = gradient;
-                    ctx.fillRect(-glowSize, -glowSize, glowSize * 2, glowSize * 2);
-                }
-
-                ctx.fillStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
-                ctx.shadowBlur = this.arrived ? 4 * depthScale : 6 * depthScale;
-                ctx.shadowColor = `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${this.arrived ? 0.5 : 0.7})`;
-                ctx.fillRect(-size / 2, -size / 2, size, size);
-
-                ctx.restore();
-            }
-        }
-
-        const particles = [];
-        let currentStage = 'ribbon';
-        let svgImage = null;
-        let svgOpacity = 0;
-        let textOpacity = 0;
-        let stageTimer = 0;
-        let vrRings = [];
-        const NUM_DEPTH_PARTICLES = 800;
-        let scanLineAngle = 0;
-        let rainbowHue = 0;
-
-        startButton.addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
-
-        class DepthParticle {
-            constructor() {
-                this.baseX = Math.random() * canvas.width;
-                this.baseY = Math.random() * canvas.height;
-                this.x = this.baseX;
-                this.y = this.baseY;
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
                 this.z = Math.random();
-                this.speedZ = 0.0015 + Math.random() * 0.003;
-                this.size = 0.8 + Math.random() * 2;
-                this.opacity = 0.4 + Math.random() * 0.5;
+                this.speedZ = 0.001 + Math.random() * 0.002;
+                this.size = 0.5 + Math.random() * 1.5;
+                this.opacity = 0.3 + Math.random() * 0.4;
                 this.twinkle = Math.random() * Math.PI * 2;
-                this.twinkleSpeed = 0.02 + Math.random() * 0.03;
-                this.driftAngle = Math.random() * Math.PI * 2;
-                this.driftSpeed = 0.02;
-                this.driftRadius = 20;
+                this.twinkleSpeed = 0.02 + Math.random() * 0.02;
             }
 
             update() {
                 this.z += this.speedZ;
                 if (this.z > 1) {
                     this.z = 0;
-                    this.baseX = Math.random() * canvas.width;
-                    this.baseY = Math.random() * canvas.height;
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
                 }
                 this.twinkle += this.twinkleSpeed;
-                this.driftAngle += this.driftSpeed;
-
-                this.x = this.baseX + Math.cos(this.driftAngle) * this.driftRadius * this.z;
-                this.y = this.baseY + Math.sin(this.driftAngle) * this.driftRadius * this.z;
             }
 
             draw() {
                 const scale = this.z * this.z;
-                const x = (this.x - canvas.width / 2) * (1 + scale * 0.5) + canvas.width / 2;
-                const y = (this.y - canvas.height / 2) * (1 + scale * 0.5) + canvas.height / 2;
+                const x = (this.x - canvas.width / 2) * (1 + scale * 0.3) + canvas.width / 2;
+                const y = (this.y - canvas.height / 2) * (1 + scale * 0.3) + canvas.height / 2;
                 const size = this.size * (0.5 + scale);
                 const alpha = this.opacity * scale * (0.7 + Math.sin(this.twinkle) * 0.3);
 
                 ctx.save();
                 ctx.globalAlpha = alpha;
-
                 const hue = 200 + this.z * 60;
                 ctx.fillStyle = `hsl(${hue}, 100%, ${70 + this.z * 30}%)`;
-                ctx.shadowBlur = 12 * scale;
+                ctx.shadowBlur = 8 * scale;
                 ctx.shadowColor = `hsla(${hue}, 100%, 70%, ${alpha})`;
-
                 ctx.beginPath();
                 ctx.arc(x, y, size, 0, Math.PI * 2);
                 ctx.fill();
@@ -711,339 +218,55 @@
             }
         }
 
-        class VRRing {
-            constructor(centerX, centerY, baseRadius, index, total) {
-                this.centerX = centerX;
-                this.centerY = centerY;
-                this.baseRadius = baseRadius;
-                this.radiusOffset = index * 40;
-                this.angle = (index / total) * Math.PI * 2;
-                this.rotationSpeed = (index % 2 === 0 ? 0.015 : -0.018);
-                this.tilt = Math.PI / 5;
-                this.opacity = 0;
-                this.targetOpacity = 0.7 - (index / total) * 0.4;
-                this.pulse = 0;
-                this.pulseSpeed = 0.03 + Math.random() * 0.02;
-                this.segmentAngle = 0;
-                this.segmentSpeed = 0.05;
-                this.index = index;
-            }
-
-            update() {
-                this.angle += this.rotationSpeed;
-                this.pulse += this.pulseSpeed;
-                this.segmentAngle += this.segmentSpeed;
-                if (this.opacity < this.targetOpacity) {
-                    this.opacity += 0.015;
-                }
-            }
-
-            draw() {
-                const radius = this.baseRadius + this.radiusOffset + Math.sin(this.pulse) * 8;
-
-                ctx.save();
-                ctx.translate(this.centerX, this.centerY);
-                ctx.rotate(this.angle);
-
-                const numSegments = 12;
-                const segmentLength = (Math.PI * 2) / numSegments;
-                const gapSize = segmentLength * 0.3;
-
-                for (let i = 0; i < numSegments; i++) {
-                    const startAngle = i * segmentLength + this.segmentAngle;
-                    const endAngle = startAngle + segmentLength - gapSize;
-
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, radius, radius * Math.cos(this.tilt), 0, startAngle, endAngle);
-
-                    const segmentProgress = Math.sin(this.segmentAngle + i * 0.5) * 0.3 + 0.7;
-                    const segmentOpacity = this.opacity * segmentProgress;
-
-                    const gradient = ctx.createLinearGradient(
-                        Math.cos(startAngle) * radius,
-                        Math.sin(startAngle) * radius * Math.cos(this.tilt),
-                        Math.cos(endAngle) * radius,
-                        Math.sin(endAngle) * radius * Math.cos(this.tilt)
-                    );
-
-                    gradient.addColorStop(0, `rgba(0, 180, 255, ${segmentOpacity * 0.4})`);
-                    gradient.addColorStop(0.5, `rgba(0, 220, 255, ${segmentOpacity})`);
-                    gradient.addColorStop(1, `rgba(0, 180, 255, ${segmentOpacity * 0.4})`);
-
-                    ctx.strokeStyle = gradient;
-                    ctx.lineWidth = 4;
-                    ctx.shadowBlur = 25;
-                    ctx.shadowColor = `rgba(0, 220, 255, ${segmentOpacity})`;
-                    ctx.stroke();
-                    ctx.restore();
-                }
-
-                ctx.restore();
-            }
+        const particles = [];
+        for (let i = 0; i < 500; i++) {
+            particles.push(new Particle());
         }
 
-        function drawScanLine(centerX, centerY, maxRadius) {
-            scanLineAngle += 0.03;
-
-            const gradient = ctx.createLinearGradient(
-                centerX + Math.cos(scanLineAngle) * maxRadius,
-                centerY + Math.sin(scanLineAngle) * maxRadius,
-                centerX + Math.cos(scanLineAngle + Math.PI) * maxRadius,
-                centerY + Math.sin(scanLineAngle + Math.PI) * maxRadius
-            );
-
-            gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
-            gradient.addColorStop(0.45, 'rgba(0, 255, 255, 0)');
-            gradient.addColorStop(0.5, 'rgba(0, 255, 255, 0.3)');
-            gradient.addColorStop(0.55, 'rgba(0, 255, 255, 0)');
-            gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
-
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.translate(centerX, centerY);
-            ctx.rotate(scanLineAngle);
-            ctx.fillStyle = gradient;
-            ctx.fillRect(-maxRadius, -3, maxRadius * 2, 6);
-            ctx.restore();
-        }
-
-        function generateRandomPos(x, y, mag) {
-            const angle = Math.random() * Math.PI * 2;
-            return {
-                x: x + Math.cos(angle) * mag,
-                y: y + Math.sin(angle) * mag
-            };
-        }
-
-        function startParticleSequence() {
-            currentStage = 'svg';
-            ribbonCanvas.style.transition = 'opacity 0.8s ease';
-            ribbonCanvas.style.opacity = '0';
-
-            setTimeout(() => {
-                ribbonCanvas.style.display = 'none';
-                showSVGParticles();
-            }, 800);
-        }
-
-        function showSVGParticles() {
-            currentStage = 'svg';
-            stageTimer = 0;
-            particles.length = 0;
-            vrRings.length = 0;
-
-            for (let i = 0; i < NUM_DEPTH_PARTICLES; i++) {
-                particles.push(new DepthParticle());
-            }
-
-            svgImage = new Image();
-            svgImage.crossOrigin = 'anonymous';
-
-            svgImage.onload = function() {
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2 - 50;
-                const baseRadius = 180;
-
-                for (let i = 0; i < 10; i++) {
-                    vrRings.push(new VRRing(centerX, centerY, baseRadius, i, 10));
-                }
-
-                setTimeout(() => {
-                    transitionToText();
-                    showTextParticles();
-                }, 6000);
-            };
-
-            svgImage.onerror = function() {
-                setTimeout(() => {
-                    showTextParticles();
-                }, 2000);
-            };
-
-            svgImage.src = 'Kerala-map-en.svg';
-        }
-
-        function transitionToText() {
-            currentStage = 'text';
-            stageTimer = 0;
-        }
-
-        function showTextParticles() {
-            setTimeout(() => {
-                currentStage = 'complete';
-                stageTimer = 0;
-                startButton.classList.add('show-button');
-            }, 3000);
-        }
-
-        let lastTime = performance.now();
-        let fps = 60;
-
-        function animate(currentTime) {
+        function animate() {
             requestAnimationFrame(animate);
 
-            const deltaTime = currentTime - lastTime;
-            lastTime = currentTime;
-            fps = 1000 / deltaTime;
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            if (currentStage === 'ribbon') {
-                updateRibbon();
-                drawRibbon();
-
-                sparklesCtx.clearRect(0, 0, sparklesCanvas.width, sparklesCanvas.height);
-                for (let i = sparkles.length - 1; i >= 0; i--) {
-                    sparkles[i].update();
-                    sparkles[i].draw();
-                    if (sparkles[i].life <= 0) {
-                        sparkles.splice(i, 1);
-                    }
-                }
-            } else if (currentStage === 'svg' || currentStage === 'text' || currentStage === 'complete') {
-                stageTimer += deltaTime;
-
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-
-                if (currentStage === 'svg') {
-                    svgOpacity = Math.min(1, stageTimer / 2000);
-
-                    vrRings.forEach(ring => {
-                        ring.update();
-                        ring.draw();
-                    });
-
-                    if (vrRings.length > 0) {
-                        const maxRadius = vrRings[vrRings.length - 1].baseRadius + vrRings[vrRings.length - 1].radiusOffset + 50;
-                        drawScanLine(canvas.width / 2, canvas.height / 2 - 50, maxRadius);
-                    }
-
-                    if (svgImage && svgOpacity > 0) {
-                        const scale = Math.min(canvas.width / svgImage.width, canvas.height / svgImage.height) * 0.35;
-                        const svgWidth = svgImage.width * scale;
-                        const svgHeight = svgImage.height * scale;
-                        const offsetX = (canvas.width - svgWidth) / 2;
-                        const offsetY = (canvas.height - svgHeight) / 2 - 50;
-
-                        ctx.save();
-                        ctx.globalAlpha = svgOpacity * 0.3;
-                        ctx.shadowBlur = 60;
-                        ctx.shadowColor = 'rgba(0, 220, 255, 0.8)';
-                        ctx.drawImage(svgImage, offsetX, offsetY, svgWidth, svgHeight);
-                        ctx.restore();
-
-                        ctx.save();
-                        ctx.globalAlpha = svgOpacity;
-                        ctx.shadowBlur = 40;
-                        ctx.shadowColor = 'rgba(0, 200, 255, 0.6)';
-                        ctx.drawImage(svgImage, offsetX, offsetY, svgWidth, svgHeight);
-                        ctx.restore();
-                    }
-                }
-
-                if (currentStage === 'text' || currentStage === 'complete') {
-                    textOpacity = Math.min(1, stageTimer / 2000);
-                    rainbowHue = (rainbowHue + 2) % 360;
-
-                    if (svgImage) {
-                        const scale = Math.min(canvas.width / svgImage.width, canvas.height / svgImage.height) * 0.35;
-                        const svgWidth = svgImage.width * scale;
-                        const svgHeight = svgImage.height * scale;
-                        const offsetX = (canvas.width - svgWidth) / 2;
-                        const offsetY = (canvas.height - svgHeight) / 2 - 50;
-
-                        ctx.save();
-                        ctx.globalAlpha = 0.3;
-                        ctx.shadowBlur = 60;
-                        ctx.shadowColor = 'rgba(0, 220, 255, 0.8)';
-                        ctx.drawImage(svgImage, offsetX, offsetY, svgWidth, svgHeight);
-                        ctx.restore();
-
-                        ctx.save();
-                        ctx.globalAlpha = 1;
-                        ctx.shadowBlur = 40;
-                        ctx.shadowColor = 'rgba(0, 200, 255, 0.6)';
-                        ctx.drawImage(svgImage, offsetX, offsetY, svgWidth, svgHeight);
-                        ctx.restore();
-                    }
-
-                    if (vrRings.length > 0) {
-                        vrRings.forEach(ring => {
-                            ring.update();
-                            ring.draw();
-                        });
-
-                        const maxRadius = vrRings[vrRings.length - 1].baseRadius + vrRings[vrRings.length - 1].radiusOffset + 50;
-                        drawScanLine(canvas.width / 2, canvas.height / 2 - 50, maxRadius);
-                    }
-
-                    if (textOpacity > 0) {
-                        const textX = canvas.width / 2;
-                        const textY = canvas.height - 120;
-                        const text = 'Welcome Kerala to a New Reality';
-
-                        ctx.font = 'bold 70px -apple-system, BlinkMacSystemFont, sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-
-                        ctx.save();
-                        ctx.globalAlpha = textOpacity;
-                        const gradient = ctx.createLinearGradient(textX - 600, textY, textX + 600, textY);
-                        gradient.addColorStop(0, '#1a1a2e');
-                        gradient.addColorStop(0.5, '#0f0f1e');
-                        gradient.addColorStop(1, '#1a1a2e');
-                        ctx.shadowBlur = 40;
-                        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-                        ctx.fillStyle = gradient;
-                        ctx.fillRect(textX - 650, textY - 60, 1300, 120);
-                        ctx.restore();
-
-                        for (let i = 0; i < 6; i++) {
-                            const offset = 8 - i * 1.5;
-                            const hue = (rainbowHue + i * 60) % 360;
-
-                            ctx.save();
-                            ctx.globalAlpha = textOpacity * (0.6 - i * 0.1);
-                            ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
-                            ctx.lineWidth = offset;
-                            ctx.shadowBlur = 20;
-                            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
-                            ctx.strokeText(text, textX, textY);
-                            ctx.restore();
-                        }
-
-                        ctx.save();
-                        ctx.globalAlpha = textOpacity;
-                        ctx.fillStyle = 'white';
-                        ctx.shadowBlur = 30;
-                        ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-                        ctx.fillText(text, textX, textY);
-                        ctx.restore();
-                    }
-                }
-
-            }
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
         }
 
         animate();
 
+        function showElement(element, delay, isLast = false) {
+            setTimeout(() => {
+                element.classList.add('animate-in');
+
+                if (!isLast) {
+                    setTimeout(() => {
+                        element.classList.remove('animate-in');
+                        element.classList.add('animate-out');
+                    }, 2000);
+                }
+            }, delay);
+        }
+
+        showElement(text1, 500);
+        showElement(text2, 3500);
+        showElement(text3, 5500);
+        showElement(text4, 7500);
+        showElement(logo, 9500, true);
+
+        setTimeout(() => {
+            startButton.classList.add('show');
+        }, 11500);
+
+        startButton.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            ribbonCanvas.width = window.innerWidth;
-            ribbonCanvas.height = window.innerHeight;
-            sparklesCanvas.width = window.innerWidth;
-            sparklesCanvas.height = window.innerHeight;
-
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ribbonCtx.imageSmoothingEnabled = true;
-            ribbonCtx.imageSmoothingQuality = 'high';
         });
     </script>
 </body>
