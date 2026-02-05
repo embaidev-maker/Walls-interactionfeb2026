@@ -605,47 +605,161 @@
 
         const particles = [];
         let currentStage = 'ribbon';
-        let connectParticles = true;
-        const connectionDistance = 100;
         let svgImage = null;
         let svgOpacity = 0;
         let textOpacity = 0;
         let stageTimer = 0;
+        let vrRings = [];
+        const NUM_DEPTH_PARTICLES = 800;
+        let scanLineAngle = 0;
 
-        function drawConnections() {
-            if (!connectParticles || svgOpacity > 0.3 || textOpacity > 0.3) return;
+        class DepthParticle {
+            constructor() {
+                this.baseX = Math.random() * canvas.width;
+                this.baseY = Math.random() * canvas.height;
+                this.x = this.baseX;
+                this.y = this.baseY;
+                this.z = Math.random();
+                this.speedZ = 0.0015 + Math.random() * 0.003;
+                this.size = 0.8 + Math.random() * 2;
+                this.opacity = 0.4 + Math.random() * 0.5;
+                this.twinkle = Math.random() * Math.PI * 2;
+                this.twinkleSpeed = 0.02 + Math.random() * 0.03;
+                this.driftAngle = Math.random() * Math.PI * 2;
+                this.driftSpeed = 0.02;
+                this.driftRadius = 20;
+            }
 
-            const arrivedParticles = particles.filter(p => p.arrived && !p.isKilled);
-            if (arrivedParticles.length < 2) return;
+            update() {
+                this.z += this.speedZ;
+                if (this.z > 1) {
+                    this.z = 0;
+                    this.baseX = Math.random() * canvas.width;
+                    this.baseY = Math.random() * canvas.height;
+                }
+                this.twinkle += this.twinkleSpeed;
+                this.driftAngle += this.driftSpeed;
 
-            const maxConnections = 200;
-            let connectionCount = 0;
+                this.x = this.baseX + Math.cos(this.driftAngle) * this.driftRadius * this.z;
+                this.y = this.baseY + Math.sin(this.driftAngle) * this.driftRadius * this.z;
+            }
 
-            ctx.save();
-            for (let i = 0; i < arrivedParticles.length && connectionCount < maxConnections; i++) {
-                const p1 = arrivedParticles[i];
+            draw() {
+                const scale = this.z * this.z;
+                const x = (this.x - canvas.width / 2) * (1 + scale * 0.5) + canvas.width / 2;
+                const y = (this.y - canvas.height / 2) * (1 + scale * 0.5) + canvas.height / 2;
+                const size = this.size * (0.5 + scale);
+                const alpha = this.opacity * scale * (0.7 + Math.sin(this.twinkle) * 0.3);
 
-                for (let j = i + 1; j < arrivedParticles.length && connectionCount < maxConnections; j++) {
-                    const p2 = arrivedParticles[j];
+                ctx.save();
+                ctx.globalAlpha = alpha;
 
-                    const dx = p2.pos.x - p1.pos.x;
-                    const dy = p2.pos.y - p1.pos.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+                const hue = 200 + this.z * 60;
+                ctx.fillStyle = `hsl(${hue}, 100%, ${70 + this.z * 30}%)`;
+                ctx.shadowBlur = 12 * scale;
+                ctx.shadowColor = `hsla(${hue}, 100%, 70%, ${alpha})`;
 
-                    if (distance < connectionDistance) {
-                        const opacity = (1 - distance / connectionDistance) * 0.1 * p1.colorWeight * p2.colorWeight;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
 
-                        ctx.globalAlpha = opacity;
-                        ctx.strokeStyle = `rgba(${p1.targetColor.r}, ${p1.targetColor.g}, ${p1.targetColor.b}, ${opacity})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.beginPath();
-                        ctx.moveTo(p1.pos.x, p1.pos.y);
-                        ctx.lineTo(p2.pos.x, p2.pos.y);
-                        ctx.stroke();
-                        connectionCount++;
-                    }
+        class VRRing {
+            constructor(centerX, centerY, baseRadius, index, total) {
+                this.centerX = centerX;
+                this.centerY = centerY;
+                this.baseRadius = baseRadius;
+                this.radiusOffset = index * 40;
+                this.angle = (index / total) * Math.PI * 2;
+                this.rotationSpeed = (index % 2 === 0 ? 0.015 : -0.018);
+                this.tilt = Math.PI / 5;
+                this.opacity = 0;
+                this.targetOpacity = 0.7 - (index / total) * 0.4;
+                this.pulse = 0;
+                this.pulseSpeed = 0.03 + Math.random() * 0.02;
+                this.segmentAngle = 0;
+                this.segmentSpeed = 0.05;
+                this.index = index;
+            }
+
+            update() {
+                this.angle += this.rotationSpeed;
+                this.pulse += this.pulseSpeed;
+                this.segmentAngle += this.segmentSpeed;
+                if (this.opacity < this.targetOpacity) {
+                    this.opacity += 0.015;
                 }
             }
+
+            draw() {
+                const radius = this.baseRadius + this.radiusOffset + Math.sin(this.pulse) * 8;
+
+                ctx.save();
+                ctx.translate(this.centerX, this.centerY);
+                ctx.rotate(this.angle);
+
+                const numSegments = 12;
+                const segmentLength = (Math.PI * 2) / numSegments;
+                const gapSize = segmentLength * 0.3;
+
+                for (let i = 0; i < numSegments; i++) {
+                    const startAngle = i * segmentLength + this.segmentAngle;
+                    const endAngle = startAngle + segmentLength - gapSize;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, radius, radius * Math.cos(this.tilt), 0, startAngle, endAngle);
+
+                    const segmentProgress = Math.sin(this.segmentAngle + i * 0.5) * 0.3 + 0.7;
+                    const segmentOpacity = this.opacity * segmentProgress;
+
+                    const gradient = ctx.createLinearGradient(
+                        Math.cos(startAngle) * radius,
+                        Math.sin(startAngle) * radius * Math.cos(this.tilt),
+                        Math.cos(endAngle) * radius,
+                        Math.sin(endAngle) * radius * Math.cos(this.tilt)
+                    );
+
+                    gradient.addColorStop(0, `rgba(0, 180, 255, ${segmentOpacity * 0.4})`);
+                    gradient.addColorStop(0.5, `rgba(0, 220, 255, ${segmentOpacity})`);
+                    gradient.addColorStop(1, `rgba(0, 180, 255, ${segmentOpacity * 0.4})`);
+
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = 4;
+                    ctx.shadowBlur = 25;
+                    ctx.shadowColor = `rgba(0, 220, 255, ${segmentOpacity})`;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        function drawScanLine(centerX, centerY, maxRadius) {
+            scanLineAngle += 0.03;
+
+            const gradient = ctx.createLinearGradient(
+                centerX + Math.cos(scanLineAngle) * maxRadius,
+                centerY + Math.sin(scanLineAngle) * maxRadius,
+                centerX + Math.cos(scanLineAngle + Math.PI) * maxRadius,
+                centerY + Math.sin(scanLineAngle + Math.PI) * maxRadius
+            );
+
+            gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
+            gradient.addColorStop(0.45, 'rgba(0, 255, 255, 0)');
+            gradient.addColorStop(0.5, 'rgba(0, 255, 255, 0.3)');
+            gradient.addColorStop(0.55, 'rgba(0, 255, 255, 0)');
+            gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.translate(centerX, centerY);
+            ctx.rotate(scanLineAngle);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(-maxRadius, -3, maxRadius * 2, 6);
             ctx.restore();
         }
 
@@ -671,96 +785,24 @@
         function showSVGParticles() {
             currentStage = 'svg';
             stageTimer = 0;
+            particles.length = 0;
+            vrRings.length = 0;
+
+            for (let i = 0; i < NUM_DEPTH_PARTICLES; i++) {
+                particles.push(new DepthParticle());
+            }
 
             svgImage = new Image();
             svgImage.crossOrigin = 'anonymous';
 
             svgImage.onload = function() {
-                const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2 - 50;
+                const baseRadius = 180;
 
-                const scale = Math.min(canvas.width / svgImage.width, canvas.height / svgImage.height) * 0.35;
-                tempCanvas.width = svgImage.width * scale;
-                tempCanvas.height = svgImage.height * scale;
-
-                tempCtx.drawImage(svgImage, 0, 0, tempCanvas.width, tempCanvas.height);
-
-                const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-                const pixels = imageData.data;
-
-                const offsetX = (canvas.width - tempCanvas.width) / 2;
-                const offsetY = (canvas.height - tempCanvas.height) / 2 - 80;
-
-                const pixelStep = 8;
-                const coords = [];
-
-                for (let y = 0; y < tempCanvas.height; y += pixelStep) {
-                    for (let x = 0; x < tempCanvas.width; x += pixelStep) {
-                        const i = (y * tempCanvas.width + x) * 4;
-                        const alpha = pixels[i + 3];
-
-                        if (alpha > 100) {
-                            coords.push({
-                                x: x + offsetX,
-                                y: y + offsetY,
-                                r: pixels[i],
-                                g: pixels[i + 1],
-                                b: pixels[i + 2]
-                            });
-                        }
-                    }
+                for (let i = 0; i < 10; i++) {
+                    vrRings.push(new VRRing(centerX, centerY, baseRadius, i, 10));
                 }
-
-                const maxParticles = 3000;
-                if (coords.length > maxParticles) {
-                    const step = Math.ceil(coords.length / maxParticles);
-                    const reducedCoords = [];
-                    for (let i = 0; i < coords.length; i += step) {
-                        reducedCoords.push(coords[i]);
-                    }
-                    coords.length = 0;
-                    coords.push(...reducedCoords);
-                }
-
-                for (let i = coords.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [coords[i], coords[j]] = [coords[j], coords[i]];
-                }
-
-                coords.forEach((coord, index) => {
-                    const particle = new Particle();
-
-                    const angle = Math.random() * Math.PI * 2;
-                    const distance = Math.max(canvas.width, canvas.height) * (1.2 + Math.random() * 0.5);
-                    particle.pos.x = canvas.width / 2 + Math.cos(angle) * distance;
-                    particle.pos.y = canvas.height / 2 + Math.sin(angle) * distance;
-
-                    particle.maxSpeed = Math.random() * 3 + 9;
-                    particle.maxForce = particle.maxSpeed * 0.18;
-                    particle.particleSize = Math.random() * 1.5 + 4;
-                    particle.colorBlendRate = Math.random() * 0.025 + 0.02;
-                    particle.closeEnoughTarget = 70 + Math.random() * 30;
-                    particle.depth = Math.random();
-
-                    particle.startColor = {
-                        r: Math.floor(coord.r * 0.2),
-                        g: Math.floor(coord.g * 0.2),
-                        b: Math.floor(coord.b * 0.2)
-                    };
-                    particle.targetColor = {
-                        r: Math.max(120, coord.r + 30),
-                        g: Math.max(120, coord.g + 30),
-                        b: Math.max(120, coord.b + 30)
-                    };
-                    particle.colorWeight = 0;
-
-                    particle.target.x = coord.x;
-                    particle.target.y = coord.y;
-
-                    particle.maxTrailLength = Math.floor(2 + Math.random() * 2);
-
-                    particles.push(particle);
-                });
 
                 setTimeout(() => {
                     transitionToText();
@@ -777,11 +819,10 @@
         }
 
         function transitionToText() {
-            particles.forEach(p => p.isKilled = true);
+            svgOpacity = 0;
+            vrRings.forEach(ring => ring.opacity = 0);
 
             setTimeout(() => {
-                particles.length = 0;
-                svgOpacity = 0;
                 showTextParticles();
             }, 1000);
         }
@@ -789,77 +830,15 @@
         function showTextParticles() {
             currentStage = 'text';
             stageTimer = 0;
+            vrRings.length = 0;
 
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height - 120;
+            const baseRadius = 280;
 
-            tempCtx.fillStyle = 'white';
-            tempCtx.font = 'bold 70px -apple-system, BlinkMacSystemFont, sans-serif';
-            tempCtx.textAlign = 'center';
-            tempCtx.textBaseline = 'middle';
-            tempCtx.fillText('Welcome Kerala to a New Reality', canvas.width / 2, canvas.height - 120);
-
-            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-            const pixels = imageData.data;
-
-            const pixelStep = 4;
-            const coords = [];
-
-            for (let y = 0; y < tempCanvas.height; y += pixelStep) {
-                for (let x = 0; x < tempCanvas.width; x += pixelStep) {
-                    const i = (y * tempCanvas.width + x) * 4;
-                    const alpha = pixels[i + 3];
-
-                    if (alpha > 128) {
-                        coords.push({ x, y });
-                    }
-                }
+            for (let i = 0; i < 8; i++) {
+                vrRings.push(new VRRing(centerX, centerY, baseRadius, i, 8));
             }
-
-            const maxParticles = 2500;
-            if (coords.length > maxParticles) {
-                const step = Math.ceil(coords.length / maxParticles);
-                const reducedCoords = [];
-                for (let i = 0; i < coords.length; i += step) {
-                    reducedCoords.push(coords[i]);
-                }
-                coords.length = 0;
-                coords.push(...reducedCoords);
-            }
-
-            for (let i = coords.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [coords[i], coords[j]] = [coords[j], coords[i]];
-            }
-
-            coords.forEach(coord => {
-                const particle = new Particle();
-
-                const angle = Math.random() * Math.PI * 2;
-                const distance = Math.max(canvas.width, canvas.height) * (1.2 + Math.random() * 0.5);
-                particle.pos.x = canvas.width / 2 + Math.cos(angle) * distance;
-                particle.pos.y = canvas.height / 2 + Math.sin(angle) * distance;
-
-                particle.maxSpeed = Math.random() * 3 + 10;
-                particle.maxForce = particle.maxSpeed * 0.2;
-                particle.particleSize = Math.random() * 1 + 3;
-                particle.colorBlendRate = Math.random() * 0.025 + 0.02;
-                particle.closeEnoughTarget = 60 + Math.random() * 25;
-                particle.depth = Math.random();
-
-                particle.startColor = { r: 60, g: 60, b: 80 };
-                particle.targetColor = { r: 255, g: 255, b: 255 };
-                particle.colorWeight = 0;
-
-                particle.target.x = coord.x;
-                particle.target.y = coord.y;
-
-                particle.maxTrailLength = Math.floor(1 + Math.random() * 2);
-
-                particles.push(particle);
-            });
 
             setTimeout(() => {
                 currentStage = 'complete';
@@ -896,70 +875,86 @@
             } else if (currentStage === 'svg' || currentStage === 'text' || currentStage === 'complete') {
                 stageTimer += deltaTime;
 
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const particle = particles[i];
-                    particle.move();
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
 
-                    if (particle.isKilled) {
-                        if (particle.pos.x < -100 || particle.pos.x > canvas.width + 100 ||
-                            particle.pos.y < -100 || particle.pos.y > canvas.height + 100) {
-                            particles.splice(i, 1);
-                            continue;
-                        }
+                if (currentStage === 'svg') {
+                    svgOpacity = Math.min(1, stageTimer / 2000);
+
+                    vrRings.forEach(ring => {
+                        ring.update();
+                        ring.draw();
+                    });
+
+                    if (vrRings.length > 0) {
+                        const maxRadius = vrRings[vrRings.length - 1].baseRadius + vrRings[vrRings.length - 1].radiusOffset + 50;
+                        drawScanLine(canvas.width / 2, canvas.height / 2 - 50, maxRadius);
+                    }
+
+                    if (svgImage && svgOpacity > 0) {
+                        const scale = Math.min(canvas.width / svgImage.width, canvas.height / svgImage.height) * 0.35;
+                        const svgWidth = svgImage.width * scale;
+                        const svgHeight = svgImage.height * scale;
+                        const offsetX = (canvas.width - svgWidth) / 2;
+                        const offsetY = (canvas.height - svgHeight) / 2 - 50;
+
+                        ctx.save();
+                        ctx.globalAlpha = svgOpacity * 0.3;
+                        ctx.shadowBlur = 60;
+                        ctx.shadowColor = 'rgba(0, 220, 255, 0.8)';
+                        ctx.drawImage(svgImage, offsetX, offsetY, svgWidth, svgHeight);
+                        ctx.restore();
+
+                        ctx.save();
+                        ctx.globalAlpha = svgOpacity;
+                        ctx.shadowBlur = 40;
+                        ctx.shadowColor = 'rgba(0, 200, 255, 0.6)';
+                        ctx.drawImage(svgImage, offsetX, offsetY, svgWidth, svgHeight);
+                        ctx.restore();
                     }
                 }
 
-                if (currentStage === 'svg' && stageTimer > 2000) {
-                    svgOpacity = Math.min(1, (stageTimer - 2000) / 2000);
-                }
+                if (currentStage === 'text' || currentStage === 'complete') {
+                    textOpacity = Math.min(1, stageTimer / 2000);
 
-                if (currentStage === 'text' && stageTimer > 2500) {
-                    textOpacity = Math.min(1, (stageTimer - 2500) / 1500);
-                }
+                    vrRings.forEach(ring => {
+                        ring.update();
+                        ring.draw();
+                    });
 
-                if (currentStage === 'svg' && svgImage && svgOpacity > 0) {
-                    const scale = Math.min(canvas.width / svgImage.width, canvas.height / svgImage.height) * 0.35;
-                    const svgWidth = svgImage.width * scale;
-                    const svgHeight = svgImage.height * scale;
-                    const offsetX = (canvas.width - svgWidth) / 2;
-                    const offsetY = (canvas.height - svgHeight) / 2 - 80;
-
-                    ctx.save();
-                    ctx.globalAlpha = svgOpacity;
-                    ctx.drawImage(svgImage, offsetX, offsetY, svgWidth, svgHeight);
-                    ctx.restore();
-                }
-
-                if ((currentStage === 'text' || currentStage === 'complete') && textOpacity > 0) {
-                    ctx.save();
-                    ctx.globalAlpha = textOpacity;
-                    ctx.fillStyle = 'white';
-                    ctx.font = 'bold 70px -apple-system, BlinkMacSystemFont, sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-                    ctx.fillText('Welcome Kerala to a New Reality', canvas.width / 2, canvas.height - 120);
-                    ctx.restore();
-                }
-
-                if (svgOpacity < 1 || currentStage === 'text' || currentStage === 'complete') {
-                    drawConnections();
-                }
-
-                for (let i = 0; i < particles.length; i++) {
-                    const particle = particles[i];
-                    ctx.save();
-                    if (currentStage === 'svg' && svgOpacity > 0) {
-                        ctx.globalAlpha = Math.max(0, 1 - svgOpacity);
-                    } else if (currentStage === 'text' && textOpacity > 0) {
-                        ctx.globalAlpha = Math.max(0, 1 - textOpacity * 0.5);
+                    if (vrRings.length > 0) {
+                        const maxRadius = vrRings[vrRings.length - 1].baseRadius + vrRings[vrRings.length - 1].radiusOffset + 50;
+                        drawScanLine(canvas.width / 2, canvas.height - 120, maxRadius);
                     }
-                    particle.draw(ctx);
-                    ctx.restore();
+
+                    if (textOpacity > 0) {
+                        ctx.save();
+                        ctx.globalAlpha = textOpacity * 0.4;
+                        ctx.fillStyle = 'white';
+                        ctx.font = 'bold 70px -apple-system, BlinkMacSystemFont, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.shadowBlur = 80;
+                        ctx.shadowColor = 'rgba(0, 220, 255, 1)';
+                        ctx.fillText('Welcome Kerala to a New Reality', canvas.width / 2, canvas.height - 120);
+                        ctx.restore();
+
+                        ctx.save();
+                        ctx.globalAlpha = textOpacity;
+                        ctx.fillStyle = 'white';
+                        ctx.font = 'bold 70px -apple-system, BlinkMacSystemFont, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.shadowBlur = 40;
+                        ctx.shadowColor = 'rgba(0, 200, 255, 0.8)';
+                        ctx.fillText('Welcome Kerala to a New Reality', canvas.width / 2, canvas.height - 120);
+                        ctx.restore();
+                    }
                 }
 
                 if (currentStage === 'complete' && stageTimer > 1500) {
