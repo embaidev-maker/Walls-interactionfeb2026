@@ -596,13 +596,7 @@
                 fruit.draw();
 
                 if (fruit.isOffScreen()) {
-                    if (!fruit.sliced && fruit.type.name !== 'bomb') {
-                        lives--;
-                        updateLives();
-                        if (lives <= 0) {
-                            endGame();
-                        }
-                    }
+                    // FIXED: Only remove the fruit, don't penalize for missing it
                     fruits.splice(index, 1);
                 }
             });
