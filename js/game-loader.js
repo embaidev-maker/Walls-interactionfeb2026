@@ -58,12 +58,6 @@ function loadGame(gameName) {
             case 'particle-playground':
                 window.location.href = 'games/particle-playground.html';
                 break;
-            case 'rhythm-dance':
-                window.location.href = 'games/rhythm-dance.html';
-                break;
-            case 'creature-creator':
-                window.location.href = 'games/creature-creator.html';
-                break;
             case 'goalkeeper':
                 window.location.href = 'games/goalkeeper.html';
                 break;
