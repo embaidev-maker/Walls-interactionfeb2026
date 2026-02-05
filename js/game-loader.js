@@ -64,6 +64,9 @@ function loadGame(gameName) {
             case 'creature-creator':
                 window.location.href = 'games/creature-creator.html';
                 break;
+            case 'goalkeeper':
+                window.location.href = 'games/goalkeeper.html';
+                break;
             default:
                 console.log('Game not found:', gameName);
                 mainMenu.style.display = 'block';
