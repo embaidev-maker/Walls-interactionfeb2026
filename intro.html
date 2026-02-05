@@ -88,6 +88,44 @@
             display: none !important;
         }
 
+        #startButton {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 20px 60px;
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            cursor: pointer;
+            opacity: 0;
+            z-index: 200;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+            letter-spacing: 2px;
+        }
+
+        #startButton:hover {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        #startButton:active {
+            transform: translateX(-50%) scale(0.98);
+        }
+
+        @keyframes fadeInButton {
+            to { opacity: 1; }
+        }
+
+        .show-button {
+            animation: fadeInButton 1s ease forwards;
+        }
+
         #sparkles {
             position: absolute;
             top: 0;
@@ -109,6 +147,7 @@
         <div>Swipe to Open the Ceremony</div>
         <div class="emoji">✨</div>
     </div>
+    <button id="startButton">START</button>
 
     <script>
         const canvas = document.getElementById('canvas');
@@ -118,6 +157,7 @@
         const sparklesCanvas = document.getElementById('sparkles');
         const sparklesCtx = sparklesCanvas.getContext('2d', { alpha: true });
         const instruction = document.getElementById('instruction');
+        const startButton = document.getElementById('startButton');
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -612,6 +652,11 @@
         let vrRings = [];
         const NUM_DEPTH_PARTICLES = 800;
         let scanLineAngle = 0;
+        let rainbowHue = 0;
+
+        startButton.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
 
         class DepthParticle {
             constructor() {
@@ -806,6 +851,7 @@
 
                 setTimeout(() => {
                     transitionToText();
+                    showTextParticles();
                 }, 6000);
             };
 
@@ -819,35 +865,16 @@
         }
 
         function transitionToText() {
-            svgOpacity = 0;
-            vrRings.forEach(ring => ring.opacity = 0);
-
-            setTimeout(() => {
-                showTextParticles();
-            }, 1000);
+            currentStage = 'text';
+            stageTimer = 0;
         }
 
         function showTextParticles() {
-            currentStage = 'text';
-            stageTimer = 0;
-            vrRings.length = 0;
-
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height - 120;
-            const baseRadius = 280;
-
-            for (let i = 0; i < 8; i++) {
-                vrRings.push(new VRRing(centerX, centerY, baseRadius, i, 8));
-            }
-
             setTimeout(() => {
                 currentStage = 'complete';
                 stageTimer = 0;
-
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2500);
-            }, 6000);
+                startButton.classList.add('show-button');
+            }, 3000);
         }
 
         let lastTime = performance.now();
@@ -921,50 +948,85 @@
 
                 if (currentStage === 'text' || currentStage === 'complete') {
                     textOpacity = Math.min(1, stageTimer / 2000);
+                    rainbowHue = (rainbowHue + 2) % 360;
 
-                    vrRings.forEach(ring => {
-                        ring.update();
-                        ring.draw();
-                    });
+                    if (svgImage) {
+                        const scale = Math.min(canvas.width / svgImage.width, canvas.height / svgImage.height) * 0.35;
+                        const svgWidth = svgImage.width * scale;
+                        const svgHeight = svgImage.height * scale;
+                        const offsetX = (canvas.width - svgWidth) / 2;
+                        const offsetY = (canvas.height - svgHeight) / 2 - 50;
+
+                        ctx.save();
+                        ctx.globalAlpha = 0.3;
+                        ctx.shadowBlur = 60;
+                        ctx.shadowColor = 'rgba(0, 220, 255, 0.8)';
+                        ctx.drawImage(svgImage, offsetX, offsetY, svgWidth, svgHeight);
+                        ctx.restore();
+
+                        ctx.save();
+                        ctx.globalAlpha = 1;
+                        ctx.shadowBlur = 40;
+                        ctx.shadowColor = 'rgba(0, 200, 255, 0.6)';
+                        ctx.drawImage(svgImage, offsetX, offsetY, svgWidth, svgHeight);
+                        ctx.restore();
+                    }
 
                     if (vrRings.length > 0) {
+                        vrRings.forEach(ring => {
+                            ring.update();
+                            ring.draw();
+                        });
+
                         const maxRadius = vrRings[vrRings.length - 1].baseRadius + vrRings[vrRings.length - 1].radiusOffset + 50;
-                        drawScanLine(canvas.width / 2, canvas.height - 120, maxRadius);
+                        drawScanLine(canvas.width / 2, canvas.height / 2 - 50, maxRadius);
                     }
 
                     if (textOpacity > 0) {
-                        ctx.save();
-                        ctx.globalAlpha = textOpacity * 0.4;
-                        ctx.fillStyle = 'white';
+                        const textX = canvas.width / 2;
+                        const textY = canvas.height - 120;
+                        const text = 'Welcome Kerala to a New Reality';
+
                         ctx.font = 'bold 70px -apple-system, BlinkMacSystemFont, sans-serif';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.shadowBlur = 80;
-                        ctx.shadowColor = 'rgba(0, 220, 255, 1)';
-                        ctx.fillText('Welcome Kerala to a New Reality', canvas.width / 2, canvas.height - 120);
+
+                        ctx.save();
+                        ctx.globalAlpha = textOpacity;
+                        const gradient = ctx.createLinearGradient(textX - 600, textY, textX + 600, textY);
+                        gradient.addColorStop(0, '#1a1a2e');
+                        gradient.addColorStop(0.5, '#0f0f1e');
+                        gradient.addColorStop(1, '#1a1a2e');
+                        ctx.shadowBlur = 40;
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                        ctx.fillStyle = gradient;
+                        ctx.fillRect(textX - 650, textY - 60, 1300, 120);
                         ctx.restore();
+
+                        for (let i = 0; i < 6; i++) {
+                            const offset = 8 - i * 1.5;
+                            const hue = (rainbowHue + i * 60) % 360;
+
+                            ctx.save();
+                            ctx.globalAlpha = textOpacity * (0.6 - i * 0.1);
+                            ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
+                            ctx.lineWidth = offset;
+                            ctx.shadowBlur = 20;
+                            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+                            ctx.strokeText(text, textX, textY);
+                            ctx.restore();
+                        }
 
                         ctx.save();
                         ctx.globalAlpha = textOpacity;
                         ctx.fillStyle = 'white';
-                        ctx.font = 'bold 70px -apple-system, BlinkMacSystemFont, sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.shadowBlur = 40;
-                        ctx.shadowColor = 'rgba(0, 200, 255, 0.8)';
-                        ctx.fillText('Welcome Kerala to a New Reality', canvas.width / 2, canvas.height - 120);
+                        ctx.shadowBlur = 30;
+                        ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+                        ctx.fillText(text, textX, textY);
                         ctx.restore();
                     }
                 }
 
-                if (currentStage === 'complete' && stageTimer > 1500) {
-                    const fadeOut = Math.min(1, (stageTimer - 1500) / 1000);
-                    ctx.save();
-                    ctx.globalAlpha = fadeOut;
-                    ctx.fillStyle = '#000000';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.restore();
-                }
             }
         }
 
