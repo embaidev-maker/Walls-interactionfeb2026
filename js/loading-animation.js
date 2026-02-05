@@ -1,192 +1,85 @@
-// Epic 3D Loading Animation - Ready Player One Style
 const canvas = document.getElementById('canvas-3d');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
-camera.position.z = 50;
+renderer.setClearColor(0xffffff);
+camera.position.z = 80;
 
-// Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
 
-const pointLight1 = new THREE.PointLight(0x00ffff, 2, 100);
-pointLight1.position.set(20, 20, 20);
-scene.add(pointLight1);
+const pointLight = new THREE.PointLight(0xffffff, 1, 200);
+pointLight.position.set(30, 30, 30);
+scene.add(pointLight);
 
-const pointLight2 = new THREE.PointLight(0xff00ff, 2, 100);
-pointLight2.position.set(-20, -20, 20);
-scene.add(pointLight2);
-
-// Create particles
-const particlesGeometry = new THREE.BufferGeometry();
-const particleCount = 5000;
-const positions = new Float32Array(particleCount * 3);
-const colors = new Float32Array(particleCount * 3);
-const sizes = new Float32Array(particleCount);
-
-for (let i = 0; i < particleCount; i++) {
-    const i3 = i * 3;
-
-    // Position
-    positions[i3] = (Math.random() - 0.5) * 200;
-    positions[i3 + 1] = (Math.random() - 0.5) * 200;
-    positions[i3 + 2] = (Math.random() - 0.5) * 200;
-
-    // Color
-    const colorChoice = Math.random();
-    if (colorChoice < 0.33) {
-        colors[i3] = 0; // R
-        colors[i3 + 1] = 1; // G (cyan)
-        colors[i3 + 2] = 1; // B
-    } else if (colorChoice < 0.66) {
-        colors[i3] = 1; // R (magenta)
-        colors[i3 + 1] = 0; // G
-        colors[i3 + 2] = 1; // B
-    } else {
-        colors[i3] = 1; // R (yellow)
-        colors[i3 + 1] = 1; // G
-        colors[i3 + 2] = 0; // B
-    }
-
-    // Size
-    sizes[i] = Math.random() * 3;
-}
-
-particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-const particlesMaterial = new THREE.PointsMaterial({
-    size: 2,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.8,
-    blending: THREE.AdditiveBlending,
-    sizeAttenuation: true
-});
-
-const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-scene.add(particles);
-
-// Create geometric shapes
-const shapes = [];
-const geometries = [
-    new THREE.TetrahedronGeometry(3, 0),
-    new THREE.OctahedronGeometry(3, 0),
-    new THREE.IcosahedronGeometry(3, 0),
-    new THREE.DodecahedronGeometry(3, 0)
+const pastelColors = [
+    0xFFB3BA,
+    0xFFDFBA,
+    0xFFFFBA,
+    0xBAFFC9,
+    0xBAE1FF,
+    0xE0BBE4,
+    0xFEC8D8,
+    0xD4A5A5,
+    0xFFAACC,
+    0xAADDFF
 ];
 
-for (let i = 0; i < 15; i++) {
-    const geometry = geometries[Math.floor(Math.random() * geometries.length)];
+const spheres = [];
+const sphereCount = 25;
+
+for (let i = 0; i < sphereCount; i++) {
+    const size = Math.random() * 4 + 2;
+    const geometry = new THREE.SphereGeometry(size, 32, 32);
     const material = new THREE.MeshPhongMaterial({
-        color: Math.random() * 0xffffff,
-        emissive: Math.random() * 0x333333,
-        shininess: 100,
+        color: pastelColors[Math.floor(Math.random() * pastelColors.length)],
+        shininess: 80,
         transparent: true,
-        opacity: 0.7,
-        wireframe: Math.random() > 0.5
+        opacity: 0.85
     });
 
-    const shape = new THREE.Mesh(geometry, material);
-    shape.position.set(
-        (Math.random() - 0.5) * 60,
-        (Math.random() - 0.5) * 60,
-        (Math.random() - 0.5) * 60
+    const sphere = new THREE.Mesh(geometry, material);
+
+    const angle = (i / sphereCount) * Math.PI * 2;
+    const radius = 20 + Math.random() * 30;
+    sphere.position.set(
+        Math.cos(angle) * radius,
+        (Math.random() - 0.5) * 30,
+        Math.sin(angle) * radius
     );
-    shape.rotation.set(
-        Math.random() * Math.PI,
-        Math.random() * Math.PI,
-        Math.random() * Math.PI
-    );
-    shape.userData = {
-        rotationSpeed: {
-            x: (Math.random() - 0.5) * 0.02,
-            y: (Math.random() - 0.5) * 0.02,
-            z: (Math.random() - 0.5) * 0.02
-        }
+
+    sphere.userData = {
+        speed: 0.001 + Math.random() * 0.003,
+        radius: radius,
+        angle: angle,
+        yOffset: Math.random() * Math.PI * 2,
+        ySpeed: 0.5 + Math.random() * 0.5
     };
 
-    scene.add(shape);
-    shapes.push(shape);
+    scene.add(sphere);
+    spheres.push(sphere);
 }
 
-// Central energy sphere
-const sphereGeometry = new THREE.SphereGeometry(8, 32, 32);
-const sphereMaterial = new THREE.MeshPhongMaterial({
-    color: 0x00ffff,
-    emissive: 0x00ffff,
-    emissiveIntensity: 0.5,
-    transparent: true,
-    opacity: 0.6,
-    shininess: 100
-});
-const centralSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-scene.add(centralSphere);
-
-// Wireframe sphere around central sphere
-const wireframeGeometry = new THREE.SphereGeometry(12, 16, 16);
-const wireframeMaterial = new THREE.MeshBasicMaterial({
-    color: 0xff00ff,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.3
-});
-const wireframeSphere = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
-scene.add(wireframeSphere);
-
-// Animation
 let time = 0;
 function animateLoading() {
     time += 0.01;
 
-    // Rotate particles
-    particles.rotation.y += 0.0005;
-    particles.rotation.x += 0.0003;
+    spheres.forEach((sphere, index) => {
+        sphere.userData.angle += sphere.userData.speed;
 
-    // Animate particle positions
-    const positions = particles.geometry.attributes.position.array;
-    for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3;
-        positions[i3 + 1] += Math.sin(time + positions[i3]) * 0.02;
-    }
-    particles.geometry.attributes.position.needsUpdate = true;
+        sphere.position.x = Math.cos(sphere.userData.angle) * sphere.userData.radius;
+        sphere.position.z = Math.sin(sphere.userData.angle) * sphere.userData.radius;
+        sphere.position.y = Math.sin(time * sphere.userData.ySpeed + sphere.userData.yOffset) * 15;
 
-    // Rotate shapes
-    shapes.forEach(shape => {
-        shape.rotation.x += shape.userData.rotationSpeed.x;
-        shape.rotation.y += shape.userData.rotationSpeed.y;
-        shape.rotation.z += shape.userData.rotationSpeed.z;
-
-        // Pulse effect
-        const scale = 1 + Math.sin(time * 2) * 0.1;
-        shape.scale.set(scale, scale, scale);
+        const scale = 1 + Math.sin(time * 2 + index) * 0.1;
+        sphere.scale.set(scale, scale, scale);
     });
 
-    // Animate central sphere
-    const sphereScale = 1 + Math.sin(time * 3) * 0.2;
-    centralSphere.scale.set(sphereScale, sphereScale, sphereScale);
-    centralSphere.rotation.y += 0.01;
-
-    // Animate wireframe sphere
-    wireframeSphere.rotation.y -= 0.008;
-    wireframeSphere.rotation.x += 0.005;
-    const wireScale = 1 + Math.cos(time * 2.5) * 0.15;
-    wireframeSphere.scale.set(wireScale, wireScale, wireScale);
-
-    // Animate lights
-    pointLight1.position.x = Math.sin(time) * 30;
-    pointLight1.position.y = Math.cos(time) * 30;
-    pointLight2.position.x = Math.cos(time) * 30;
-    pointLight2.position.y = Math.sin(time) * 30;
-
-    // Camera movement
-    camera.position.z = 50 + Math.sin(time * 0.5) * 5;
-    camera.position.x = Math.sin(time * 0.3) * 3;
-    camera.position.y = Math.cos(time * 0.3) * 3;
+    camera.position.x = Math.sin(time * 0.2) * 5;
+    camera.position.y = Math.cos(time * 0.15) * 5;
     camera.lookAt(0, 0, 0);
 
     renderer.render(scene, camera);
@@ -195,14 +88,12 @@ function animateLoading() {
 
 animateLoading();
 
-// Handle window resize
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Show main menu after loading
 setTimeout(() => {
     const loadingScreen = document.getElementById('loading-screen');
     const mainMenu = document.getElementById('main-menu');

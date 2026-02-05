@@ -1,130 +1,88 @@
-// Animated background for main menu
 const menuCanvas = document.getElementById('menu-canvas');
 const menuScene = new THREE.Scene();
 const menuCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const menuRenderer = new THREE.WebGLRenderer({ canvas: menuCanvas, antialias: true, alpha: true });
+const menuRenderer = new THREE.WebGLRenderer({ canvas: menuCanvas, antialias: true, alpha: false });
 
 menuRenderer.setSize(window.innerWidth, window.innerHeight);
 menuRenderer.setPixelRatio(window.devicePixelRatio);
-menuCamera.position.z = 30;
+menuRenderer.setClearColor(0xffffff);
+menuCamera.position.z = 60;
 
-// Lighting
-const menuAmbientLight = new THREE.AmbientLight(0xffffff, 0.3);
+const menuAmbientLight = new THREE.AmbientLight(0xffffff, 0.6);
 menuScene.add(menuAmbientLight);
 
-const menuPointLight = new THREE.PointLight(0x00ffff, 1.5, 100);
-menuPointLight.position.set(0, 0, 30);
+const menuPointLight = new THREE.PointLight(0xffffff, 0.8, 150);
+menuPointLight.position.set(20, 20, 20);
 menuScene.add(menuPointLight);
 
-// Create flowing particles
-const menuParticlesGeometry = new THREE.BufferGeometry();
-const menuParticleCount = 2000;
-const menuPositions = new Float32Array(menuParticleCount * 3);
-const menuColors = new Float32Array(menuParticleCount * 3);
-const menuSizes = new Float32Array(menuParticleCount);
-const menuVelocities = new Float32Array(menuParticleCount * 3);
+const pastelColors = [
+    0xFFB3BA,
+    0xFFDFBA,
+    0xFFFFBA,
+    0xBAFFC9,
+    0xBAE1FF,
+    0xE0BBE4,
+    0xFEC8D8,
+    0xFFAACC,
+    0xAADDFF
+];
 
-for (let i = 0; i < menuParticleCount; i++) {
-    const i3 = i * 3;
+const menuSpheres = [];
+const menuSphereCount = 20;
 
-    // Position
-    menuPositions[i3] = (Math.random() - 0.5) * 100;
-    menuPositions[i3 + 1] = (Math.random() - 0.5) * 100;
-    menuPositions[i3 + 2] = (Math.random() - 0.5) * 100;
+for (let i = 0; i < menuSphereCount; i++) {
+    const size = Math.random() * 3 + 1.5;
+    const geometry = new THREE.SphereGeometry(size, 32, 32);
+    const material = new THREE.MeshPhongMaterial({
+        color: pastelColors[Math.floor(Math.random() * pastelColors.length)],
+        shininess: 60,
+        transparent: true,
+        opacity: 0.7
+    });
 
-    // Velocity
-    menuVelocities[i3] = (Math.random() - 0.5) * 0.02;
-    menuVelocities[i3 + 1] = (Math.random() - 0.5) * 0.02;
-    menuVelocities[i3 + 2] = (Math.random() - 0.5) * 0.02;
+    const sphere = new THREE.Mesh(geometry, material);
 
-    // Color
-    const hue = Math.random();
-    if (hue < 0.5) {
-        menuColors[i3] = 0;
-        menuColors[i3 + 1] = 1;
-        menuColors[i3 + 2] = 1;
-    } else {
-        menuColors[i3] = 1;
-        menuColors[i3 + 1] = 0;
-        menuColors[i3 + 2] = 1;
-    }
+    sphere.position.set(
+        (Math.random() - 0.5) * 100,
+        (Math.random() - 0.5) * 60,
+        (Math.random() - 0.5) * 40 - 20
+    );
 
-    // Size
-    menuSizes[i] = Math.random() * 2;
+    sphere.userData = {
+        speedX: (Math.random() - 0.5) * 0.05,
+        speedY: (Math.random() - 0.5) * 0.05,
+        originalY: sphere.position.y,
+        floatSpeed: Math.random() * 0.02 + 0.01,
+        floatRange: Math.random() * 5 + 3
+    };
+
+    menuScene.add(sphere);
+    menuSpheres.push(sphere);
 }
 
-menuParticlesGeometry.setAttribute('position', new THREE.BufferAttribute(menuPositions, 3));
-menuParticlesGeometry.setAttribute('color', new THREE.BufferAttribute(menuColors, 3));
-menuParticlesGeometry.setAttribute('size', new THREE.BufferAttribute(menuSizes, 1));
-menuParticlesGeometry.setAttribute('velocity', new THREE.BufferAttribute(menuVelocities, 3));
-
-const menuParticlesMaterial = new THREE.PointsMaterial({
-    size: 1.5,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.6,
-    blending: THREE.AdditiveBlending
-});
-
-const menuParticles = new THREE.Points(menuParticlesGeometry, menuParticlesMaterial);
-menuScene.add(menuParticles);
-
-// Create grid
-const gridSize = 100;
-const gridDivisions = 20;
-const gridHelper = new THREE.GridHelper(gridSize, gridDivisions, 0x00ffff, 0xff00ff);
-gridHelper.position.y = -20;
-gridHelper.material.transparent = true;
-gridHelper.material.opacity = 0.2;
-menuScene.add(gridHelper);
-
-// Animation
 let menuTime = 0;
 function animateMenu() {
     menuTime += 0.01;
 
-    // Rotate particles slowly
-    menuParticles.rotation.y += 0.0002;
+    menuSpheres.forEach((sphere, index) => {
+        sphere.position.x += sphere.userData.speedX;
+        sphere.position.y = sphere.userData.originalY + Math.sin(menuTime * sphere.userData.floatSpeed + index) * sphere.userData.floatRange;
 
-    // Move particles
-    const positions = menuParticles.geometry.attributes.position.array;
-    const velocities = menuParticles.geometry.attributes.velocity.array;
+        if (sphere.position.x > 50) sphere.position.x = -50;
+        if (sphere.position.x < -50) sphere.position.x = 50;
 
-    for (let i = 0; i < menuParticleCount; i++) {
-        const i3 = i * 3;
-
-        positions[i3] += velocities[i3];
-        positions[i3 + 1] += velocities[i3 + 1];
-        positions[i3 + 2] += velocities[i3 + 2];
-
-        // Wrap around
-        if (Math.abs(positions[i3]) > 50) velocities[i3] *= -1;
-        if (Math.abs(positions[i3 + 1]) > 50) velocities[i3 + 1] *= -1;
-        if (Math.abs(positions[i3 + 2]) > 50) velocities[i3 + 2] *= -1;
-    }
-    menuParticles.geometry.attributes.position.needsUpdate = true;
-
-    // Animate grid
-    gridHelper.rotation.y += 0.001;
-
-    // Gentle camera sway
-    menuCamera.position.x = Math.sin(menuTime * 0.2) * 2;
-    menuCamera.position.y = Math.cos(menuTime * 0.15) * 2;
-    menuCamera.lookAt(0, 0, 0);
-
-    // Animate light
-    menuPointLight.intensity = 1.5 + Math.sin(menuTime) * 0.3;
+        const scale = 1 + Math.sin(menuTime * 1.5 + index) * 0.05;
+        sphere.scale.set(scale, scale, scale);
+    });
 
     menuRenderer.render(menuScene, menuCamera);
     requestAnimationFrame(animateMenu);
 }
 
-// Start animation when menu is visible
 setTimeout(() => {
     animateMenu();
 }, 3000);
 
-// Handle window resize
 window.addEventListener('resize', () => {
     menuCamera.aspect = window.innerWidth / window.innerHeight;
     menuCamera.updateProjectionMatrix();
