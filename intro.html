@@ -270,7 +270,7 @@
 
         .instruction-text {
             position: absolute;
-            top: 58%;
+            top: 55%;
             left: 50%;
             transform: translateX(-50%);
             color: rgba(255, 255, 255, 0.9);
@@ -901,9 +901,9 @@
 
         function createRibbon() {
             const centerX = physicsCanvas.width / 2;
-            const centerY = physicsCanvas.height / 2;
-            const ropeLength = Math.min(400, physicsCanvas.width * 0.4);
-            const numSegments = 40;
+            const centerY = physicsCanvas.height * 0.4;
+            const ropeLength = Math.min(800, physicsCanvas.width * 0.7);
+            const numSegments = 70;
             const segmentLength = ropeLength / numSegments;
 
             const startX = centerX - ropeLength / 2;
