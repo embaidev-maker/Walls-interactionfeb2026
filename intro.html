@@ -25,6 +25,8 @@
             left: 0;
             width: 100%;
             height: 100%;
+            will-change: transform;
+            transform: translate3d(0, 0, 0);
         }
 
         #ribbon-canvas {
@@ -35,6 +37,8 @@
             height: 100%;
             z-index: 100;
             cursor: crosshair;
+            will-change: opacity;
+            transform: translate3d(0, 0, 0);
         }
 
         #instruction {
@@ -92,6 +96,8 @@
             height: 100%;
             pointer-events: none;
             z-index: 101;
+            will-change: contents;
+            transform: translate3d(0, 0, 0);
         }
     </style>
 </head>
@@ -106,11 +112,11 @@
 
     <script>
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
         const ribbonCanvas = document.getElementById('ribbon-canvas');
-        const ribbonCtx = ribbonCanvas.getContext('2d');
+        const ribbonCtx = ribbonCanvas.getContext('2d', { alpha: true });
         const sparklesCanvas = document.getElementById('sparkles');
-        const sparklesCtx = sparklesCanvas.getContext('2d');
+        const sparklesCtx = sparklesCanvas.getContext('2d', { alpha: true });
         const instruction = document.getElementById('instruction');
 
         canvas.width = window.innerWidth;
@@ -120,31 +126,66 @@
         sparklesCanvas.width = window.innerWidth;
         sparklesCanvas.height = window.innerHeight;
 
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ribbonCtx.imageSmoothingEnabled = true;
+        ribbonCtx.imageSmoothingQuality = 'high';
+
         class Sparkle {
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.size = Math.random() * 4 + 2;
-                this.speedX = (Math.random() - 0.5) * 4;
-                this.speedY = (Math.random() - 0.5) * 4;
+                this.size = Math.random() * 5 + 3;
+                this.speedX = (Math.random() - 0.5) * 6;
+                this.speedY = (Math.random() - 0.5) * 6 - 2;
                 this.life = 1;
-                this.decay = Math.random() * 0.02 + 0.01;
+                this.decay = Math.random() * 0.015 + 0.008;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.2;
+                this.colorHue = Math.random() * 60 + 340;
             }
 
             update() {
                 this.x += this.speedX;
                 this.y += this.speedY;
                 this.life -= this.decay;
-                this.speedY += 0.1;
+                this.speedY += 0.15;
+                this.speedX *= 0.99;
+                this.rotation += this.rotationSpeed;
             }
 
             draw() {
                 sparklesCtx.save();
-                sparklesCtx.globalAlpha = this.life;
+                sparklesCtx.translate(this.x, this.y);
+                sparklesCtx.rotate(this.rotation);
+                sparklesCtx.globalAlpha = this.life * this.life;
+
+                const gradient = sparklesCtx.createRadialGradient(0, 0, 0, 0, 0, this.size * 2);
+                gradient.addColorStop(0, `hsla(${this.colorHue}, 100%, 80%, ${this.life})`);
+                gradient.addColorStop(0.5, `hsla(${this.colorHue}, 100%, 60%, ${this.life * 0.5})`);
+                gradient.addColorStop(1, `hsla(${this.colorHue}, 100%, 50%, 0)`);
+
+                sparklesCtx.fillStyle = gradient;
+                sparklesCtx.fillRect(-this.size * 2, -this.size * 2, this.size * 4, this.size * 4);
+
                 sparklesCtx.fillStyle = '#ffffff';
-                sparklesCtx.shadowBlur = 10;
-                sparklesCtx.shadowColor = '#ffffff';
-                sparklesCtx.fillRect(this.x, this.y, this.size, this.size);
+                sparklesCtx.shadowBlur = 15;
+                sparklesCtx.shadowColor = `hsla(${this.colorHue}, 100%, 70%, ${this.life})`;
+
+                sparklesCtx.beginPath();
+                for (let i = 0; i < 4; i++) {
+                    const angle = (Math.PI / 2) * i;
+                    const x = Math.cos(angle) * this.size;
+                    const y = Math.sin(angle) * this.size;
+                    if (i === 0) {
+                        sparklesCtx.moveTo(x, y);
+                    } else {
+                        sparklesCtx.lineTo(x, y);
+                    }
+                }
+                sparklesCtx.closePath();
+                sparklesCtx.fill();
+
                 sparklesCtx.restore();
             }
         }
@@ -348,8 +389,11 @@
                     ribbonPoints[i].cut = true;
                 }
 
-                for (let i = 0; i < 30; i++) {
-                    sparkles.push(new Sparkle(centerX + (Math.random() - 0.5) * 100, ribbonY + (Math.random() - 0.5) * 50));
+                for (let i = 0; i < 60; i++) {
+                    sparkles.push(new Sparkle(
+                        centerX + (Math.random() - 0.5) * 150,
+                        ribbonY + (Math.random() - 0.5) * 80
+                    ));
                 }
 
                 instruction.classList.add('fade-out');
@@ -414,17 +458,43 @@
                 this.targetColor = { r: 255, g: 255, b: 255 };
                 this.colorWeight = 0;
                 this.colorBlendRate = 0.02;
+                this.trail = [];
+                this.maxTrailLength = 3;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.15;
+                this.depth = Math.random();
+                this.arrived = false;
+            }
+
+            easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
             }
 
             move() {
-                let proximityMult = 1;
+                this.trail.unshift({ x: this.pos.x, y: this.pos.y });
+                if (this.trail.length > this.maxTrailLength) {
+                    this.trail.pop();
+                }
+
                 const distance = Math.sqrt(
                     Math.pow(this.pos.x - this.target.x, 2) +
                     Math.pow(this.pos.y - this.target.y, 2)
                 );
 
+                if (distance < 2) {
+                    this.arrived = true;
+                    this.vel.x *= 0.8;
+                    this.vel.y *= 0.8;
+                    return;
+                }
+
+                let proximityMult = 1;
                 if (distance < this.closeEnoughTarget) {
-                    proximityMult = distance / this.closeEnoughTarget;
+                    proximityMult = this.easeInOutCubic(distance / this.closeEnoughTarget);
                 }
 
                 const towardsTarget = {
@@ -445,8 +515,9 @@
 
                 const steerMagnitude = Math.sqrt(steer.x * steer.x + steer.y * steer.y);
                 if (steerMagnitude > 0) {
-                    steer.x = (steer.x / steerMagnitude) * this.maxForce;
-                    steer.y = (steer.y / steerMagnitude) * this.maxForce;
+                    const dynamicForce = this.maxForce * (1 + (1 - proximityMult) * 0.5);
+                    steer.x = (steer.x / steerMagnitude) * dynamicForce;
+                    steer.y = (steer.y / steerMagnitude) * dynamicForce;
                 }
 
                 this.acc.x += steer.x;
@@ -454,10 +525,19 @@
 
                 this.vel.x += this.acc.x;
                 this.vel.y += this.acc.y;
+
+                const currentSpeed = Math.sqrt(this.vel.x * this.vel.x + this.vel.y * this.vel.y);
+                if (currentSpeed > this.maxSpeed) {
+                    this.vel.x = (this.vel.x / currentSpeed) * this.maxSpeed;
+                    this.vel.y = (this.vel.y / currentSpeed) * this.maxSpeed;
+                }
+
                 this.pos.x += this.vel.x;
                 this.pos.y += this.vel.y;
                 this.acc.x = 0;
                 this.acc.y = 0;
+
+                this.rotation += this.rotationSpeed * (currentSpeed / this.maxSpeed);
             }
 
             draw(ctx) {
@@ -465,24 +545,94 @@
                     this.colorWeight = Math.min(this.colorWeight + this.colorBlendRate, 1.0);
                 }
 
+                const easedWeight = this.easeOutCubic(this.colorWeight);
+
                 const currentColor = {
-                    r: Math.round(this.startColor.r + (this.targetColor.r - this.startColor.r) * this.colorWeight),
-                    g: Math.round(this.startColor.g + (this.targetColor.g - this.startColor.g) * this.colorWeight),
-                    b: Math.round(this.startColor.b + (this.targetColor.b - this.startColor.b) * this.colorWeight)
+                    r: Math.round(this.startColor.r + (this.targetColor.r - this.startColor.r) * easedWeight),
+                    g: Math.round(this.startColor.g + (this.targetColor.g - this.startColor.g) * easedWeight),
+                    b: Math.round(this.startColor.b + (this.targetColor.b - this.startColor.b) * easedWeight)
                 };
 
+                const depthScale = 0.7 + this.depth * 0.6;
+                const size = this.particleSize * depthScale;
+
+                for (let i = this.trail.length - 1; i >= 0; i--) {
+                    const trailAlpha = ((i + 1) / this.trail.length) * easedWeight * 0.4;
+                    const trailSize = size * ((i + 1) / this.trail.length) * 0.7;
+
+                    ctx.save();
+                    ctx.globalAlpha = trailAlpha;
+                    ctx.fillStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
+                    ctx.fillRect(
+                        this.trail[i].x - trailSize / 2,
+                        this.trail[i].y - trailSize / 2,
+                        trailSize,
+                        trailSize
+                    );
+                    ctx.restore();
+                }
+
                 ctx.save();
-                ctx.globalAlpha = Math.min(this.colorWeight, 1);
+                ctx.translate(this.pos.x, this.pos.y);
+                ctx.rotate(this.rotation);
+
+                ctx.globalAlpha = easedWeight;
+
+                const glowSize = size * 2.5;
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
+                gradient.addColorStop(0, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${0.8 * easedWeight})`);
+                gradient.addColorStop(0.4, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, ${0.3 * easedWeight})`);
+                gradient.addColorStop(1, `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, 0)`);
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(-glowSize, -glowSize, glowSize * 2, glowSize * 2);
+
                 ctx.fillStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`;
-                ctx.shadowBlur = 3;
-                ctx.shadowColor = `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, 0.5)`;
-                ctx.fillRect(this.pos.x, this.pos.y, this.particleSize, this.particleSize);
+                ctx.shadowBlur = 8 * depthScale;
+                ctx.shadowColor = `rgba(${currentColor.r}, ${currentColor.g}, ${currentColor.b}, 0.8)`;
+                ctx.fillRect(-size / 2, -size / 2, size, size);
+
                 ctx.restore();
             }
         }
 
         const particles = [];
         let currentStage = 'ribbon';
+        let connectParticles = true;
+        const connectionDistance = 120;
+
+        function drawConnections() {
+            if (!connectParticles) return;
+
+            const arrivedParticles = particles.filter(p => p.arrived);
+            if (arrivedParticles.length < 2) return;
+
+            ctx.save();
+            for (let i = 0; i < arrivedParticles.length; i++) {
+                const p1 = arrivedParticles[i];
+
+                for (let j = i + 1; j < arrivedParticles.length; j++) {
+                    const p2 = arrivedParticles[j];
+
+                    const dx = p2.pos.x - p1.pos.x;
+                    const dy = p2.pos.y - p1.pos.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        const opacity = (1 - distance / connectionDistance) * 0.15 * p1.colorWeight * p2.colorWeight;
+
+                        ctx.globalAlpha = opacity;
+                        ctx.strokeStyle = `rgba(${p1.targetColor.r}, ${p1.targetColor.g}, ${p1.targetColor.b}, ${opacity})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.pos.x, p1.pos.y);
+                        ctx.lineTo(p2.pos.x, p2.pos.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            ctx.restore();
+        }
 
         function generateRandomPos(x, y, mag) {
             const angle = Math.random() * Math.PI * 2;
@@ -553,25 +703,40 @@
                 coords.forEach((coord, index) => {
                     const particle = new Particle();
 
-                    const randomPos = generateRandomPos(canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height));
-                    particle.pos.x = randomPos.x;
-                    particle.pos.y = randomPos.y;
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.max(canvas.width, canvas.height) * (1.2 + Math.random() * 0.5);
+                    particle.pos.x = canvas.width / 2 + Math.cos(angle) * distance;
+                    particle.pos.y = canvas.height / 2 + Math.sin(angle) * distance;
 
-                    particle.maxSpeed = Math.random() * 3 + 6;
-                    particle.maxForce = particle.maxSpeed * 0.1;
-                    particle.particleSize = 4;
-                    particle.colorBlendRate = Math.random() * 0.015 + 0.01;
+                    particle.maxSpeed = Math.random() * 4 + 8;
+                    particle.maxForce = particle.maxSpeed * 0.15;
+                    particle.particleSize = Math.random() * 2 + 4;
+                    particle.colorBlendRate = Math.random() * 0.02 + 0.015;
+                    particle.closeEnoughTarget = 80 + Math.random() * 40;
+                    particle.depth = Math.random();
 
-                    particle.startColor = { r: 0, g: 0, b: 0 };
+                    const distanceFromCenter = Math.sqrt(
+                        Math.pow(coord.x - canvas.width / 2, 2) +
+                        Math.pow(coord.y - canvas.height / 2, 2)
+                    );
+                    const normalizedDistance = distanceFromCenter / (Math.max(canvas.width, canvas.height) / 2);
+
+                    particle.startColor = {
+                        r: Math.floor(coord.r * 0.3),
+                        g: Math.floor(coord.g * 0.3),
+                        b: Math.floor(coord.b * 0.3)
+                    };
                     particle.targetColor = {
-                        r: Math.max(100, coord.r),
-                        g: Math.max(100, coord.g),
-                        b: Math.max(100, coord.b)
+                        r: Math.max(120, coord.r + 30),
+                        g: Math.max(120, coord.g + 30),
+                        b: Math.max(120, coord.b + 30)
                     };
                     particle.colorWeight = 0;
 
                     particle.target.x = coord.x;
                     particle.target.y = coord.y;
+
+                    particle.maxTrailLength = Math.floor(3 + Math.random() * 3);
 
                     particles.push(particle);
                 });
@@ -629,21 +794,26 @@
             coords.forEach(coord => {
                 const particle = new Particle();
 
-                const randomPos = generateRandomPos(canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height));
-                particle.pos.x = randomPos.x;
-                particle.pos.y = randomPos.y;
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.max(canvas.width, canvas.height) * (1.2 + Math.random() * 0.5);
+                particle.pos.x = canvas.width / 2 + Math.cos(angle) * distance;
+                particle.pos.y = canvas.height / 2 + Math.sin(angle) * distance;
 
-                particle.maxSpeed = Math.random() * 3 + 6;
-                particle.maxForce = particle.maxSpeed * 0.1;
-                particle.particleSize = 3;
-                particle.colorBlendRate = Math.random() * 0.015 + 0.01;
+                particle.maxSpeed = Math.random() * 4 + 9;
+                particle.maxForce = particle.maxSpeed * 0.15;
+                particle.particleSize = Math.random() * 1.5 + 3;
+                particle.colorBlendRate = Math.random() * 0.02 + 0.015;
+                particle.closeEnoughTarget = 70 + Math.random() * 30;
+                particle.depth = Math.random();
 
-                particle.startColor = { r: 0, g: 0, b: 0 };
+                particle.startColor = { r: 80, g: 80, b: 100 };
                 particle.targetColor = { r: 255, g: 255, b: 255 };
                 particle.colorWeight = 0;
 
                 particle.target.x = coord.x;
                 particle.target.y = coord.y;
+
+                particle.maxTrailLength = Math.floor(2 + Math.random() * 2);
 
                 particles.push(particle);
             });
@@ -670,8 +840,15 @@
             }, 5000);
         }
 
-        function animate() {
+        let lastTime = performance.now();
+        let fps = 60;
+
+        function animate(currentTime) {
             requestAnimationFrame(animate);
+
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+            fps = 1000 / deltaTime;
 
             if (currentStage === 'ribbon') {
                 updateRibbon();
@@ -686,20 +863,32 @@
                     }
                 }
             } else if (currentStage === 'svg' || currentStage === 'text' || currentStage === 'complete') {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const particle = particles[i];
-                    particle.move();
-                    particle.draw(ctx);
+                const batchSize = Math.min(particles.length, 50);
+                for (let batch = 0; batch < Math.ceil(particles.length / batchSize); batch++) {
+                    const start = batch * batchSize;
+                    const end = Math.min(start + batchSize, particles.length);
 
-                    if (particle.isKilled) {
-                        if (particle.pos.x < -100 || particle.pos.x > canvas.width + 100 ||
-                            particle.pos.y < -100 || particle.pos.y > canvas.height + 100) {
-                            particles.splice(i, 1);
+                    for (let i = end - 1; i >= start; i--) {
+                        const particle = particles[i];
+                        particle.move();
+
+                        if (particle.isKilled) {
+                            if (particle.pos.x < -100 || particle.pos.x > canvas.width + 100 ||
+                                particle.pos.y < -100 || particle.pos.y > canvas.height + 100) {
+                                particles.splice(i, 1);
+                                continue;
+                            }
                         }
                     }
+                }
+
+                drawConnections();
+
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].draw(ctx);
                 }
             }
         }
@@ -713,6 +902,11 @@
             ribbonCanvas.height = window.innerHeight;
             sparklesCanvas.width = window.innerWidth;
             sparklesCanvas.height = window.innerHeight;
+
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ribbonCtx.imageSmoothingEnabled = true;
+            ribbonCtx.imageSmoothingQuality = 'high';
         });
     </script>
 </body>
