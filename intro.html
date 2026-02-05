@@ -27,118 +27,47 @@
             height: 100%;
         }
 
-        .ribbon-container {
+        #physicsCanvas {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
-            height: 400px;
-            z-index: 50;
-            opacity: 0;
-        }
-
-        .ribbon-container.show {
-            animation: fadeInRibbon 1s ease forwards;
-        }
-
-        .ribbon-container.hide {
-            animation: fadeOutRibbon 1s ease forwards;
-        }
-
-        @keyframes fadeInRibbon {
-            to { opacity: 1; }
-        }
-
-        @keyframes fadeOutRibbon {
-            to { opacity: 0; }
-        }
-
-        .ribbon {
-            position: absolute;
-            width: 100%;
-            height: 8px;
-            background: linear-gradient(90deg, #ff6b6b 0%, #ff8787 50%, #ff6b6b 100%);
-            top: 50%;
-            left: 0;
-            transform: translateY(-50%);
-            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5);
-        }
-
-        .ribbon-left, .ribbon-right {
-            position: absolute;
-            width: 50%;
-            height: 100%;
             top: 0;
-            transition: transform 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        .ribbon-left {
             left: 0;
-            transform-origin: right center;
-        }
-
-        .ribbon-right {
-            right: 0;
-            transform-origin: left center;
-        }
-
-        .ribbon-container.cut .ribbon-left {
-            transform: translateX(-150%) rotate(-15deg);
-        }
-
-        .ribbon-container.cut .ribbon-right {
-            transform: translateX(150%) rotate(15deg);
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+            pointer-events: none;
         }
 
         .scissors {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            width: 80px;
-            height: 80px;
+            transform: translate(-50%, -50%) translateX(-200px);
+            width: 100px;
+            height: 100px;
             opacity: 0;
-            transition: all 1s ease;
-            filter: drop-shadow(0 4px 10px rgba(255, 215, 0, 0.5));
+            z-index: 100;
+            filter: drop-shadow(0 4px 20px rgba(255, 215, 0, 0.8));
+            transition: opacity 0.5s ease;
         }
 
         .scissors.show {
             opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
         }
 
-        .scissors.cutting {
-            animation: cut 0.6s ease;
+        .scissors.strike {
+            animation: strike 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        @keyframes cut {
-            0%, 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-            25% { transform: translate(-50%, -50%) scale(1.1) rotate(-10deg); }
-            75% { transform: translate(-50%, -50%) scale(1.1) rotate(10deg); }
-        }
-
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            top: 50%;
-            left: 50%;
-            opacity: 0;
-        }
-
-        .confetti.burst {
-            animation: confettiBurst 1.5s ease-out forwards;
-        }
-
-        @keyframes confettiBurst {
+        @keyframes strike {
             0% {
-                opacity: 1;
-                transform: translate(0, 0) rotate(0deg);
+                transform: translate(-50%, -50%) translateX(-200px) rotate(0deg);
+            }
+            50% {
+                transform: translate(-50%, -50%) translateX(0px) rotate(15deg);
             }
             100% {
+                transform: translate(-50%, -50%) translateX(200px) rotate(0deg);
                 opacity: 0;
-                transform: translate(var(--tx), var(--ty)) rotate(720deg);
             }
         }
 
@@ -147,10 +76,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 800px;
-            height: 80%;
-            max-height: 800px;
+            width: 50%;
+            max-width: 600px;
             z-index: 60;
             opacity: 0;
             display: none;
@@ -175,22 +102,48 @@
 
         .kerala-svg {
             width: 100%;
-            height: 100%;
-            filter: drop-shadow(0 0 30px rgba(0, 255, 0, 0.5));
+            height: auto;
+            filter: drop-shadow(0 0 40px rgba(0, 255, 100, 0.8));
         }
 
-        .kerala-svg path {
-            fill: none;
-            stroke: #00ff00;
-            stroke-width: 2;
-            stroke-dasharray: 3000;
-            stroke-dashoffset: 3000;
-            animation: drawKerala 3s ease forwards;
+        .halo-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 3px solid rgba(0, 255, 200, 0.6);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
         }
 
-        @keyframes drawKerala {
-            to {
-                stroke-dashoffset: 0;
+        .halo-ring.animate {
+            animation: haloExpand 3s ease-out infinite;
+        }
+
+        .halo-ring:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .halo-ring:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        .halo-ring:nth-child(4) {
+            animation-delay: 1.5s;
+        }
+
+        @keyframes haloExpand {
+            0% {
+                width: 300px;
+                height: 300px;
+                opacity: 0.8;
+                border-width: 4px;
+            }
+            100% {
+                width: 800px;
+                height: 800px;
+                opacity: 0;
+                border-width: 1px;
             }
         }
 
@@ -324,31 +277,30 @@
 </head>
 <body>
     <canvas id="canvas"></canvas>
+    <canvas id="physicsCanvas"></canvas>
 
-    <div class="ribbon-container" id="ribbonContainer">
-        <div class="ribbon ribbon-left"></div>
-        <div class="ribbon ribbon-right"></div>
-        <svg class="scissors" id="scissors" viewBox="0 0 100 100">
-            <defs>
-                <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
-                    <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#FFD700;stop-opacity:1" />
-                </linearGradient>
-            </defs>
-            <circle cx="30" cy="35" r="12" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="2"/>
-            <circle cx="30" cy="65" r="12" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="2"/>
-            <line x1="30" y1="35" x2="70" y2="45" stroke="url(#goldGradient)" stroke-width="4" stroke-linecap="round"/>
-            <line x1="30" y1="65" x2="70" y2="55" stroke="url(#goldGradient)" stroke-width="4" stroke-linecap="round"/>
-            <path d="M 65 40 L 85 25 L 90 30 L 70 50 Z" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="1.5"/>
-            <path d="M 65 60 L 85 75 L 90 70 L 70 50 Z" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="1.5"/>
-        </svg>
-    </div>
+    <svg class="scissors" id="scissors" viewBox="0 0 100 100">
+        <defs>
+            <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+                <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#FFD700;stop-opacity:1" />
+            </linearGradient>
+        </defs>
+        <circle cx="30" cy="35" r="14" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="3"/>
+        <circle cx="30" cy="65" r="14" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="3"/>
+        <line x1="30" y1="35" x2="70" y2="45" stroke="url(#goldGradient)" stroke-width="5" stroke-linecap="round"/>
+        <line x1="30" y1="65" x2="70" y2="55" stroke="url(#goldGradient)" stroke-width="5" stroke-linecap="round"/>
+        <path d="M 65 40 L 88 22 L 93 28 L 70 50 Z" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="2"/>
+        <path d="M 65 60 L 88 78 L 93 72 L 70 50 Z" fill="url(#goldGradient)" stroke="#FF6B6B" stroke-width="2"/>
+    </svg>
 
     <div class="kerala-container" id="keralaContainer">
-        <svg class="kerala-svg" viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet">
-            <path d="M 150 100 Q 180 80 220 90 T 280 100 Q 320 110 340 140 L 360 180 Q 370 220 360 260 L 340 320 Q 320 360 280 380 L 240 400 Q 200 410 170 400 L 140 380 Q 120 360 110 330 L 100 280 Q 95 240 100 200 L 110 160 Q 120 120 150 100 Z" />
-        </svg>
+        <div class="halo-ring"></div>
+        <div class="halo-ring"></div>
+        <div class="halo-ring"></div>
+        <div class="halo-ring"></div>
+        <img src="Kerala-map-en.svg" class="kerala-svg" alt="Kerala Map">
     </div>
 
     <div id="welcomeText" class="intro-text">Welcome Kerala</div>
@@ -366,11 +318,14 @@
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d', { alpha: false });
+        const physicsCanvas = document.getElementById('physicsCanvas');
+        const physicsCtx = physicsCanvas.getContext('2d', { alpha: true });
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        physicsCanvas.width = window.innerWidth;
+        physicsCanvas.height = window.innerHeight;
 
-        const ribbonContainer = document.getElementById('ribbonContainer');
         const scissors = document.getElementById('scissors');
         const keralaContainer = document.getElementById('keralaContainer');
         const welcomeText = document.getElementById('welcomeText');
@@ -424,10 +379,96 @@
             }
         }
 
+        class RibbonPiece {
+            constructor(x, y, width, height, vx, vy, rotation, color) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.vx = vx;
+                this.vy = vy;
+                this.rotation = rotation;
+                this.angularVelocity = (Math.random() - 0.5) * 0.2;
+                this.color = color;
+                this.gravity = 0.5;
+                this.opacity = 1;
+            }
+
+            update() {
+                this.vx *= 0.98;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.rotation += this.angularVelocity;
+
+                if (this.y > physicsCanvas.height + 100) {
+                    this.opacity -= 0.02;
+                }
+            }
+
+            draw() {
+                physicsCtx.save();
+                physicsCtx.globalAlpha = this.opacity;
+                physicsCtx.translate(this.x, this.y);
+                physicsCtx.rotate(this.rotation);
+
+                const gradient = physicsCtx.createLinearGradient(-this.width/2, 0, this.width/2, 0);
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(0.5, '#ff8787');
+                gradient.addColorStop(1, this.color);
+
+                physicsCtx.fillStyle = gradient;
+                physicsCtx.shadowBlur = 15;
+                physicsCtx.shadowColor = 'rgba(255, 107, 107, 0.8)';
+                physicsCtx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                physicsCtx.restore();
+            }
+        }
+
+        class Confetti {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 15;
+                this.vy = (Math.random() - 0.5) * 15 - 5;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.angularVelocity = (Math.random() - 0.5) * 0.3;
+                this.size = 8 + Math.random() * 6;
+                this.color = ['#ff6b6b', '#ffd93d', '#6bcf7f', '#4d96ff', '#ff8787', '#a8dadc'][Math.floor(Math.random() * 6)];
+                this.gravity = 0.3;
+                this.opacity = 1;
+            }
+
+            update() {
+                this.vx *= 0.98;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.rotation += this.angularVelocity;
+
+                if (this.y > physicsCanvas.height) {
+                    this.opacity -= 0.02;
+                }
+            }
+
+            draw() {
+                physicsCtx.save();
+                physicsCtx.globalAlpha = this.opacity;
+                physicsCtx.translate(this.x, this.y);
+                physicsCtx.rotate(this.rotation);
+                physicsCtx.fillStyle = this.color;
+                physicsCtx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                physicsCtx.restore();
+            }
+        }
+
         const particles = [];
         for (let i = 0; i < 500; i++) {
             particles.push(new Particle());
         }
+
+        const physicsObjects = [];
+        let animatingPhysics = false;
 
         function animate() {
             requestAnimationFrame(animate);
@@ -441,28 +482,70 @@
             });
         }
 
-        animate();
+        function animatePhysics() {
+            if (!animatingPhysics) return;
 
-        function createConfetti() {
-            const colors = ['#ff6b6b', '#ffd93d', '#6bcf7f', '#4d96ff', '#ff8787', '#a8dadc'];
-            const container = ribbonContainer;
+            physicsCtx.clearRect(0, 0, physicsCanvas.width, physicsCanvas.height);
 
-            for (let i = 0; i < 30; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.setProperty('--tx', `${(Math.random() - 0.5) * 400}px`);
-                confetti.style.setProperty('--ty', `${(Math.random() - 0.5) * 400}px`);
-                container.appendChild(confetti);
+            physicsObjects.forEach((obj, index) => {
+                obj.update();
+                obj.draw();
 
-                setTimeout(() => {
-                    confetti.classList.add('burst');
-                }, 10);
+                if (obj.opacity <= 0) {
+                    physicsObjects.splice(index, 1);
+                }
+            });
 
-                setTimeout(() => {
-                    confetti.remove();
-                }, 1600);
+            if (physicsObjects.length > 0) {
+                requestAnimationFrame(animatePhysics);
+            } else {
+                animatingPhysics = false;
             }
+        }
+
+        function createRibbon() {
+            const centerX = physicsCanvas.width / 2;
+            const centerY = physicsCanvas.height / 2;
+            const ribbonWidth = 600;
+            const ribbonHeight = 15;
+
+            physicsCtx.fillStyle = '#ff6b6b';
+            physicsCtx.shadowBlur = 20;
+            physicsCtx.shadowColor = 'rgba(255, 107, 107, 0.8)';
+
+            const gradient = physicsCtx.createLinearGradient(centerX - ribbonWidth/2, 0, centerX + ribbonWidth/2, 0);
+            gradient.addColorStop(0, '#ff6b6b');
+            gradient.addColorStop(0.5, '#ff8787');
+            gradient.addColorStop(1, '#ff6b6b');
+
+            physicsCtx.fillStyle = gradient;
+            physicsCtx.fillRect(centerX - ribbonWidth/2, centerY - ribbonHeight/2, ribbonWidth, ribbonHeight);
+        }
+
+        function cutRibbon() {
+            const centerX = physicsCanvas.width / 2;
+            const centerY = physicsCanvas.height / 2;
+            const ribbonHeight = 15;
+
+            const pieceWidth = 80;
+            const numPieces = 15;
+
+            for (let i = 0; i < numPieces; i++) {
+                const x = centerX - (numPieces * pieceWidth) / 2 + i * pieceWidth;
+                const vx = (Math.random() - 0.5) * 10;
+                const vy = -5 - Math.random() * 8;
+                const rotation = (Math.random() - 0.5) * 0.5;
+                const color = i % 2 === 0 ? '#ff6b6b' : '#ff8787';
+
+                physicsObjects.push(new RibbonPiece(x, centerY, pieceWidth, ribbonHeight, vx, vy, rotation, color));
+            }
+
+            for (let i = 0; i < 60; i++) {
+                physicsObjects.push(new Confetti(centerX, centerY));
+            }
+
+            animatingPhysics = true;
+            animatePhysics();
         }
 
         function showElement(element, delay, isLast = false) {
@@ -478,67 +561,66 @@
             }, delay);
         }
 
-        let currentTime = 0;
+        function startSequence() {
+            let currentTime = 0;
 
-        setTimeout(() => {
-            ribbonContainer.classList.add('show');
-        }, 500);
-        currentTime = 500;
+            createRibbon();
 
-        setTimeout(() => {
-            scissors.classList.add('show');
-        }, currentTime + 800);
-        currentTime += 800;
+            setTimeout(() => {
+                scissors.classList.add('show');
+            }, 800);
+            currentTime = 800;
 
-        setTimeout(() => {
-            scissors.classList.add('cutting');
-        }, currentTime + 500);
-        currentTime += 500;
+            setTimeout(() => {
+                scissors.classList.add('strike');
+            }, currentTime + 600);
+            currentTime += 600;
 
-        setTimeout(() => {
-            ribbonContainer.classList.add('cut');
-            createConfetti();
-        }, currentTime + 300);
-        currentTime += 300;
+            setTimeout(() => {
+                cutRibbon();
+            }, currentTime + 400);
+            currentTime += 2500;
 
-        setTimeout(() => {
-            ribbonContainer.classList.add('hide');
-        }, currentTime + 1500);
-        currentTime += 2000;
+            setTimeout(() => {
+                keralaContainer.classList.add('show');
+                document.querySelectorAll('.halo-ring').forEach(ring => {
+                    ring.classList.add('animate');
+                });
+            }, currentTime);
 
-        setTimeout(() => {
-            keralaContainer.classList.add('show');
-        }, currentTime);
+            setTimeout(() => {
+                keralaContainer.classList.add('hide');
+            }, currentTime + 4000);
+            currentTime += 4500;
 
-        setTimeout(() => {
-            keralaContainer.classList.add('hide');
-        }, currentTime + 3500);
-        currentTime += 4000;
+            showElement(welcomeText, currentTime);
+            currentTime += 2800;
 
-        showElement(welcomeText, currentTime);
-        currentTime += 2800;
+            showElement(realityText, currentTime);
+            currentTime += 2800;
 
-        showElement(realityText, currentTime);
-        currentTime += 2800;
+            showElement(text1, currentTime);
+            currentTime += 2800;
 
-        showElement(text1, currentTime);
-        currentTime += 2800;
+            showElement(text2, currentTime);
+            currentTime += 2000;
 
-        showElement(text2, currentTime);
-        currentTime += 2000;
+            showElement(text3, currentTime);
+            currentTime += 2000;
 
-        showElement(text3, currentTime);
-        currentTime += 2000;
+            showElement(text4, currentTime);
+            currentTime += 2000;
 
-        showElement(text4, currentTime);
-        currentTime += 2000;
+            showElement(logo, currentTime, true);
+            currentTime += 2000;
 
-        showElement(logo, currentTime, true);
-        currentTime += 2000;
+            setTimeout(() => {
+                startButton.classList.add('show');
+            }, currentTime);
+        }
 
-        setTimeout(() => {
-            startButton.classList.add('show');
-        }, currentTime);
+        animate();
+        setTimeout(startSequence, 500);
 
         startButton.addEventListener('click', () => {
             window.location.href = 'index.html';
@@ -547,6 +629,8 @@
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            physicsCanvas.width = window.innerWidth;
+            physicsCanvas.height = window.innerHeight;
         });
     </script>
 </body>
