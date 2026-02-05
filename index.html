@@ -14,7 +14,7 @@
         body {
             font-family: 'Arial', sans-serif;
             overflow: hidden;
-            background: #ffffff;
+            background: linear-gradient(to bottom, #f5f7fa 0%, #e8ecf1 50%, #f0f4f8 100%);
             color: #333;
         }
 
@@ -24,7 +24,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #ffffff;
+            background: linear-gradient(to bottom, #f5f7fa 0%, #e8ecf1 50%, #f0f4f8 100%);
             z-index: 10000;
             display: flex;
             flex-direction: column;
@@ -78,7 +78,7 @@
             width: 100%;
             height: 100%;
             position: relative;
-            background: #ffffff;
+            background: linear-gradient(to bottom, #f5f7fa 0%, #e8ecf1 50%, #f0f4f8 100%);
         }
 
         #menu-canvas {
@@ -118,38 +118,62 @@
         }
 
         .games-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 400px);
-            gap: 3rem;
-            max-width: 1600px;
-            width: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4rem;
+            max-width: 1400px;
             justify-content: center;
+            align-items: center;
             margin: 0 auto;
         }
 
         .game-card {
             position: relative;
-            width: 400px;
-            height: 300px;
-            background: #ffffff;
-            border: 3px solid #FFB3BA;
-            border-radius: 20px;
+            width: 220px;
+            height: 220px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 4px solid #FFB3BA;
+            border-radius: 50%;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 40px rgba(255, 179, 186, 0.3);
+        }
+
+        .game-card:nth-child(2) {
+            border-color: #BAE1FF;
+            box-shadow: 0 15px 40px rgba(186, 225, 255, 0.3);
+        }
+
+        .game-card:nth-child(3) {
+            border-color: #BAFFC9;
+            box-shadow: 0 15px 40px rgba(186, 255, 201, 0.3);
+        }
+
+        .game-card:nth-child(4) {
+            border-color: #E0BBE4;
+            box-shadow: 0 15px 40px rgba(224, 187, 228, 0.3);
+        }
+
+        .game-card:nth-child(5) {
+            border-color: #FFDEBA;
+            box-shadow: 0 15px 40px rgba(255, 222, 186, 0.3);
+        }
+
+        .game-card:nth-child(6) {
+            border-color: #FEC8D8;
+            box-shadow: 0 15px 40px rgba(254, 200, 216, 0.3);
         }
 
         .game-card:hover {
-            transform: scale(1.1) translateY(-10px);
-            border-color: #BAE1FF;
-            box-shadow: 0 20px 60px rgba(186, 225, 255, 0.4);
+            transform: scale(1.15);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
         }
 
         .game-card-content {
             position: relative;
             z-index: 1;
-            padding: 2rem;
+            padding: 1rem;
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -159,42 +183,70 @@
         }
 
         .game-title {
-            font-size: 2rem;
+            font-size: 1.3rem;
             font-weight: bold;
-            margin-bottom: 1rem;
-            color: #FFB3BA;
+            margin-top: 0.5rem;
+            color: #555;
+            line-height: 1.2;
         }
 
         .game-description {
-            font-size: 1.2rem;
-            color: #666;
-            line-height: 1.5;
+            font-size: 0.9rem;
+            color: #999;
+            line-height: 1.3;
+            margin-top: 0.3rem;
         }
 
-        @media (max-width: 1400px) {
+        @media (max-width: 1200px) {
             .games-grid {
-                grid-template-columns: repeat(2, 400px);
+                gap: 3rem;
+            }
+
+            .game-card {
+                width: 200px;
+                height: 200px;
             }
         }
 
         @media (max-width: 900px) {
             .games-grid {
-                grid-template-columns: 400px;
+                gap: 2rem;
+            }
+
+            .game-card {
+                width: 180px;
+                height: 180px;
             }
 
             .title {
                 font-size: 4rem;
             }
+
+            .game-title {
+                font-size: 1.1rem;
+            }
+
+            .game-description {
+                font-size: 0.8rem;
+            }
         }
 
-        @media (max-width: 500px) {
+        @media (max-width: 600px) {
             .games-grid {
-                grid-template-columns: 1fr;
-                padding: 1rem;
+                gap: 1.5rem;
             }
 
             .game-card {
-                max-width: 100%;
+                width: 150px;
+                height: 150px;
+            }
+
+            .title {
+                font-size: 3rem;
+            }
+
+            .subtitle {
+                font-size: 1.5rem;
             }
         }
 
@@ -238,10 +290,10 @@
                     </div>
                 </div>
 
-                <div class="game-card" data-game="music-maker">
+                <div class="game-card" data-game="coloring-book">
                     <div class="game-card-content">
-                        <div class="game-title">Music Maker</div>
-                        <div class="game-description">Create sounds and beats</div>
+                        <div class="game-title">Coloring Book</div>
+                        <div class="game-description">Draw with crayons</div>
                     </div>
                 </div>
 

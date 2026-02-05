@@ -52,8 +52,8 @@ function loadGame(gameName) {
             case 'solar-system':
                 window.location.href = 'solar-system.html';
                 break;
-            case 'music-maker':
-                window.location.href = 'games/music-maker.html';
+            case 'coloring-book':
+                window.location.href = 'games/coloring-book.html';
                 break;
             case 'particle-playground':
                 window.location.href = 'games/particle-playground.html';

@@ -5,55 +5,54 @@ const menuRenderer = new THREE.WebGLRenderer({ canvas: menuCanvas, antialias: tr
 
 menuRenderer.setSize(window.innerWidth, window.innerHeight);
 menuRenderer.setPixelRatio(window.devicePixelRatio);
-menuRenderer.setClearColor(0xffffff);
+menuRenderer.setClearColor(0xf5f7fa);
 menuCamera.position.z = 60;
 
-const menuAmbientLight = new THREE.AmbientLight(0xffffff, 0.6);
+const menuAmbientLight = new THREE.AmbientLight(0xffffff, 1.2);
 menuScene.add(menuAmbientLight);
 
-const menuPointLight = new THREE.PointLight(0xffffff, 0.8, 150);
-menuPointLight.position.set(20, 20, 20);
-menuScene.add(menuPointLight);
+const menuPointLight1 = new THREE.PointLight(0xBAE1FF, 0.5, 100);
+menuPointLight1.position.set(-20, 20, 20);
+menuScene.add(menuPointLight1);
+
+const menuPointLight2 = new THREE.PointLight(0xFFB3BA, 0.5, 100);
+menuPointLight2.position.set(20, -20, 20);
+menuScene.add(menuPointLight2);
 
 const pastelColors = [
-    0xFFB3BA,
-    0xFFDFBA,
-    0xFFFFBA,
-    0xBAFFC9,
     0xBAE1FF,
+    0xFFB3BA,
     0xE0BBE4,
-    0xFEC8D8,
-    0xFFAACC,
-    0xAADDFF
+    0xBAFFC9
 ];
 
 const menuSpheres = [];
-const menuSphereCount = 20;
+const menuSphereCount = 10;
 
 for (let i = 0; i < menuSphereCount; i++) {
-    const size = Math.random() * 3 + 1.5;
-    const geometry = new THREE.SphereGeometry(size, 32, 32);
+    const size = 3 + Math.random() * 3;
+    const geometry = new THREE.SphereGeometry(size, 64, 64);
     const material = new THREE.MeshPhongMaterial({
-        color: pastelColors[Math.floor(Math.random() * pastelColors.length)],
-        shininess: 60,
+        color: pastelColors[i % pastelColors.length],
+        shininess: 100,
         transparent: true,
-        opacity: 0.7
+        opacity: 0.5
     });
 
     const sphere = new THREE.Mesh(geometry, material);
 
     sphere.position.set(
-        (Math.random() - 0.5) * 100,
-        (Math.random() - 0.5) * 60,
-        (Math.random() - 0.5) * 40 - 20
+        (Math.random() - 0.5) * 80,
+        (Math.random() - 0.5) * 50,
+        (Math.random() - 0.5) * 30
     );
 
     sphere.userData = {
-        speedX: (Math.random() - 0.5) * 0.05,
-        speedY: (Math.random() - 0.5) * 0.05,
+        originalX: sphere.position.x,
         originalY: sphere.position.y,
-        floatSpeed: Math.random() * 0.02 + 0.01,
-        floatRange: Math.random() * 5 + 3
+        floatSpeed: 0.3 + Math.random() * 0.2,
+        floatRange: 2 + Math.random() * 2,
+        offset: Math.random() * Math.PI * 2
     };
 
     menuScene.add(sphere);
@@ -62,16 +61,16 @@ for (let i = 0; i < menuSphereCount; i++) {
 
 let menuTime = 0;
 function animateMenu() {
-    menuTime += 0.01;
+    menuTime += 0.005;
 
     menuSpheres.forEach((sphere, index) => {
-        sphere.position.x += sphere.userData.speedX;
-        sphere.position.y = sphere.userData.originalY + Math.sin(menuTime * sphere.userData.floatSpeed + index) * sphere.userData.floatRange;
+        sphere.position.y = sphere.userData.originalY +
+            Math.sin(menuTime * sphere.userData.floatSpeed + sphere.userData.offset) * sphere.userData.floatRange;
 
-        if (sphere.position.x > 50) sphere.position.x = -50;
-        if (sphere.position.x < -50) sphere.position.x = 50;
+        sphere.position.x = sphere.userData.originalX +
+            Math.sin(menuTime * 0.5 + sphere.userData.offset) * 1;
 
-        const scale = 1 + Math.sin(menuTime * 1.5 + index) * 0.05;
+        const scale = 1 + Math.sin(menuTime + index) * 0.02;
         sphere.scale.set(scale, scale, scale);
     });
 
