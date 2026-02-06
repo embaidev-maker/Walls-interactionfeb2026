@@ -238,24 +238,17 @@
         <div class="controls-content">
             <div class="control-group">
                 <label class="control-label">
-                    Cloud Density
+                    Flow Turbulence
                     <span class="control-value" id="turbulenceValue">60</span>
                 </label>
                 <input type="range" id="turbulenceSlider" min="0" max="100" value="60">
             </div>
             <div class="control-group">
                 <label class="control-label">
-                    Drift Speed
+                    Flow Speed
                     <span class="control-value" id="waveSpeedValue">50</span>
                 </label>
                 <input type="range" id="waveSpeedSlider" min="10" max="100" value="50">
-            </div>
-            <div class="control-group">
-                <label class="control-label">
-                    Interaction Force
-                    <span class="control-value" id="interactionValue">250</span>
-                </label>
-                <input type="range" id="interactionSlider" min="50" max="500" value="250">
             </div>
             <div class="control-group">
                 <label class="control-label">
@@ -284,113 +277,80 @@
 
     <script>
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d', { alpha: false });
+        const ctx = canvas.getContext('2d');
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
         let turbulenceForce = 60;
         let waveSpeed = 50;
-        let interactionForce = 250;
         let targetParticleCount = 1200;
         let colorStart = { r: 50, g: 205, b: 50 };
         let colorEnd = { r: 34, g: 139, b: 34 };
         let touchedColor = { r: 255, g: 140, b: 0 };
-        const interactionPoints = [];
         const touchPoints = [];
         let animationTime = 0;
+        let mx = canvas.width / 2;
+        let my = canvas.height / 2;
 
         class Particle {
             constructor() {
-                this.reset();
+                this.reset(true);
             }
 
-            reset() {
-                this.baseX = Math.random() * canvas.width;
-                this.baseY = Math.random() * canvas.height;
-                this.baseZ = Math.random();
-                this.x = this.baseX;
-                this.y = this.baseY;
-                this.z = this.baseZ;
+            reset(spawn = false) {
+                const radius = spawn
+                    ? Math.sqrt(Math.random()) * Math.min(canvas.width, canvas.height) * 0.5
+                    : Math.random() * Math.min(canvas.width, canvas.height) * 0.55;
+                const angle = Math.random() * Math.PI * 2;
+
+                this.x = canvas.width / 2 + Math.cos(angle) * radius;
+                this.y = canvas.height / 2 + Math.sin(angle) * radius;
                 this.vx = 0;
                 this.vy = 0;
-                this.vz = 0;
 
-                const depth = this.baseZ;
-                this.size = (0.8 + Math.random() * 2) * (0.5 + depth * 1.5);
-                this.opacity = (0.3 + Math.random() * 0.7) * (0.4 + depth * 0.6);
+                this.z = Math.random();
+                this.size = (1.5 + Math.random() * 2.5) * (0.6 + this.z * 0.8);
+                this.opacity = (0.4 + Math.random() * 0.6) * (0.5 + this.z * 0.5);
 
-                this.phaseX = Math.random() * Math.PI * 2;
-                this.phaseY = Math.random() * Math.PI * 2;
-                this.phaseZ = Math.random() * Math.PI * 2;
-                this.frequency = 0.0008 + Math.random() * 0.0015;
-                this.noise = Math.random() * Math.PI * 2;
-                this.noiseSpeed = 0.008 + Math.random() * 0.015;
+                this.hue = Math.random() * 30;
+                this.speed = (0.8 + Math.random() * 1.5) * (waveSpeed / 50);
+                this.life = 300 + Math.random() * 500;
+                this.age = 0;
 
                 this.touched = false;
                 this.touchProgress = 0;
             }
 
             update(time) {
-                const turbulence = turbulenceForce / 100;
                 const speedFactor = waveSpeed / 50;
+                const turbulence = turbulenceForce / 100;
 
-                this.noise += this.noiseSpeed * speedFactor * 0.3;
+                const dx = (this.x - mx) / Math.max(150, Math.min(canvas.width, canvas.height) * 0.6);
+                const dy = (this.y - my) / Math.max(150, Math.min(canvas.width, canvas.height) * 0.6);
+                const r = Math.hypot(dx, dy) + 1e-6;
 
-                const depthFactor = 0.3 + this.baseZ * 0.7;
+                const flowAngle =
+                    Math.sin(3 * dx + time * 0.5 * turbulence) +
+                    Math.cos(3 * dy - time * 0.7 * turbulence) +
+                    Math.sin(2.2 * r - time * 1.2 * turbulence);
 
-                const driftX = Math.sin(this.noise * 0.5) * 0.8 * speedFactor * depthFactor;
-                const driftY = Math.cos(this.noise * 0.7) * 0.8 * speedFactor * depthFactor;
-                const driftZ = Math.sin(this.noise * 0.3) * 0.002 * speedFactor;
+                const direction = flowAngle + r * 2.5;
+                const ax = Math.cos(direction);
+                const ay = Math.sin(direction);
 
-                const cloudOffsetX = Math.sin(time * 0.0001 + this.phaseX) * 100 * turbulence * depthFactor;
-                const cloudOffsetY = Math.cos(time * 0.00008 + this.phaseY) * 100 * turbulence * depthFactor;
-                const cloudOffsetZ = Math.sin(time * 0.00006 + this.phaseZ) * 0.15 * turbulence;
-
-                const perlinX = Math.sin(this.baseY * 0.002 + time * 0.0002) * Math.cos(time * 0.00015 + this.phaseX) * 60 * turbulence * depthFactor;
-                const perlinY = Math.cos(this.baseX * 0.002 + time * 0.00015) * Math.sin(time * 0.0001 + this.phaseY) * 60 * turbulence * depthFactor;
-
-                let forceX = 0;
-                let forceY = 0;
-
-                interactionPoints.forEach(point => {
-                    const dx = this.x - point.x;
-                    const dy = this.y - point.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    const maxDistance = point.radius * (0.5 + this.z * 0.5);
-
-                    if (distance < maxDistance) {
-                        const force = (1 - distance / maxDistance) * point.strength * (0.5 + this.z * 0.5);
-                        const angle = Math.atan2(dy, dx);
-                        forceX += Math.cos(angle) * force;
-                        forceY += Math.sin(angle) * force;
-                    }
-                });
-
-                const targetX = this.baseX + cloudOffsetX + perlinX + forceX;
-                const targetY = this.baseY + cloudOffsetY + perlinY + forceY;
-                const targetZ = Math.max(0, Math.min(1, this.baseZ + cloudOffsetZ));
-
-                this.vx += driftX;
-                this.vy += driftY;
-                this.vz += driftZ;
-
-                this.vx += (targetX - this.x) * 0.008;
-                this.vy += (targetY - this.y) * 0.008;
-                this.vz += (targetZ - this.z) * 0.004;
-
-                this.vx *= 0.96;
-                this.vy *= 0.96;
-                this.vz *= 0.97;
+                this.vx = this.vx * 0.88 + ax * this.speed * speedFactor;
+                this.vy = this.vy * 0.88 + ay * this.speed * speedFactor;
 
                 this.x += this.vx;
                 this.y += this.vy;
-                this.z += this.vz;
 
-                if (this.baseX < -200 || this.baseX > canvas.width + 200 ||
-                    this.baseY < -200 || this.baseY > canvas.height + 200) {
+                if (this.x < -30 || this.x > canvas.width + 30 ||
+                    this.y < -30 || this.y > canvas.height + 30) {
                     this.reset();
                 }
+
+                if (++this.age > this.life) this.reset();
 
                 let nearTouchPoint = false;
                 touchPoints.forEach(point => {
@@ -414,7 +374,8 @@
             }
 
             draw() {
-                const depthScale = 0.3 + this.z * 0.7;
+                const speed = Math.hypot(this.vx, this.vy);
+                const depthScale = 0.5 + this.z * 0.5;
                 const size = this.size * depthScale;
                 const alpha = this.opacity * depthScale;
 
@@ -431,21 +392,26 @@
                 ctx.globalAlpha = alpha;
 
                 const gradient = ctx.createRadialGradient(
-                    this.x - size * 0.3, this.y - size * 0.3, 0,
-                    this.x, this.y, size
+                    this.x - size * 0.35, this.y - size * 0.35, 0,
+                    this.x, this.y, size * 1.2
                 );
 
-                const highlightR = Math.min(255, r + 80);
-                const highlightG = Math.min(255, g + 80);
-                const highlightB = Math.min(255, b + 80);
+                const highlightR = Math.min(255, r + 100);
+                const highlightG = Math.min(255, g + 100);
+                const highlightB = Math.min(255, b + 100);
+
+                const shadowR = Math.floor(r * 0.4);
+                const shadowG = Math.floor(g * 0.4);
+                const shadowB = Math.floor(b * 0.4);
 
                 gradient.addColorStop(0, `rgba(${highlightR}, ${highlightG}, ${highlightB}, 1)`);
-                gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, 1)`);
-                gradient.addColorStop(1, `rgba(${Math.floor(r * 0.6)}, ${Math.floor(g * 0.6)}, ${Math.floor(b * 0.6)}, 0.8)`);
+                gradient.addColorStop(0.3, `rgba(${r}, ${g}, ${b}, 1)`);
+                gradient.addColorStop(0.7, `rgba(${Math.floor(r * 0.7)}, ${Math.floor(g * 0.7)}, ${Math.floor(b * 0.7)}, 0.95)`);
+                gradient.addColorStop(1, `rgba(${shadowR}, ${shadowG}, ${shadowB}, 0.7)`);
 
                 ctx.fillStyle = gradient;
-                ctx.shadowBlur = 20 * depthScale;
-                ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                ctx.shadowBlur = 25 * depthScale * (1 + speed * 0.5);
+                ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${alpha * 0.8})`;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
                 ctx.fill();
@@ -464,18 +430,10 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            animationTime++;
+            animationTime += 0.007;
 
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.04)';
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.12)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            for (let i = interactionPoints.length - 1; i >= 0; i--) {
-                interactionPoints[i].life--;
-                interactionPoints[i].strength *= 0.94;
-                if (interactionPoints[i].life <= 0) {
-                    interactionPoints.splice(i, 1);
-                }
-            }
 
             for (let i = touchPoints.length - 1; i >= 0; i--) {
                 touchPoints[i].life--;
@@ -490,53 +448,33 @@
             });
         }
 
-        function addParticleInteraction(x, y, strength) {
-            interactionPoints.push({
-                x: x,
-                y: y,
-                radius: 250,
-                strength: strength,
-                life: 20
-            });
-        }
-
-        function addTouchColorChange(x, y, radius = 150) {
+        function addTouchColorChange(x, y, radius = 120) {
             touchPoints.push({
                 x: x,
                 y: y,
                 radius: radius,
-                life: 120
+                life: 90
             });
         }
 
-        function handleInteraction(e) {
+        canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
+            mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+            my = (e.clientY - rect.top) * (canvas.height / rect.height);
+        });
 
-            if (e.touches) {
-                for (let i = 0; i < e.touches.length; i++) {
-                    const touch = e.touches[i];
-                    const x = (touch.clientX - rect.left) * scaleX;
-                    const y = (touch.clientY - rect.top) * scaleY;
-                    addParticleInteraction(x, y, interactionForce);
-                }
-            } else {
-                const x = (e.clientX - rect.left) * scaleX;
-                const y = (e.clientY - rect.top) * scaleY;
-                addParticleInteraction(x, y, interactionForce);
-            }
-        }
-
-        canvas.addEventListener('mousemove', handleInteraction);
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            handleInteraction(e);
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            if (touch) {
+                mx = (touch.clientX - rect.left) * (canvas.width / rect.width);
+                my = (touch.clientY - rect.top) * (canvas.height / rect.height);
+            }
         }, { passive: false });
 
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            handleInteraction(e);
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
@@ -544,6 +482,8 @@
                 const touch = e.touches[i];
                 const x = (touch.clientX - rect.left) * scaleX;
                 const y = (touch.clientY - rect.top) * scaleY;
+                mx = x;
+                my = y;
                 addTouchColorChange(x, y);
             }
         }, { passive: false });
@@ -573,8 +513,6 @@
         const turbulenceValue = document.getElementById('turbulenceValue');
         const waveSpeedSlider = document.getElementById('waveSpeedSlider');
         const waveSpeedValue = document.getElementById('waveSpeedValue');
-        const interactionSlider = document.getElementById('interactionSlider');
-        const interactionValue = document.getElementById('interactionValue');
         const particleCountSlider = document.getElementById('particleCountSlider');
         const particleCountValue = document.getElementById('particleCountValue');
         const colorStartInput = document.getElementById('colorStart');
@@ -594,11 +532,6 @@
         waveSpeedSlider.addEventListener('input', (e) => {
             waveSpeed = parseFloat(e.target.value);
             waveSpeedValue.textContent = Math.round(waveSpeed);
-        });
-
-        interactionSlider.addEventListener('input', (e) => {
-            interactionForce = parseFloat(e.target.value);
-            interactionValue.textContent = Math.round(interactionForce);
         });
 
         particleCountSlider.addEventListener('input', (e) => {
@@ -625,6 +558,8 @@
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            mx = canvas.width / 2;
+            my = canvas.height / 2;
         });
 
         animate();
