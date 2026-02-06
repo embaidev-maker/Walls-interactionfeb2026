@@ -25,7 +25,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            cursor: crosshair;
+            cursor: default;
+            will-change: contents;
         }
 
         .controls-panel {
@@ -253,45 +254,37 @@
             <div class="control-group">
                 <label class="control-label">
                     Particle Count
-                    <span class="control-value" id="particleCountValue">800</span>
+                    <span class="control-value" id="particleCountValue">2000</span>
                 </label>
-                <input type="range" id="particleCountSlider" min="200" max="2000" value="800" step="100">
+                <input type="range" id="particleCountSlider" min="500" max="5000" value="2000" step="100">
             </div>
             <div class="control-group">
-                <label class="control-label">Color Start (Base)</label>
+                <label class="control-label">Color Start</label>
                 <input type="color" id="colorStart" value="#32cd32">
             </div>
             <div class="control-group">
-                <label class="control-label">Color End (Base)</label>
+                <label class="control-label">Color End</label>
                 <input type="color" id="colorEnd" value="#228b22">
-            </div>
-            <div class="control-group">
-                <label class="control-label">Touch Color</label>
-                <input type="color" id="touchColor" value="#ff8c00">
             </div>
         </div>
     </div>
 
-    <div class="info-text">Move to interact • Click or touch to change particle colors • Multi-touch supported</div>
+    <div class="info-text">Autonomous particle flow field • Adjust controls to customize</div>
     <button class="back-button" onclick="window.location.href='../index.html'">Back to Menu</button>
 
     <script>
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
         let turbulenceForce = 60;
         let waveSpeed = 50;
-        let targetParticleCount = 800;
+        let targetParticleCount = 2000;
         let colorStart = { r: 50, g: 205, b: 50 };
         let colorEnd = { r: 34, g: 139, b: 34 };
-        let touchedColor = { r: 255, g: 140, b: 0 };
-        const touchPoints = [];
         let animationTime = 0;
-        let mx = canvas.width / 2;
-        let my = canvas.height / 2;
 
         class Particle {
             constructor() {
@@ -305,15 +298,17 @@
                 this.vy = (Math.random() - 0.5) * 0.5;
 
                 this.z = Math.random();
-                this.size = (1.2 + Math.random() * 1.8) * (0.7 + this.z * 0.6);
-                this.opacity = (0.5 + Math.random() * 0.5) * (0.6 + this.z * 0.4);
+                this.size = 1.5 + Math.random() * 2;
+                this.opacity = 0.4 + Math.random() * 0.4;
 
-                this.speed = (0.6 + Math.random() * 1.2) * (waveSpeed / 50);
-                this.life = 400 + Math.random() * 600;
+                this.speed = (0.5 + Math.random() * 1.0) * (waveSpeed / 50);
+                this.life = 500 + Math.random() * 700;
                 this.age = 0;
 
-                this.touched = false;
-                this.touchProgress = 0;
+                const t = this.z;
+                this.r = colorStart.r + (colorEnd.r - colorStart.r) * t;
+                this.g = colorStart.g + (colorEnd.g - colorStart.g) * t;
+                this.b = colorStart.b + (colorEnd.b - colorStart.b) * t;
             }
 
             update(time) {
@@ -323,21 +318,15 @@
                 const normX = this.x / canvas.width;
                 const normY = this.y / canvas.height;
 
-                const dx = (this.x - mx) / (canvas.width * 0.4);
-                const dy = (this.y - my) / (canvas.height * 0.4);
-                const distToMouse = Math.sqrt(dx * dx + dy * dy);
-
                 const flowAngle =
                     Math.sin(2.5 * normX + time * 0.6 * turbulence) +
-                    Math.cos(2.5 * normY - time * 0.8 * turbulence) +
-                    Math.sin(normX * normY * 5 + time * 0.5 * turbulence);
+                    Math.cos(2.5 * normY - time * 0.8 * turbulence);
 
-                const direction = flowAngle + Math.atan2(dy, dx) * 0.3;
-                const ax = Math.cos(direction);
-                const ay = Math.sin(direction);
+                const ax = Math.cos(flowAngle);
+                const ay = Math.sin(flowAngle);
 
-                this.vx = this.vx * 0.85 + ax * this.speed * speedFactor;
-                this.vy = this.vy * 0.85 + ay * this.speed * speedFactor;
+                this.vx = this.vx * 0.92 + ax * this.speed * speedFactor * 0.08;
+                this.vy = this.vy * 0.92 + ay * this.speed * speedFactor * 0.08;
 
                 this.x += this.vx;
                 this.y += this.vy;
@@ -348,56 +337,13 @@
                 }
 
                 if (++this.age > this.life) this.reset();
-
-                let nearTouchPoint = false;
-                for (let i = 0; i < touchPoints.length; i++) {
-                    const point = touchPoints[i];
-                    const dx = this.x - point.x;
-                    const dy = this.y - point.y;
-                    const distSq = dx * dx + dy * dy;
-                    if (distSq < point.radius * point.radius) {
-                        nearTouchPoint = true;
-                        break;
-                    }
-                }
-
-                if (nearTouchPoint) {
-                    this.touchProgress = Math.min(1, this.touchProgress + 0.1);
-                } else {
-                    this.touchProgress = Math.max(0, this.touchProgress - 0.02);
-                }
             }
 
             draw() {
-                const depthScale = 0.6 + this.z * 0.4;
-                const size = this.size * depthScale;
-                const alpha = this.opacity * depthScale;
-
-                const t = this.z;
-                const baseR = colorStart.r + (colorEnd.r - colorStart.r) * t;
-                const baseG = colorStart.g + (colorEnd.g - colorStart.g) * t;
-                const baseB = colorStart.b + (colorEnd.b - colorStart.b) * t;
-
-                const r = baseR + (touchedColor.r - baseR) * this.touchProgress;
-                const g = baseG + (touchedColor.g - baseG) * this.touchProgress;
-                const b = baseB + (touchedColor.b - baseB) * this.touchProgress;
-
-                ctx.globalAlpha = alpha;
-
-                const gradient = ctx.createRadialGradient(
-                    this.x - size * 0.3, this.y - size * 0.3, 0,
-                    this.x, this.y, size * 1.1
-                );
-
-                gradient.addColorStop(0, `rgb(${r + 80}, ${g + 80}, ${b + 80})`);
-                gradient.addColorStop(0.5, `rgb(${r}, ${g}, ${b})`);
-                gradient.addColorStop(1, `rgb(${r * 0.5}, ${g * 0.5}, ${b * 0.5})`);
-
-                ctx.fillStyle = gradient;
+                ctx.fillStyle = `rgba(${this.r}, ${this.g}, ${this.b}, ${this.opacity})`;
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.globalAlpha = 1;
             }
         }
 
@@ -412,17 +358,10 @@
 
         function animate() {
             requestAnimationFrame(animate);
-            animationTime += 0.008;
+            animationTime += 0.01;
 
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.18)';
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.2)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            for (let i = touchPoints.length - 1; i >= 0; i--) {
-                touchPoints[i].life--;
-                if (touchPoints[i].life <= 0) {
-                    touchPoints.splice(i, 1);
-                }
-            }
 
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update(animationTime);
@@ -430,57 +369,6 @@
             }
         }
 
-        function addTouchColorChange(x, y, radius = 100) {
-            touchPoints.push({
-                x: x,
-                y: y,
-                radius: radius,
-                life: 60
-            });
-        }
-
-        let scaleX = 1, scaleY = 1, rectLeft = 0, rectTop = 0;
-
-        function updateCanvasScale() {
-            const rect = canvas.getBoundingClientRect();
-            scaleX = canvas.width / rect.width;
-            scaleY = canvas.height / rect.height;
-            rectLeft = rect.left;
-            rectTop = rect.top;
-        }
-        updateCanvasScale();
-
-        canvas.addEventListener('mousemove', (e) => {
-            mx = (e.clientX - rectLeft) * scaleX;
-            my = (e.clientY - rectTop) * scaleY;
-        });
-
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            if (touch) {
-                mx = (touch.clientX - rectLeft) * scaleX;
-                my = (touch.clientY - rectTop) * scaleY;
-            }
-        }, { passive: false });
-
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            for (let i = 0; i < e.touches.length; i++) {
-                const touch = e.touches[i];
-                const x = (touch.clientX - rectLeft) * scaleX;
-                const y = (touch.clientY - rectTop) * scaleY;
-                mx = x;
-                my = y;
-                addTouchColorChange(x, y);
-            }
-        }, { passive: false });
-
-        canvas.addEventListener('click', (e) => {
-            const x = (e.clientX - rectLeft) * scaleX;
-            const y = (e.clientY - rectTop) * scaleY;
-            addTouchColorChange(x, y);
-        });
 
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -502,7 +390,6 @@
         const particleCountValue = document.getElementById('particleCountValue');
         const colorStartInput = document.getElementById('colorStart');
         const colorEndInput = document.getElementById('colorEnd');
-        const touchColorInput = document.getElementById('touchColor');
 
         controlsHeader.addEventListener('click', () => {
             controlsPanel.classList.toggle('collapsed');
@@ -527,25 +414,33 @@
 
         colorStartInput.addEventListener('input', (e) => {
             const rgb = hexToRgb(e.target.value);
-            if (rgb) colorStart = rgb;
+            if (rgb) {
+                colorStart = rgb;
+                particles.forEach(p => {
+                    const t = p.z;
+                    p.r = colorStart.r + (colorEnd.r - colorStart.r) * t;
+                    p.g = colorStart.g + (colorEnd.g - colorStart.g) * t;
+                    p.b = colorStart.b + (colorEnd.b - colorStart.b) * t;
+                });
+            }
         });
 
         colorEndInput.addEventListener('input', (e) => {
             const rgb = hexToRgb(e.target.value);
-            if (rgb) colorEnd = rgb;
-        });
-
-        touchColorInput.addEventListener('input', (e) => {
-            const rgb = hexToRgb(e.target.value);
-            if (rgb) touchedColor = rgb;
+            if (rgb) {
+                colorEnd = rgb;
+                particles.forEach(p => {
+                    const t = p.z;
+                    p.r = colorStart.r + (colorEnd.r - colorStart.r) * t;
+                    p.g = colorStart.g + (colorEnd.g - colorStart.g) * t;
+                    p.b = colorStart.b + (colorEnd.b - colorStart.b) * t;
+                });
+            }
         });
 
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            mx = canvas.width / 2;
-            my = canvas.height / 2;
-            updateCanvasScale();
         });
 
         animate();
