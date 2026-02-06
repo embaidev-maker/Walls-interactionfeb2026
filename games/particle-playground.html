@@ -284,6 +284,29 @@
                 </label>
                 <input type="range" id="touchRadiusSlider" min="50" max="300" value="150" step="10">
             </div>
+
+            <div class="control-group" style="margin-top: 20px; border-top: 2px solid rgba(255,255,255,0.2); padding-top: 20px;">
+                <label class="control-label">Paint Mode</label>
+                <button id="paintModeToggle" style="width: 100%; padding: 10px; background: rgba(100,100,100,0.5); color: white; border: 2px solid white; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+                    OFF
+                </button>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">
+                    Brush Size
+                    <span class="control-value" id="brushSizeValue">20</span>
+                </label>
+                <input type="range" id="brushSizeSlider" min="5" max="50" value="20" step="1">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">
+                    Brush Density
+                    <span class="control-value" id="brushDensityValue">5</span>
+                </label>
+                <input type="range" id="brushDensitySlider" min="1" max="15" value="5" step="1">
+            </div>
         </div>
     </div>
 
@@ -307,6 +330,13 @@
         let touchRadius = 150;
         const touchPoints = [];
         let animationTime = 0;
+        let paintMode = false;
+        let brushSize = 20;
+        let brushDensity = 5;
+        let lastPaintPos = { x: 0, y: 0 };
+        let isPainting = false;
+        let mousePos = { x: -100, y: -100 };
+        let showCursor = false;
 
         class Particle {
             constructor() {
@@ -431,6 +461,19 @@
                 particles[i].update(animationTime);
                 particles[i].draw();
             }
+
+            if (paintMode && showCursor) {
+                ctx.strokeStyle = `rgba(${touchedColor.r}, ${touchedColor.g}, ${touchedColor.b}, 0.8)`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(mousePos.x, mousePos.y, brushSize, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(mousePos.x, mousePos.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${touchedColor.r}, ${touchedColor.g}, ${touchedColor.b}, 1)`;
+                ctx.fill();
+            }
         }
 
 
@@ -453,6 +496,33 @@
             });
         }
 
+        function paintBrush(x, y) {
+            if (isPainting) {
+                const dx = x - lastPaintPos.x;
+                const dy = y - lastPaintPos.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const steps = Math.max(1, Math.floor(dist / 5));
+
+                for (let i = 0; i < steps; i++) {
+                    const t = i / steps;
+                    const px = lastPaintPos.x + dx * t;
+                    const py = lastPaintPos.y + dy * t;
+
+                    for (let j = 0; j < brushDensity; j++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const radius = Math.random() * brushSize;
+                        const offsetX = Math.cos(angle) * radius;
+                        const offsetY = Math.sin(angle) * radius;
+
+                        particles.push(new Particle(px + offsetX, py + offsetY, touchedColor.r, touchedColor.g, touchedColor.b));
+                    }
+                }
+            }
+
+            lastPaintPos.x = x;
+            lastPaintPos.y = y;
+        }
+
         let scaleX = 1, scaleY = 1, rectLeft = 0, rectTop = 0;
 
         function updateCanvasScale() {
@@ -466,11 +536,19 @@
 
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            isPainting = true;
             for (let i = 0; i < e.touches.length; i++) {
                 const touch = e.touches[i];
                 const x = (touch.clientX - rectLeft) * scaleX;
                 const y = (touch.clientY - rectTop) * scaleY;
-                addTouchColorChange(x, y, touchRadius, touchForce);
+
+                if (paintMode) {
+                    lastPaintPos.x = x;
+                    lastPaintPos.y = y;
+                    paintBrush(x, y);
+                } else {
+                    addTouchColorChange(x, y, touchRadius, touchForce);
+                }
             }
         }, { passive: false });
 
@@ -480,14 +558,57 @@
                 const touch = e.touches[i];
                 const x = (touch.clientX - rectLeft) * scaleX;
                 const y = (touch.clientY - rectTop) * scaleY;
-                addTouchColorChange(x, y, touchRadius * 0.8, touchForce * 1.2);
+
+                if (paintMode) {
+                    paintBrush(x, y);
+                } else {
+                    addTouchColorChange(x, y, touchRadius * 0.8, touchForce * 1.2);
+                }
             }
         }, { passive: false });
 
-        canvas.addEventListener('click', (e) => {
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isPainting = false;
+        }, { passive: false });
+
+        canvas.addEventListener('mousedown', (e) => {
+            isPainting = true;
             const x = (e.clientX - rectLeft) * scaleX;
             const y = (e.clientY - rectTop) * scaleY;
-            addTouchColorChange(x, y, touchRadius, touchForce);
+
+            if (paintMode) {
+                lastPaintPos.x = x;
+                lastPaintPos.y = y;
+                paintBrush(x, y);
+            } else {
+                addTouchColorChange(x, y, touchRadius, touchForce);
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const x = (e.clientX - rectLeft) * scaleX;
+            const y = (e.clientY - rectTop) * scaleY;
+            mousePos.x = x;
+            mousePos.y = y;
+            showCursor = true;
+
+            if (isPainting && paintMode) {
+                paintBrush(x, y);
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isPainting = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isPainting = false;
+            showCursor = false;
+        });
+
+        canvas.addEventListener('mouseenter', () => {
+            showCursor = true;
         });
 
         const controlsPanel = document.getElementById('controlsPanel');
@@ -506,6 +627,11 @@
         const touchForceValue = document.getElementById('touchForceValue');
         const touchRadiusSlider = document.getElementById('touchRadiusSlider');
         const touchRadiusValue = document.getElementById('touchRadiusValue');
+        const paintModeToggle = document.getElementById('paintModeToggle');
+        const brushSizeSlider = document.getElementById('brushSizeSlider');
+        const brushSizeValue = document.getElementById('brushSizeValue');
+        const brushDensitySlider = document.getElementById('brushDensitySlider');
+        const brushDensityValue = document.getElementById('brushDensityValue');
 
         controlsHeader.addEventListener('click', () => {
             controlsPanel.classList.toggle('collapsed');
@@ -567,6 +693,23 @@
         touchRadiusSlider.addEventListener('input', (e) => {
             touchRadius = parseFloat(e.target.value);
             touchRadiusValue.textContent = Math.round(touchRadius);
+        });
+
+        paintModeToggle.addEventListener('click', () => {
+            paintMode = !paintMode;
+            paintModeToggle.textContent = paintMode ? 'ON' : 'OFF';
+            paintModeToggle.style.background = paintMode ? 'rgba(50,200,50,0.7)' : 'rgba(100,100,100,0.5)';
+            canvas.style.cursor = paintMode ? 'none' : 'default';
+        });
+
+        brushSizeSlider.addEventListener('input', (e) => {
+            brushSize = parseFloat(e.target.value);
+            brushSizeValue.textContent = Math.round(brushSize);
+        });
+
+        brushDensitySlider.addEventListener('input', (e) => {
+            brushDensity = parseInt(e.target.value);
+            brushDensityValue.textContent = brushDensity;
         });
 
         window.addEventListener('resize', () => {
