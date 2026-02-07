@@ -3,419 +3,808 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Room Sorter - Tidy Up!</title>
+<title>Room Cleanup</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-  background:#ffecd2;
-  overflow:hidden;
-  -webkit-user-select:none;user-select:none;
-  touch-action:none;
-  width:100vw;height:100vh;
-}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
+body{-webkit-user-select:none;user-select:none;touch-action:none;background:#1a1a2e}
 
-.game-area{position:relative;width:100vw;height:100vh;overflow:hidden}
+#roomCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:0}
 
-.rooms-row{
-  position:absolute;bottom:0;left:0;right:0;
-  display:flex;height:48%;
-}
+.game-layer{position:absolute;inset:0;z-index:10}
 
-.room{
-  flex:1;position:relative;
-  border-top:6px solid #a0522d;
-  overflow:hidden;
-  transition:box-shadow .3s ease;
-}
-.room.highlight{box-shadow:inset 0 0 40px rgba(255,255,100,.5)}
-
-.room-bg{position:absolute;inset:0;z-index:0}
-
-.room-bedroom .room-bg{background:linear-gradient(180deg,#e8d5f5 0%,#d4b8e8 100%)}
-.room-kitchen .room-bg{background:linear-gradient(180deg,#fff8e1 0%,#ffe0b2 100%)}
-.room-living .room-bg{background:linear-gradient(180deg,#e0f2f1 0%,#b2dfdb 100%)}
-
-.room-label{
-  position:absolute;top:10px;left:50%;transform:translateX(-50%);
-  font-size:clamp(16px,2.5vw,24px);font-weight:800;
-  padding:6px 20px;border-radius:20px;z-index:5;
-  white-space:nowrap;letter-spacing:1px;
-}
-.room-bedroom .room-label{background:#ce93d8;color:#4a148c}
-.room-kitchen .room-label{background:#ffb74d;color:#e65100}
-.room-living .room-label{background:#80cbc4;color:#004d40}
-
-.room-count{
-  position:absolute;bottom:8px;right:12px;
-  font-size:14px;font-weight:700;z-index:5;
-  color:rgba(0,0,0,.45);
-}
-
-.items-area{
-  position:absolute;top:0;left:0;right:0;
-  height:52%;
-  background:
-    repeating-linear-gradient(90deg,transparent,transparent 79px,rgba(139,90,43,.08) 79px,rgba(139,90,43,.08) 80px),
-    repeating-linear-gradient(0deg,transparent,transparent 79px,rgba(139,90,43,.08) 79px,rgba(139,90,43,.08) 80px),
-    linear-gradient(180deg,#ffe8cc 0%,#fdd9a8 100%);
-  border-bottom:4px dashed #c8956c;
-}
-
-.items-label{
-  position:absolute;top:12px;left:50%;transform:translateX(-50%);
-  font-size:18px;font-weight:700;color:#8d6e63;
-  background:rgba(255,255,255,.7);padding:5px 18px;border-radius:16px;
-  pointer-events:none;z-index:10;
-}
-
-.item{
+.target-zone{
   position:absolute;
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  cursor:grab;z-index:50;
-  transition:transform .15s ease,filter .15s ease;
-  will-change:transform;
+  border:3px dashed rgba(255,255,255,.45);
+  border-radius:14px;
+  background:rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+  transition:all .3s ease;
 }
-.item.dragging{
-  z-index:200;cursor:grabbing;
-  filter:drop-shadow(0 8px 20px rgba(0,0,0,.35));
-  transform:scale(1.18);
+.target-zone.active{
+  border-color:rgba(100,255,100,.8);
+  background:rgba(100,255,100,.12);
+  box-shadow:0 0 24px rgba(100,255,100,.25);
+}
+.target-zone.filled{
+  border-color:rgba(100,255,100,.6);
+  background:rgba(100,255,100,.1);
+  border-style:solid;
+}
+.target-label{
+  font-size:clamp(10px,1.3vw,14px);font-weight:700;
+  color:rgba(255,255,255,.55);text-align:center;
+  pointer-events:none;
+}
+.target-zone.filled .target-label{display:none}
+
+.drag-item{
+  position:absolute;
+  cursor:grab;z-index:100;
+  transition:transform .2s ease,filter .2s ease;
+}
+.drag-item:hover{filter:brightness(1.15) drop-shadow(0 4px 12px rgba(255,255,255,.3))}
+.drag-item.dragging{
+  z-index:500;cursor:grabbing;
+  filter:brightness(1.2) drop-shadow(0 12px 30px rgba(0,0,0,.6));
   transition:none;
 }
-.item.placed{
-  z-index:30;cursor:default;
-  animation:popIn .4s ease;
+.drag-item.placed{
+  cursor:default;z-index:50;
+  animation:snapIn .4s ease;
 }
-.item.wrong{animation:shake .4s ease}
-.item-svg{width:clamp(50px,6vw,80px);height:clamp(50px,6vw,80px)}
-.item-name{
-  font-size:clamp(10px,1.4vw,13px);font-weight:700;
-  color:#5d4037;background:rgba(255,255,255,.85);
-  padding:2px 8px;border-radius:8px;white-space:nowrap;
-}
-.item.placed .item-name{color:#2e7d32;background:rgba(200,255,200,.9)}
+.drag-item.wrong{animation:reject .4s ease}
+.drag-item svg{display:block}
 
-@keyframes popIn{
-  0%{transform:scale(0.4);opacity:.5}
-  60%{transform:scale(1.15)}
+@keyframes snapIn{
+  0%{transform:scale(.6);opacity:.6}
+  60%{transform:scale(1.12)}
   100%{transform:scale(1);opacity:1}
 }
-@keyframes shake{
+@keyframes reject{
   0%,100%{transform:translateX(0)}
-  20%{transform:translateX(-12px)}
-  40%{transform:translateX(10px)}
-  60%{transform:translateX(-8px)}
-  80%{transform:translateX(5px)}
+  20%{transform:translateX(-14px) rotate(-3deg)}
+  40%{transform:translateX(12px) rotate(3deg)}
+  60%{transform:translateX(-8px) rotate(-2deg)}
+  80%{transform:translateX(5px) rotate(1deg)}
 }
 
 .hud{
-  position:absolute;top:12px;left:12px;right:12px;
+  position:absolute;top:14px;left:14px;right:14px;
   display:flex;justify-content:space-between;align-items:flex-start;
-  z-index:300;pointer-events:none;
+  z-index:600;pointer-events:none;
 }
 .hud>*{pointer-events:auto}
 
 .hud-box{
-  background:rgba(255,255,255,.92);
-  border:3px solid #c8956c;border-radius:16px;
-  padding:8px 16px;text-align:center;
-  box-shadow:0 4px 12px rgba(0,0,0,.12);
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(12px);
+  border:2px solid rgba(255,255,255,.15);
+  border-radius:14px;padding:10px 18px;text-align:center;
 }
-.hud-label{font-size:11px;font-weight:600;color:#8d6e63;text-transform:uppercase}
-.hud-val{font-size:clamp(22px,3vw,32px);font-weight:800;color:#5d4037}
-.hud-val.danger{color:#d32f2f;animation:pulse .5s ease infinite alternate}
-@keyframes pulse{to{transform:scale(1.08)}}
+.hud-label{font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px}
+.hud-val{font-size:clamp(20px,3vw,30px);font-weight:800;color:white}
 
-.touch-badge{
-  position:absolute;top:12px;left:50%;transform:translateX(-50%);
-  background:rgba(255,255,255,.88);border:2px solid #a1887f;
-  border-radius:12px;padding:5px 14px;font-size:12px;font-weight:700;color:#6d4c41;
-  z-index:300;opacity:0;transition:opacity .3s;
+.room-title{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  font-size:clamp(18px,3vw,28px);font-weight:800;
+  color:white;text-shadow:0 2px 10px rgba(0,0,0,.5);
+  z-index:600;pointer-events:none;
+  padding:8px 24px;
+  background:rgba(0,0,0,.4);
+  backdrop-filter:blur(10px);
+  border:2px solid rgba(255,255,255,.15);
+  border-radius:16px;
 }
-.touch-badge.visible{opacity:1}
 
 .btn-back{
-  position:absolute;bottom:calc(48% + 10px);left:12px;
-  padding:10px 22px;font-size:14px;font-weight:700;
-  background:rgba(255,255,255,.85);border:3px solid #a1887f;
-  color:#5d4037;border-radius:30px;cursor:pointer;z-index:300;
+  position:absolute;bottom:16px;left:16px;
+  padding:12px 26px;font-size:14px;font-weight:700;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(10px);
+  border:2px solid rgba(255,255,255,.2);
+  color:white;border-radius:30px;cursor:pointer;z-index:600;
   transition:all .3s;
 }
-.btn-back:hover{background:#fff;transform:scale(1.05)}
+.btn-back:hover{background:rgba(0,0,0,.7);transform:scale(1.05)}
+
+.progress-wrap{
+  position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  width:clamp(200px,35vw,350px);z-index:600;text-align:center;
+}
+.progress-bar{
+  width:100%;height:12px;
+  background:rgba(0,0,0,.4);
+  border:2px solid rgba(255,255,255,.15);
+  border-radius:10px;overflow:hidden;
+}
+.progress-fill{
+  height:100%;border-radius:10px;
+  transition:width .35s ease;width:0;
+}
+.progress-text{
+  font-size:12px;font-weight:600;color:rgba(255,255,255,.65);margin-top:4px;
+}
 
 .overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.8);
+  position:fixed;inset:0;background:rgba(0,0,0,.82);
   display:none;justify-content:center;align-items:center;z-index:5000;
 }
 .overlay.show{display:flex}
-
 .overlay-box{
-  text-align:center;padding:clamp(24px,4vw,48px);
-  background:linear-gradient(135deg,#fff8e1,#ffe0b2);
-  border:6px solid #ffb74d;border-radius:28px;
-  max-width:500px;width:90%;
-  box-shadow:0 20px 60px rgba(0,0,0,.4);
-  animation:boxBounce .5s ease;
+  text-align:center;padding:clamp(28px,4vw,48px);
+  border-radius:28px;max-width:480px;width:90%;
+  animation:boxPop .45s ease;
 }
-@keyframes boxBounce{
-  0%{transform:scale(.5) rotate(-5deg);opacity:0}
-  60%{transform:scale(1.05) rotate(1deg)}
+@keyframes boxPop{
+  0%{transform:scale(.5) rotate(-4deg);opacity:0}
+  60%{transform:scale(1.06) rotate(1deg)}
   100%{transform:scale(1) rotate(0);opacity:1}
 }
-.overlay-title{font-size:clamp(28px,5vw,42px);font-weight:800;color:#e65100;margin-bottom:8px}
-.overlay-msg{font-size:clamp(16px,2.5vw,20px);color:#5d4037;margin-bottom:20px;line-height:1.5}
+.overlay-title{font-size:clamp(30px,5vw,44px);font-weight:800;margin-bottom:10px}
+.overlay-msg{font-size:clamp(16px,2.5vw,20px);margin-bottom:24px;line-height:1.6}
 .overlay-btn{
   padding:14px 36px;font-size:18px;font-weight:700;
-  background:#ff9800;color:white;border:none;border-radius:50px;
+  border:none;border-radius:50px;
   cursor:pointer;transition:all .3s;margin:6px;
-  box-shadow:0 4px 12px rgba(255,152,0,.4);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
 }
-.overlay-btn:hover{background:#f57c00;transform:scale(1.06)}
-.overlay-btn.secondary{background:#8d6e63;box-shadow:0 4px 12px rgba(141,110,99,.4)}
-.overlay-btn.secondary:hover{background:#6d4c41}
+.overlay-btn:hover{transform:scale(1.06)}
+.overlay-btn.primary{background:#4caf50;color:white}
+.overlay-btn.secondary{background:rgba(255,255,255,.15);color:white;border:2px solid rgba(255,255,255,.3)}
 
-.progress-wrap{
-  position:absolute;bottom:calc(48% + 10px);left:50%;transform:translateX(-50%);
-  width:clamp(200px,40vw,400px);z-index:300;text-align:center;
+.touch-badge{
+  position:absolute;top:70px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.5);backdrop-filter:blur(10px);
+  border:2px solid rgba(255,255,255,.15);
+  border-radius:12px;padding:5px 14px;
+  font-size:12px;font-weight:600;color:rgba(255,255,255,.65);
+  z-index:600;opacity:0;transition:opacity .3s;
 }
-.progress-bar{
-  width:100%;height:14px;background:rgba(255,255,255,.6);
-  border:2px solid #a1887f;border-radius:10px;overflow:hidden;
-}
-.progress-fill{
-  height:100%;background:linear-gradient(90deg,#66bb6a,#43a047);
-  border-radius:10px;transition:width .35s ease;width:0;
-}
-.progress-text{font-size:12px;font-weight:700;color:#5d4037;margin-top:4px}
+.touch-badge.visible{opacity:1}
 
-@media(max-width:768px){
-  .rooms-row{height:42%}
-  .items-area{height:58%}
-  .btn-back{bottom:calc(42% + 10px)}
-  .progress-wrap{bottom:calc(42% + 10px)}
+.sparkle{
+  position:absolute;pointer-events:none;z-index:400;
+  animation:sparkleOut .7s ease-out forwards;
+}
+@keyframes sparkleOut{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  100%{transform:translate(var(--sx),var(--sy)) scale(0);opacity:0}
 }
 </style>
 </head>
 <body>
-<div class="game-area" id="gameArea">
 
-  <div class="items-area" id="itemsArea">
-    <div class="items-label">Drag items to the correct room!</div>
-  </div>
+<canvas id="roomCanvas"></canvas>
 
-  <div class="rooms-row" id="roomsRow">
-    <div class="room room-bedroom" data-room="bedroom">
-      <div class="room-bg"></div>
-      <div class="room-label">Bedroom</div>
-      <div class="room-count" id="count-bedroom">0/3</div>
-    </div>
-    <div class="room room-kitchen" data-room="kitchen">
-      <div class="room-bg"></div>
-      <div class="room-label">Kitchen</div>
-      <div class="room-count" id="count-kitchen">0/3</div>
-    </div>
-    <div class="room room-living" data-room="living">
-      <div class="room-bg"></div>
-      <div class="room-label">Living Room</div>
-      <div class="room-count" id="count-living">0/3</div>
-    </div>
-  </div>
-
+<div class="game-layer" id="gameLayer">
   <div class="hud">
     <div class="hud-box">
-      <div class="hud-label">Score</div>
-      <div class="hud-val" id="scoreVal">0</div>
+      <div class="hud-label">Sorted</div>
+      <div class="hud-val" id="scoreVal">0/5</div>
     </div>
     <div class="hud-box">
-      <div class="hud-label">Time Left</div>
-      <div class="hud-val" id="timerVal">2:00</div>
+      <div class="hud-label">Time</div>
+      <div class="hud-val" id="timerVal">0:00</div>
     </div>
   </div>
 
+  <div class="room-title" id="roomTitle">Room</div>
   <div class="touch-badge" id="touchBadge">Touches: 0</div>
 
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="progress-text" id="progressText">0 / 9 items sorted</div>
+    <div class="progress-text" id="progressText">0 / 5 items placed</div>
   </div>
 
   <button class="btn-back" onclick="location.href='../index.html'">Menu</button>
 </div>
 
 <div class="overlay" id="winOverlay">
-  <div class="overlay-box">
-    <div class="overlay-title" id="overlayTitle">All Tidy!</div>
+  <div class="overlay-box" id="overlayBox">
+    <div class="overlay-title" id="overlayTitle">Sparkling Clean!</div>
     <div class="overlay-msg" id="overlayMsg"></div>
     <div>
-      <button class="overlay-btn" onclick="location.reload()">Play Again</button>
+      <button class="overlay-btn primary" onclick="location.reload()">Play Again</button>
       <button class="overlay-btn secondary" onclick="location.href='../index.html'">Menu</button>
     </div>
   </div>
 </div>
 
 <script>
-const ITEMS = {
-  bedroom: [
-    { svg: '<svg viewBox="0 0 64 64"><rect x="8" y="28" width="48" height="24" fill="#8B4513" rx="2"/><rect x="12" y="32" width="40" height="16" fill="#D2691E"/><rect x="6" y="52" width="4" height="8" fill="#654321"/><rect x="54" y="52" width="4" height="8" fill="#654321"/></svg>', name: 'Bed' },
-    { svg: '<svg viewBox="0 0 64 64"><rect x="22" y="12" width="20" height="6" fill="#8B4513" rx="3"/><rect x="24" y="18" width="16" height="24" fill="#A0522D"/><rect x="18" y="42" width="28" height="4" fill="#654321"/><rect x="20" y="46" width="4" height="12" fill="#654321"/><rect x="40" y="46" width="4" height="12" fill="#654321"/></svg>', name: 'Chair' },
-    { svg: '<svg viewBox="0 0 64 64"><circle cx="32" cy="24" r="12" fill="#FFD700"/><path d="M32 36 L32 48 M22 42 L42 42 M28 48 L36 48" stroke="#8B4513" stroke-width="3" fill="none"/><rect x="28" y="48" width="8" height="12" fill="#654321"/></svg>', name: 'Lamp' }
-  ],
-  kitchen: [
-    { svg: '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="36" rx="24" ry="4" fill="#666"/><path d="M8 36 Q8 20 32 20 Q56 20 56 36" fill="#888" stroke="#555" stroke-width="2"/><rect x="30" y="10" width="4" height="12" fill="#333"/></svg>', name: 'Pan' },
-    { svg: '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="44" rx="18" ry="3" fill="#E8E8E8"/><rect x="28" y="44" width="8" height="4" fill="#C0C0C0"/><path d="M32 12 L28 44 M32 12 L36 44" fill="#D3D3D3" stroke="#A9A9A9" stroke-width="2"/><circle cx="32" cy="12" r="6" fill="#FFD700"/></svg>', name: 'Spoon' },
-    { svg: '<svg viewBox="0 0 64 64"><rect x="16" y="24" width="32" height="20" fill="#FF6B6B" rx="2"/><circle cx="32" cy="20" r="8" fill="#FFD93D"/><rect x="28" y="8" width="8" height="12" fill="#8B4513"/></svg>', name: 'Pot' }
-  ],
-  living: [
-    { svg: '<svg viewBox="0 0 64 64"><rect x="12" y="20" width="40" height="28" fill="#2C3E50"/><rect x="14" y="22" width="36" height="24" fill="#3498DB"/><rect x="28" y="48" width="8" height="8" fill="#34495E"/><rect x="20" y="56" width="24" height="4" fill="#2C3E50"/></svg>', name: 'TV' },
-    { svg: '<svg viewBox="0 0 64 64"><rect x="8" y="28" width="48" height="20" fill="#E74C3C" rx="4"/><rect x="12" y="32" width="40" height="12" fill="#C0392B"/><rect x="6" y="48" width="4" height="8" fill="#8B4513"/><rect x="54" y="48" width="4" height="8" fill="#8B4513"/><circle cx="16" cy="36" r="3" fill="#D35400"/><circle cx="48" cy="36" r="3" fill="#D35400"/></svg>', name: 'Sofa' },
-    { svg: '<svg viewBox="0 0 64 64"><rect x="16" y="16" width="32" height="28" fill="#8B4513" rx="2"/><rect x="20" y="20" width="24" height="20" fill="#DEB887"/><path d="M24 28 L28 32 L40 20" stroke="#654321" stroke-width="2" fill="none"/><rect x="30" y="44" width="4" height="12" fill="#654321"/></svg>', name: 'Table' }
-  ]
+const params = new URLSearchParams(window.location.search);
+const roomType = params.get('room') || 'bedroom';
+
+const cvs = document.getElementById('roomCanvas');
+const ctx = cvs.getContext('2d');
+const gameLayer = document.getElementById('gameLayer');
+let W, H;
+
+const ROOM_CONFIGS = {
+  bedroom: {
+    name: 'Bedroom Cleanup',
+    wall: '#e8d4c8',
+    wallAccent: '#d4bfb0',
+    floor: '#b8956a',
+    floorAccent: '#a6845c',
+    trim: '#8b6f52',
+    progressColor: 'linear-gradient(90deg,#ce93d8,#ab47bc)',
+    overlayBg: 'linear-gradient(135deg,#f3e5f5,#e1bee7)',
+    overlayBorder: '#ce93d8',
+    overlayTitleColor: '#7b1fa2',
+    items: [
+      {
+        name: 'Pillow',
+        svg: '<svg viewBox="0 0 90 60" width="90" height="60"><rect x="5" y="10" width="80" height="40" rx="20" fill="#E3F2FD" stroke="#90CAF9" stroke-width="2"/><ellipse cx="20" cy="30" rx="8" ry="12" fill="none" stroke="#BBDEFB" stroke-width="1.5"/><ellipse cx="70" cy="30" rx="8" ry="12" fill="none" stroke="#BBDEFB" stroke-width="1.5"/></svg>',
+        startX: 0.72, startY: 0.78,
+        targetX: 0.18, targetY: 0.42,
+        targetW: 100, targetH: 70,
+        targetLabel: 'Pillow here'
+      },
+      {
+        name: 'Teddy Bear',
+        svg: '<svg viewBox="0 0 70 80" width="70" height="80"><circle cx="20" cy="18" r="10" fill="#A1887F"/><circle cx="50" cy="18" r="10" fill="#A1887F"/><ellipse cx="35" cy="45" rx="22" ry="28" fill="#8D6E63"/><circle cx="28" cy="38" r="4" fill="#3E2723"/><circle cx="42" cy="38" r="4" fill="#3E2723"/><ellipse cx="35" cy="48" rx="5" ry="4" fill="#5D4037"/><ellipse cx="18" cy="60" rx="8" ry="10" fill="#8D6E63"/><ellipse cx="52" cy="60" rx="8" ry="10" fill="#8D6E63"/></svg>',
+        startX: 0.55, startY: 0.82,
+        targetX: 0.78, targetY: 0.38,
+        targetW: 80, targetH: 90,
+        targetLabel: 'Teddy here'
+      },
+      {
+        name: 'Book',
+        svg: '<svg viewBox="0 0 60 72" width="60" height="72"><rect x="8" y="4" width="44" height="64" rx="3" fill="#1565C0"/><rect x="12" y="8" width="36" height="56" fill="#E3F2FD"/><line x1="16" y1="20" x2="44" y2="20" stroke="#90CAF9" stroke-width="2"/><line x1="16" y1="28" x2="40" y2="28" stroke="#90CAF9" stroke-width="2"/><line x1="16" y1="36" x2="38" y2="36" stroke="#90CAF9" stroke-width="2"/><rect x="5" y="4" width="6" height="64" rx="2" fill="#0D47A1"/></svg>',
+        startX: 0.38, startY: 0.88,
+        targetX: 0.62, targetY: 0.34,
+        targetW: 70, targetH: 80,
+        targetLabel: 'Book here'
+      },
+      {
+        name: 'Shoes',
+        svg: '<svg viewBox="0 0 90 50" width="90" height="50"><path d="M5 35 Q5 15 25 15 L45 15 Q55 15 55 25 L55 35 Q55 45 45 45 L15 45 Q5 45 5 35Z" fill="#795548"/><path d="M50 35 Q50 15 70 15 L85 15 Q90 15 90 25 L90 35 Q90 45 80 45 L60 45 Q50 45 50 35Z" fill="#795548"/><rect x="5" y="33" width="50" height="5" rx="2" fill="#5D4037"/><rect x="50" y="33" width="40" height="5" rx="2" fill="#5D4037"/></svg>',
+        startX: 0.45, startY: 0.72,
+        targetX: 0.85, targetY: 0.82,
+        targetW: 100, targetH: 60,
+        targetLabel: 'Shoes here'
+      },
+      {
+        name: 'Blanket',
+        svg: '<svg viewBox="0 0 100 70" width="100" height="70"><path d="M5 10 Q50 5 95 10 L95 55 Q50 65 5 55Z" fill="#CE93D8" stroke="#AB47BC" stroke-width="2"/><path d="M15 18 Q50 14 85 18" stroke="#E1BEE7" stroke-width="2" fill="none"/><path d="M15 30 Q50 26 85 30" stroke="#E1BEE7" stroke-width="2" fill="none"/><path d="M15 42 Q50 38 85 42" stroke="#E1BEE7" stroke-width="2" fill="none"/></svg>',
+        startX: 0.15, startY: 0.85,
+        targetX: 0.28, targetY: 0.52,
+        targetW: 110, targetH: 80,
+        targetLabel: 'Blanket here'
+      }
+    ],
+    drawRoom: drawBedroom
+  },
+  kitchen: {
+    name: 'Kitchen Cleanup',
+    wall: '#FFF8E1',
+    wallAccent: '#FFF3C4',
+    floor: '#D7CCC8',
+    floorAccent: '#BCAAA4',
+    trim: '#8D6E63',
+    progressColor: 'linear-gradient(90deg,#FFB74D,#FF9800)',
+    overlayBg: 'linear-gradient(135deg,#FFF8E1,#FFE0B2)',
+    overlayBorder: '#FFB74D',
+    overlayTitleColor: '#E65100',
+    items: [
+      {
+        name: 'Frying Pan',
+        svg: '<svg viewBox="0 0 100 65" width="100" height="65"><circle cx="40" cy="35" r="25" fill="#616161" stroke="#424242" stroke-width="2"/><circle cx="40" cy="35" r="20" fill="#757575"/><rect x="62" y="30" width="35" height="10" rx="4" fill="#4E342E"/></svg>',
+        startX: 0.65, startY: 0.82,
+        targetX: 0.30, targetY: 0.40,
+        targetW: 110, targetH: 75,
+        targetLabel: 'Pan on stove'
+      },
+      {
+        name: 'Plate',
+        svg: '<svg viewBox="0 0 80 80" width="80" height="80"><circle cx="40" cy="40" r="35" fill="#ECEFF1" stroke="#B0BEC5" stroke-width="2"/><circle cx="40" cy="40" r="25" fill="#FAFAFA"/><circle cx="40" cy="40" r="12" fill="none" stroke="#CFD8DC" stroke-width="1.5"/></svg>',
+        startX: 0.42, startY: 0.75,
+        targetX: 0.72, targetY: 0.35,
+        targetW: 90, targetH: 90,
+        targetLabel: 'Plate here'
+      },
+      {
+        name: 'Cup',
+        svg: '<svg viewBox="0 0 60 70" width="60" height="70"><rect x="10" y="10" width="32" height="45" rx="4" fill="#E3F2FD" stroke="#42A5F5" stroke-width="2"/><path d="M42 20 Q55 20 55 35 Q55 50 42 50" fill="none" stroke="#42A5F5" stroke-width="2"/><ellipse cx="26" cy="12" rx="16" ry="4" fill="#BBDEFB" stroke="#42A5F5" stroke-width="1.5"/></svg>',
+        startX: 0.22, startY: 0.88,
+        targetX: 0.55, targetY: 0.38,
+        targetW: 70, targetH: 80,
+        targetLabel: 'Cup here'
+      },
+      {
+        name: 'Cutting Board',
+        svg: '<svg viewBox="0 0 80 60" width="80" height="60"><rect x="5" y="8" width="70" height="44" rx="8" fill="#D7CCC8" stroke="#8D6E63" stroke-width="2"/><rect x="12" y="14" width="56" height="32" rx="4" fill="#EFEBE9"/><circle cx="68" cy="10" r="5" fill="none" stroke="#8D6E63" stroke-width="2"/></svg>',
+        startX: 0.78, startY: 0.72,
+        targetX: 0.48, targetY: 0.44,
+        targetW: 90, targetH: 70,
+        targetLabel: 'Board here'
+      },
+      {
+        name: 'Apple',
+        svg: '<svg viewBox="0 0 55 60" width="55" height="60"><circle cx="28" cy="34" r="22" fill="#E53935"/><circle cx="18" cy="28" r="8" fill="#EF5350" opacity=".5"/><path d="M28 12 Q28 4 34 4" stroke="#4E342E" stroke-width="2.5" fill="none"/><ellipse cx="35" cy="10" rx="8" ry="5" fill="#66BB6A" transform="rotate(-20 35 10)"/></svg>',
+        startX: 0.12, startY: 0.78,
+        targetX: 0.82, targetY: 0.68,
+        targetW: 65, targetH: 70,
+        targetLabel: 'Apple in bowl'
+      }
+    ],
+    drawRoom: drawKitchen
+  },
+  living: {
+    name: 'Living Room Cleanup',
+    wall: '#E8F5E9',
+    wallAccent: '#C8E6C9',
+    floor: '#BCAAA4',
+    floorAccent: '#A1887F',
+    trim: '#6D4C41',
+    progressColor: 'linear-gradient(90deg,#80CBC4,#26A69A)',
+    overlayBg: 'linear-gradient(135deg,#E0F2F1,#B2DFDB)',
+    overlayBorder: '#80CBC4',
+    overlayTitleColor: '#00695C',
+    items: [
+      {
+        name: 'Remote',
+        svg: '<svg viewBox="0 0 35 90" width="35" height="90"><rect x="3" y="3" width="29" height="84" rx="6" fill="#37474F" stroke="#263238" stroke-width="2"/><circle cx="17" cy="20" r="6" fill="#F44336"/><rect x="10" y="35" width="6" height="4" rx="1" fill="#78909C"/><rect x="19" y="35" width="6" height="4" rx="1" fill="#78909C"/><rect x="10" y="43" width="6" height="4" rx="1" fill="#78909C"/><rect x="19" y="43" width="6" height="4" rx="1" fill="#78909C"/><rect x="10" y="51" width="6" height="4" rx="1" fill="#78909C"/><rect x="19" y="51" width="6" height="4" rx="1" fill="#78909C"/></svg>',
+        startX: 0.68, startY: 0.85,
+        targetX: 0.42, targetY: 0.62,
+        targetW: 50, targetH: 100,
+        targetLabel: 'Remote here'
+      },
+      {
+        name: 'Cushion',
+        svg: '<svg viewBox="0 0 80 80" width="80" height="80"><rect x="5" y="5" width="70" height="70" rx="16" fill="#FF8A65" stroke="#E64A19" stroke-width="2"/><rect x="15" y="15" width="50" height="50" rx="10" fill="none" stroke="#FFAB91" stroke-width="2"/><line x1="5" y1="5" x2="20" y2="20" stroke="#E64A19" stroke-width="1.5"/><line x1="75" y1="5" x2="60" y2="20" stroke="#E64A19" stroke-width="1.5"/><line x1="5" y1="75" x2="20" y2="60" stroke="#E64A19" stroke-width="1.5"/><line x1="75" y1="75" x2="60" y2="60" stroke="#E64A19" stroke-width="1.5"/></svg>',
+        startX: 0.22, startY: 0.88,
+        targetX: 0.25, targetY: 0.52,
+        targetW: 90, targetH: 90,
+        targetLabel: 'Cushion here'
+      },
+      {
+        name: 'Book',
+        svg: '<svg viewBox="0 0 55 68" width="55" height="68"><rect x="6" y="4" width="42" height="60" rx="3" fill="#2E7D32"/><rect x="10" y="8" width="34" height="52" fill="#E8F5E9"/><line x1="14" y1="18" x2="40" y2="18" stroke="#A5D6A7" stroke-width="2"/><line x1="14" y1="26" x2="36" y2="26" stroke="#A5D6A7" stroke-width="2"/><line x1="14" y1="34" x2="38" y2="34" stroke="#A5D6A7" stroke-width="2"/><rect x="3" y="4" width="6" height="60" rx="2" fill="#1B5E20"/></svg>',
+        startX: 0.52, startY: 0.80,
+        targetX: 0.82, targetY: 0.35,
+        targetW: 65, targetH: 78,
+        targetLabel: 'Book here'
+      },
+      {
+        name: 'Toy Car',
+        svg: '<svg viewBox="0 0 90 55" width="90" height="55"><rect x="12" y="18" width="66" height="22" rx="4" fill="#F44336"/><path d="M22 18 Q30 4 45 4 Q60 4 68 18" fill="#EF5350"/><rect x="28" y="8" width="14" height="10" rx="2" fill="#90CAF9" opacity=".7"/><rect x="48" y="8" width="14" height="10" rx="2" fill="#90CAF9" opacity=".7"/><circle cx="25" cy="42" r="8" fill="#37474F"/><circle cx="25" cy="42" r="4" fill="#78909C"/><circle cx="65" cy="42" r="8" fill="#37474F"/><circle cx="65" cy="42" r="4" fill="#78909C"/></svg>',
+        startX: 0.78, startY: 0.75,
+        targetX: 0.12, targetY: 0.78,
+        targetW: 100, targetH: 65,
+        targetLabel: 'Car in toy box'
+      },
+      {
+        name: 'Flower Pot',
+        svg: '<svg viewBox="0 0 60 80" width="60" height="80"><path d="M15 40 L10 75 Q10 78 15 78 L45 78 Q50 78 50 75 L45 40Z" fill="#E65100" stroke="#BF360C" stroke-width="2"/><rect x="8" y="36" width="44" height="8" rx="3" fill="#BF360C"/><circle cx="30" cy="22" r="14" fill="#66BB6A"/><circle cx="22" cy="16" r="8" fill="#81C784"/><circle cx="38" cy="16" r="8" fill="#81C784"/><circle cx="30" cy="10" r="6" fill="#A5D6A7"/><rect x="28" y="22" width="4" height="16" fill="#4E342E"/></svg>',
+        startX: 0.38, startY: 0.72,
+        targetX: 0.58, targetY: 0.30,
+        targetW: 70, targetH: 90,
+        targetLabel: 'Plant here'
+      }
+    ],
+    drawRoom: drawLiving
+  }
 };
 
-const TOTAL_TIME = 120;
-let timeLeft = TOTAL_TIME;
-let timerInterval = null;
-let gameScore = 0;
-let totalItems = 9;
+const config = ROOM_CONFIGS[roomType] || ROOM_CONFIGS.bedroom;
 let placedCount = 0;
+let totalItems = config.items.length;
+let elapsed = 0;
+let timerInterval = null;
 let gameOver = false;
+let itemEls = [];
+let targetEls = [];
 
-const itemsArea = document.getElementById('itemsArea');
-const gameArea = document.getElementById('gameArea');
-const rooms = document.querySelectorAll('.room');
-const touchBadge = document.getElementById('touchBadge');
+function resize() {
+  W = cvs.width = window.innerWidth;
+  H = cvs.height = window.innerHeight;
+  config.drawRoom(ctx, W, H, config);
+  repositionElements();
+}
 
-const activeDrags = new Map();
-let allItemEls = [];
+function repositionElements() {
+  config.items.forEach((it, i) => {
+    const tEl = targetEls[i];
+    if (tEl) {
+      tEl.style.left = (it.targetX * W - it.targetW / 2) + 'px';
+      tEl.style.top = (it.targetY * H - it.targetH / 2) + 'px';
+      tEl.style.width = it.targetW + 'px';
+      tEl.style.height = it.targetH + 'px';
+    }
+    const dEl = itemEls[i];
+    if (dEl && dEl.dataset.placed === 'false') {
+      dEl.style.left = (it.startX * W - dEl.offsetWidth / 2) + 'px';
+      dEl.style.top = (it.startY * H - dEl.offsetHeight / 2) + 'px';
+    } else if (dEl && dEl.dataset.placed === 'true') {
+      dEl.style.left = (it.targetX * W - dEl.offsetWidth / 2) + 'px';
+      dEl.style.top = (it.targetY * H - dEl.offsetHeight / 2) + 'px';
+    }
+  });
+}
 
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+window.addEventListener('resize', resize);
+
+function drawPerspectiveRoom(ctx, W, H, wallColor, floorColor, trimColor, wallAccent, floorAccent) {
+  const vpX = W * 0.5;
+  const vpY = H * 0.22;
+  const bwL = W * 0.15;
+  const bwR = W * 0.85;
+  const bwT = H * 0.12;
+  const bwB = H * 0.58;
+
+  ctx.fillStyle = wallColor;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = wallAccent;
+  ctx.beginPath();
+  ctx.moveTo(bwL, bwT); ctx.lineTo(bwR, bwT);
+  ctx.lineTo(bwR, bwB); ctx.lineTo(bwL, bwB);
+  ctx.closePath(); ctx.fill();
+
+  const wainscotY = bwT + (bwB - bwT) * 0.6;
+  ctx.fillStyle = trimColor + '22';
+  ctx.fillRect(bwL, wainscotY, bwR - bwL, bwB - wainscotY);
+  ctx.strokeStyle = trimColor + '44';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(bwL, wainscotY); ctx.lineTo(bwR, wainscotY); ctx.stroke();
+
+  ctx.fillStyle = wallColor;
+  ctx.beginPath();
+  ctx.moveTo(0, 0); ctx.lineTo(bwL, bwT);
+  ctx.lineTo(bwL, bwB); ctx.lineTo(0, H);
+  ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle = wallColor;
+  ctx.beginPath();
+  ctx.moveTo(W, 0); ctx.lineTo(bwR, bwT);
+  ctx.lineTo(bwR, bwB); ctx.lineTo(W, H);
+  ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle = floorColor;
+  ctx.beginPath();
+  ctx.moveTo(0, H); ctx.lineTo(bwL, bwB);
+  ctx.lineTo(bwR, bwB); ctx.lineTo(W, H);
+  ctx.closePath(); ctx.fill();
+
+  const tileRows = 6;
+  const tileCols = 8;
+  ctx.strokeStyle = floorAccent;
+  ctx.lineWidth = 1;
+  for (let r = 0; r <= tileRows; r++) {
+    const t = r / tileRows;
+    const lx = 0 + t * (bwL - 0);
+    const rx = W + t * (bwR - W);
+    const y = H + t * (bwB - H);
+    ctx.beginPath(); ctx.moveTo(lx, y); ctx.lineTo(rx, y); ctx.stroke();
   }
-  return arr;
+  for (let c = 0; c <= tileCols; c++) {
+    const t = c / tileCols;
+    const topX = bwL + t * (bwR - bwL);
+    const botX = t * W;
+    ctx.beginPath(); ctx.moveTo(topX, bwB); ctx.lineTo(botX, H); ctx.stroke();
+  }
+
+  ctx.strokeStyle = trimColor;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(0, H); ctx.lineTo(bwL, bwB); ctx.lineTo(bwR, bwB); ctx.lineTo(W, H);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(bwL, bwT); ctx.lineTo(bwR, bwT);
+  ctx.lineTo(bwR, bwB); ctx.lineTo(bwL, bwB); ctx.lineTo(bwL, bwT);
+  ctx.stroke();
+
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(bwL, bwT); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W, 0); ctx.lineTo(bwR, bwT); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(bwL, bwB); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W, H); ctx.lineTo(bwR, bwB); ctx.stroke();
+
+  return { bwL, bwR, bwT, bwB, vpX, vpY };
+}
+
+function drawBedroom(ctx, W, H, cfg) {
+  const r = drawPerspectiveRoom(ctx, W, H, cfg.wall, cfg.floor, cfg.trim, cfg.wallAccent, cfg.floorAccent);
+
+  ctx.fillStyle = '#5D4037';
+  const bedX = r.bwL + 10;
+  const bedY = r.bwB - (r.bwB - r.bwT) * 0.65;
+  const bedW = (r.bwR - r.bwL) * 0.35;
+  const bedH = (r.bwB - r.bwT) * 0.6;
+  ctx.fillRect(bedX, bedY, bedW, bedH);
+  ctx.fillStyle = '#8D6E63';
+  ctx.fillRect(bedX + 4, bedY + 4, bedW - 8, bedH - 4);
+  ctx.fillStyle = '#BCAAA4';
+  ctx.fillRect(bedX + 8, bedY + 8, bedW - 16, bedH * 0.35);
+  ctx.fillStyle = '#5D4037';
+  ctx.fillRect(bedX, bedY, bedW, 12);
+
+  const deskX = r.bwL + (r.bwR - r.bwL) * 0.55;
+  const deskY = r.bwB - (r.bwB - r.bwT) * 0.4;
+  const deskW = (r.bwR - r.bwL) * 0.25;
+  const deskH = (r.bwB - r.bwT) * 0.35;
+  ctx.fillStyle = '#A1887F';
+  ctx.fillRect(deskX, deskY, deskW, 8);
+  ctx.fillStyle = '#8D6E63';
+  ctx.fillRect(deskX + 8, deskY + 8, 8, deskH - 8);
+  ctx.fillRect(deskX + deskW - 16, deskY + 8, 8, deskH - 8);
+
+  const shelfX = r.bwR - (r.bwR - r.bwL) * 0.18;
+  const shelfY = r.bwT + (r.bwB - r.bwT) * 0.2;
+  const shelfW = (r.bwR - r.bwL) * 0.15;
+  ctx.fillStyle = '#6D4C41';
+  ctx.fillRect(shelfX, shelfY, shelfW, 6);
+  ctx.fillRect(shelfX, shelfY + 40, shelfW, 6);
+  ctx.fillRect(shelfX, shelfY, 4, 46);
+  ctx.fillRect(shelfX + shelfW - 4, shelfY, 4, 46);
+
+  const winX = r.bwL + (r.bwR - r.bwL) * 0.35;
+  const winY = r.bwT + 20;
+  const winW = (r.bwR - r.bwL) * 0.2;
+  const winH = (r.bwB - r.bwT) * 0.35;
+  ctx.fillStyle = '#90CAF9';
+  ctx.fillRect(winX, winY, winW, winH);
+  ctx.strokeStyle = '#F5F5F5';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(winX, winY, winW, winH);
+  ctx.beginPath(); ctx.moveTo(winX + winW / 2, winY); ctx.lineTo(winX + winW / 2, winY + winH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(winX, winY + winH / 2); ctx.lineTo(winX + winW, winY + winH / 2); ctx.stroke();
+}
+
+function drawKitchen(ctx, W, H, cfg) {
+  const r = drawPerspectiveRoom(ctx, W, H, cfg.wall, cfg.floor, cfg.trim, cfg.wallAccent, cfg.floorAccent);
+
+  const counterY = r.bwB - (r.bwB - r.bwT) * 0.45;
+  const counterH = (r.bwB - r.bwT) * 0.45;
+  ctx.fillStyle = '#5D4037';
+  ctx.fillRect(r.bwL + 5, counterY, (r.bwR - r.bwL) * 0.6, counterH);
+  ctx.fillStyle = '#BCAAA4';
+  ctx.fillRect(r.bwL + 5, counterY, (r.bwR - r.bwL) * 0.6, 10);
+
+  const stoveX = r.bwL + (r.bwR - r.bwL) * 0.12;
+  const stoveY = counterY + 14;
+  ctx.fillStyle = '#37474F';
+  ctx.fillRect(stoveX, stoveY, 80, 50);
+  for (let i = 0; i < 4; i++) {
+    const cx = stoveX + 15 + (i % 2) * 40;
+    const cy = stoveY + 12 + Math.floor(i / 2) * 22;
+    ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#616161'; ctx.fill();
+    ctx.strokeStyle = '#424242'; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  const fridgeX = r.bwR - (r.bwR - r.bwL) * 0.22;
+  const fridgeY = r.bwT + (r.bwB - r.bwT) * 0.08;
+  const fridgeW = (r.bwR - r.bwL) * 0.18;
+  const fridgeH = (r.bwB - r.bwT) * 0.88;
+  ctx.fillStyle = '#ECEFF1';
+  ctx.fillRect(fridgeX, fridgeY, fridgeW, fridgeH);
+  ctx.strokeStyle = '#B0BEC5';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(fridgeX, fridgeY, fridgeW, fridgeH);
+  ctx.beginPath(); ctx.moveTo(fridgeX, fridgeY + fridgeH * 0.4); ctx.lineTo(fridgeX + fridgeW, fridgeY + fridgeH * 0.4); ctx.stroke();
+  ctx.fillStyle = '#90A4AE';
+  ctx.fillRect(fridgeX + fridgeW - 8, fridgeY + fridgeH * 0.15, 4, 20);
+  ctx.fillRect(fridgeX + fridgeW - 8, fridgeY + fridgeH * 0.55, 4, 20);
+
+  const cabY = r.bwT + 10;
+  const cabH = (r.bwB - r.bwT) * 0.25;
+  for (let c = 0; c < 3; c++) {
+    const cx = r.bwL + 10 + c * ((r.bwR - r.bwL) * 0.18 + 8);
+    ctx.fillStyle = '#8D6E63';
+    ctx.fillRect(cx, cabY, (r.bwR - r.bwL) * 0.17, cabH);
+    ctx.strokeStyle = '#6D4C41';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cx, cabY, (r.bwR - r.bwL) * 0.17, cabH);
+    ctx.fillStyle = '#A1887F';
+    ctx.fillRect(cx + (r.bwR - r.bwL) * 0.07, cabY + cabH - 12, 10, 4);
+  }
+
+  const bowlX = r.bwR - (r.bwR - r.bwL) * 0.42;
+  const bowlY = counterY - 10;
+  ctx.beginPath();
+  ctx.ellipse(bowlX, bowlY + 15, 25, 12, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#FFF9C4';
+  ctx.fill();
+  ctx.strokeStyle = '#F9A825';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function drawLiving(ctx, W, H, cfg) {
+  const r = drawPerspectiveRoom(ctx, W, H, cfg.wall, cfg.floor, cfg.trim, cfg.wallAccent, cfg.floorAccent);
+
+  const sofaX = r.bwL + (r.bwR - r.bwL) * 0.08;
+  const sofaY = r.bwB - (r.bwB - r.bwT) * 0.5;
+  const sofaW = (r.bwR - r.bwL) * 0.38;
+  const sofaH = (r.bwB - r.bwT) * 0.35;
+  ctx.fillStyle = '#5D4037';
+  ctx.fillRect(sofaX, sofaY - 10, sofaW, sofaH + 10);
+  ctx.fillStyle = '#795548';
+  ctx.fillRect(sofaX + 6, sofaY, sofaW - 12, sofaH - 10);
+  ctx.fillStyle = '#8D6E63';
+  ctx.fillRect(sofaX, sofaY - 10, 12, sofaH + 10);
+  ctx.fillRect(sofaX + sofaW - 12, sofaY - 10, 12, sofaH + 10);
+  ctx.fillStyle = '#6D4C41';
+  ctx.fillRect(sofaX + 6, sofaY + sofaH - 12, sofaW - 12, 12);
+
+  const tableX = r.bwL + (r.bwR - r.bwL) * 0.2;
+  const tableY = r.bwB - (r.bwB - r.bwT) * 0.12;
+  const tableW = (r.bwR - r.bwL) * 0.25;
+  ctx.fillStyle = '#A1887F';
+  ctx.fillRect(tableX, tableY, tableW, 10);
+  ctx.fillStyle = '#8D6E63';
+  ctx.fillRect(tableX + 10, tableY + 10, 8, 30);
+  ctx.fillRect(tableX + tableW - 18, tableY + 10, 8, 30);
+
+  const tvX = r.bwL + (r.bwR - r.bwL) * 0.35;
+  const tvY = r.bwT + 15;
+  const tvW = (r.bwR - r.bwL) * 0.3;
+  const tvH = (r.bwB - r.bwT) * 0.35;
+  ctx.fillStyle = '#263238';
+  ctx.fillRect(tvX, tvY, tvW, tvH);
+  ctx.fillStyle = '#37474F';
+  ctx.fillRect(tvX + 6, tvY + 6, tvW - 12, tvH - 12);
+  const tvGrd = ctx.createLinearGradient(tvX + 6, tvY + 6, tvX + tvW - 6, tvY + tvH - 6);
+  tvGrd.addColorStop(0, 'rgba(66,165,245,.15)');
+  tvGrd.addColorStop(1, 'rgba(38,50,56,0)');
+  ctx.fillStyle = tvGrd;
+  ctx.fillRect(tvX + 6, tvY + 6, tvW - 12, tvH - 12);
+
+  ctx.fillStyle = '#455A64';
+  ctx.fillRect(tvX + tvW * 0.35, tvY + tvH, tvW * 0.3, 8);
+  ctx.fillRect(tvX + tvW * 0.2, tvY + tvH + 8, tvW * 0.6, 6);
+
+  const shelfX = r.bwR - (r.bwR - r.bwL) * 0.2;
+  const shelfY = r.bwT + (r.bwB - r.bwT) * 0.1;
+  const shelfW = (r.bwR - r.bwL) * 0.16;
+  const shelfH = (r.bwB - r.bwT) * 0.75;
+  ctx.fillStyle = '#5D4037';
+  ctx.fillRect(shelfX, shelfY, shelfW, shelfH);
+  ctx.fillStyle = '#6D4C41';
+  for (let s = 0; s < 4; s++) {
+    ctx.fillRect(shelfX + 2, shelfY + s * (shelfH / 4), shelfW - 4, 5);
+  }
+
+  const rugCx = tableX + tableW / 2;
+  const rugCy = r.bwB + (H - r.bwB) * 0.35;
+  ctx.beginPath();
+  ctx.ellipse(rugCx, rugCy, (r.bwR - r.bwL) * 0.22, (H - r.bwB) * 0.28, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#8D6E6322';
+  ctx.fill();
+  ctx.strokeStyle = '#8D6E6344';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  const toyBoxX = r.bwL * 0.3;
+  const toyBoxY = H - 80;
+  ctx.fillStyle = '#FFB74D';
+  ctx.fillRect(toyBoxX, toyBoxY, 70, 50);
+  ctx.strokeStyle = '#F57C00';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(toyBoxX, toyBoxY, 70, 50);
+  ctx.fillStyle = '#FF9800';
+  ctx.fillRect(toyBoxX - 3, toyBoxY, 76, 8);
 }
 
 function initGame() {
-  const combined = [];
-  Object.entries(ITEMS).forEach(([room, list]) => {
-    list.forEach(it => combined.push({ ...it, room }));
-  });
-  shuffle(combined);
+  document.getElementById('roomTitle').textContent = config.name;
+  document.getElementById('scoreVal').textContent = '0/' + totalItems;
+  document.getElementById('progressFill').style.background = config.progressColor;
 
-  const areaRect = itemsArea.getBoundingClientRect();
-  const cols = 3;
-  const rows = 3;
-  const cellW = areaRect.width / cols;
-  const cellH = (areaRect.height - 50) / rows;
+  const overlayBox = document.getElementById('overlayBox');
+  overlayBox.style.background = config.overlayBg;
+  overlayBox.style.border = '5px solid ' + config.overlayBorder;
+  document.getElementById('overlayTitle').style.color = config.overlayTitleColor;
 
-  combined.forEach((it, i) => {
+  config.items.forEach((it, i) => {
+    const tz = document.createElement('div');
+    tz.className = 'target-zone';
+    tz.id = 'target-' + i;
+    tz.style.left = (it.targetX * W - it.targetW / 2) + 'px';
+    tz.style.top = (it.targetY * H - it.targetH / 2) + 'px';
+    tz.style.width = it.targetW + 'px';
+    tz.style.height = it.targetH + 'px';
+    tz.innerHTML = '<span class="target-label">' + it.targetLabel + '</span>';
+    gameLayer.appendChild(tz);
+    targetEls.push(tz);
+
     const el = document.createElement('div');
-    el.className = 'item';
-    el.innerHTML = '<div class="item-svg">' + it.svg + '</div><span class="item-name">' + it.name + '</span>';
-    el.dataset.room = it.room;
+    el.className = 'drag-item';
+    el.innerHTML = it.svg;
+    el.dataset.index = i;
     el.dataset.placed = 'false';
 
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x = col * cellW + cellW * 0.5 - 40 + (Math.random() - 0.5) * 20;
-    const y = 50 + row * cellH + cellH * 0.5 - 40 + (Math.random() - 0.5) * 20;
-
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    el.dataset.homeX = x;
-    el.dataset.homeY = y;
-
-    gameArea.appendChild(el);
-    allItemEls.push(el);
+    const jitterX = (Math.random() - 0.5) * 60;
+    const jitterY = (Math.random() - 0.5) * 40;
+    const rotation = (Math.random() - 0.5) * 30;
+    el.style.left = (it.startX * W - 45 + jitterX) + 'px';
+    el.style.top = (it.startY * H - 40 + jitterY) + 'px';
+    el.style.transform = 'rotate(' + rotation + 'deg)';
+    el.dataset.homeX = it.startX * W - 45 + jitterX;
+    el.dataset.homeY = it.startY * H - 40 + jitterY;
+    el.dataset.homeRot = rotation;
+    gameLayer.appendChild(el);
+    itemEls.push(el);
   });
 
-  updateCounts();
-  updateProgress();
   startTimer();
 }
 
-function updateCounts() {
-  ['bedroom', 'kitchen', 'living'].forEach(r => {
-    const total = ITEMS[r].length;
-    const placed = allItemEls.filter(el => el.dataset.room === r && el.dataset.placed === 'true').length;
-    document.getElementById('count-' + r).textContent = placed + '/' + total;
-  });
+function startTimer() {
+  timerInterval = setInterval(() => {
+    if (gameOver) return;
+    elapsed++;
+    const m = Math.floor(elapsed / 60);
+    const s = elapsed % 60;
+    document.getElementById('timerVal').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  }, 1000);
 }
 
 function updateProgress() {
   const pct = totalItems > 0 ? (placedCount / totalItems) * 100 : 0;
   document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressText').textContent = placedCount + ' / ' + totalItems + ' items sorted';
+  document.getElementById('progressText').textContent = placedCount + ' / ' + totalItems + ' items placed';
+  document.getElementById('scoreVal').textContent = placedCount + '/' + totalItems;
 }
 
-function startTimer() {
-  updateTimerDisplay();
-  timerInterval = setInterval(() => {
-    timeLeft--;
-    updateTimerDisplay();
-    if (timeLeft <= 0) endGame(false);
-  }, 1000);
-}
+function checkDrop(el, dropX, dropY) {
+  const idx = parseInt(el.dataset.index);
+  const it = config.items[idx];
+  const tz = targetEls[idx];
+  const tr = tz.getBoundingClientRect();
 
-function updateTimerDisplay() {
-  const m = Math.floor(timeLeft / 60);
-  const s = timeLeft % 60;
-  const el = document.getElementById('timerVal');
-  el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
-  el.classList.toggle('danger', timeLeft <= 15);
-}
+  const cx = tr.left + tr.width / 2;
+  const cy = tr.top + tr.height / 2;
+  const dist = Math.hypot(dropX - cx, dropY - cy);
+  const threshold = Math.max(tr.width, tr.height) * 0.7;
 
-function getRoomAtPoint(x, y) {
-  for (let i = 0; i < rooms.length; i++) {
-    const r = rooms[i].getBoundingClientRect();
-    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return rooms[i];
-  }
-  return null;
-}
-
-function tryPlace(el, dropX, dropY) {
-  const room = getRoomAtPoint(dropX, dropY);
-  if (!room) {
-    sendHome(el);
-    return;
-  }
-
-  const correctRoom = el.dataset.room;
-  const droppedRoom = room.dataset.room;
-
-  if (correctRoom === droppedRoom) {
+  if (dist < threshold) {
     el.dataset.placed = 'true';
-    el.classList.add('placed');
     el.classList.remove('dragging');
+    el.classList.add('placed');
+    el.style.left = (it.targetX * W - el.offsetWidth / 2) + 'px';
+    el.style.top = (it.targetY * H - el.offsetHeight / 2) + 'px';
+    el.style.transform = 'rotate(0deg)';
+    tz.classList.add('filled');
     placedCount++;
-    gameScore += 10;
-    document.getElementById('scoreVal').textContent = gameScore;
-    updateCounts();
     updateProgress();
+    spawnSparkles(dropX, dropY);
     playSound(true);
-
-    const rr = room.getBoundingClientRect();
-    const nx = rr.left + 20 + Math.random() * (rr.width - 120);
-    const ny = rr.top + 50 + Math.random() * (rr.height - 100);
-    el.style.left = nx + 'px';
-    el.style.top = ny + 'px';
-
-    if (placedCount >= totalItems) endGame(true);
+    if (placedCount >= totalItems) endGame();
   } else {
     el.classList.add('wrong');
     playSound(false);
     setTimeout(() => {
-      el.classList.remove('wrong');
-      sendHome(el);
+      el.classList.remove('wrong', 'dragging');
+      el.style.left = el.dataset.homeX + 'px';
+      el.style.top = el.dataset.homeY + 'px';
+      el.style.transform = 'rotate(' + el.dataset.homeRot + 'deg)';
     }, 400);
   }
 }
 
-function sendHome(el) {
-  el.classList.remove('dragging');
-  el.style.left = el.dataset.homeX + 'px';
-  el.style.top = el.dataset.homeY + 'px';
+function spawnSparkles(x, y) {
+  const shapes = [
+    '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 0 L10 6 L16 8 L10 10 L8 16 L6 10 L0 8 L6 6Z" fill="#FFD700"/></svg>',
+    '<svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#81C784"/></svg>',
+    '<svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1 L9 5 L13 5 L10 8 L11 12 L7 10 L3 12 L4 8 L1 5 L5 5Z" fill="#FFB74D"/></svg>'
+  ];
+  for (let i = 0; i < 10; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.innerHTML = shapes[i % shapes.length];
+    s.style.left = x + 'px';
+    s.style.top = y + 'px';
+    const angle = (i / 10) * Math.PI * 2;
+    const dist = 50 + Math.random() * 70;
+    s.style.setProperty('--sx', (Math.cos(angle) * dist) + 'px');
+    s.style.setProperty('--sy', (Math.sin(angle) * dist) + 'px');
+    gameLayer.appendChild(s);
+    s.addEventListener('animationend', () => s.remove());
+  }
 }
 
 function playSound(success) {
@@ -429,8 +818,8 @@ function playSound(success) {
         o.frequency.value = f; o.type = 'sine';
         const t = ac.currentTime + i * 0.07;
         g.gain.setValueAtTime(0.18, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-        o.start(t); o.stop(t + 0.25);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        o.start(t); o.stop(t + 0.3);
       });
     } else {
       const o = ac.createOscillator();
@@ -444,31 +833,36 @@ function playSound(success) {
   } catch (_) {}
 }
 
-function endGame(won) {
-  if (gameOver) return;
+function endGame() {
   gameOver = true;
   clearInterval(timerInterval);
-
-  const ov = document.getElementById('winOverlay');
-  const title = document.getElementById('overlayTitle');
-  const msg = document.getElementById('overlayMsg');
-
-  if (won) {
-    const elapsed = TOTAL_TIME - timeLeft;
+  setTimeout(() => {
     const m = Math.floor(elapsed / 60);
     const s = elapsed % 60;
-    title.textContent = 'All Tidy!';
-    msg.innerHTML = 'Score: ' + gameScore + '<br>Time: ' + m + ':' + (s < 10 ? '0' : '') + s + '<br>Great job sorting all the items!';
-  } else {
-    title.textContent = 'Time\'s Up!';
-    msg.innerHTML = 'Score: ' + gameScore + '<br>Items sorted: ' + placedCount + '/' + totalItems + '<br>Try again to beat the clock!';
-  }
-  ov.classList.add('show');
+    document.getElementById('overlayMsg').innerHTML =
+      'Time: ' + m + ':' + (s < 10 ? '0' : '') + s + '<br>All ' + totalItems + ' items are in their place!';
+    document.getElementById('winOverlay').classList.add('show');
+  }, 500);
+}
+
+function highlightTargets(x, y) {
+  targetEls.forEach((tz, i) => {
+    if (tz.classList.contains('filled')) return;
+    const tr = tz.getBoundingClientRect();
+    const cx = tr.left + tr.width / 2;
+    const cy = tr.top + tr.height / 2;
+    const dist = Math.hypot(x - cx, y - cy);
+    tz.classList.toggle('active', dist < Math.max(tr.width, tr.height) * 0.9);
+  });
+}
+
+function clearHighlights() {
+  targetEls.forEach(tz => tz.classList.remove('active'));
 }
 
 function getItemAt(x, y) {
-  for (let i = allItemEls.length - 1; i >= 0; i--) {
-    const el = allItemEls[i];
+  for (let i = itemEls.length - 1; i >= 0; i--) {
+    const el = itemEls[i];
     if (el.dataset.placed === 'true') continue;
     const r = el.getBoundingClientRect();
     if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return el;
@@ -476,69 +870,8 @@ function getItemAt(x, y) {
   return null;
 }
 
-function highlightRoom(x, y) {
-  rooms.forEach(r => r.classList.remove('highlight'));
-  const room = getRoomAtPoint(x, y);
-  if (room) room.classList.add('highlight');
-}
-
-gameArea.addEventListener('touchstart', e => {
-  if (gameOver) return;
-  e.preventDefault();
-  for (let i = 0; i < e.changedTouches.length; i++) {
-    const t = e.changedTouches[i];
-    const el = getItemAt(t.clientX, t.clientY);
-    if (!el) continue;
-    el.classList.add('dragging');
-    const r = el.getBoundingClientRect();
-    activeDrags.set(t.identifier, {
-      el,
-      offsetX: t.clientX - r.left - r.width / 2,
-      offsetY: t.clientY - r.top - r.height / 2
-    });
-    el.style.left = (t.clientX - r.width / 2) + 'px';
-    el.style.top = (t.clientY - r.height / 2) + 'px';
-  }
-  updateTouchBadge();
-}, { passive: false });
-
-gameArea.addEventListener('touchmove', e => {
-  if (gameOver) return;
-  e.preventDefault();
-  for (let i = 0; i < e.changedTouches.length; i++) {
-    const t = e.changedTouches[i];
-    const drag = activeDrags.get(t.identifier);
-    if (!drag) continue;
-    const el = drag.el;
-    const r = el.getBoundingClientRect();
-    el.style.left = (t.clientX - r.width / 2) + 'px';
-    el.style.top = (t.clientY - r.height / 2) + 'px';
-    highlightRoom(t.clientX, t.clientY);
-  }
-}, { passive: false });
-
-gameArea.addEventListener('touchend', e => {
-  for (let i = 0; i < e.changedTouches.length; i++) {
-    const t = e.changedTouches[i];
-    const drag = activeDrags.get(t.identifier);
-    if (!drag) { activeDrags.delete(t.identifier); continue; }
-    rooms.forEach(r => r.classList.remove('highlight'));
-    tryPlace(drag.el, t.clientX, t.clientY);
-    activeDrags.delete(t.identifier);
-  }
-  updateTouchBadge();
-});
-
-gameArea.addEventListener('touchcancel', e => {
-  for (let i = 0; i < e.changedTouches.length; i++) {
-    const t = e.changedTouches[i];
-    const drag = activeDrags.get(t.identifier);
-    if (drag) sendHome(drag.el);
-    activeDrags.delete(t.identifier);
-  }
-  rooms.forEach(r => r.classList.remove('highlight'));
-  updateTouchBadge();
-});
+const activeDrags = new Map();
+const touchBadge = document.getElementById('touchBadge');
 
 function updateTouchBadge() {
   const n = activeDrags.size;
@@ -546,33 +879,93 @@ function updateTouchBadge() {
   touchBadge.classList.toggle('visible', n > 1);
 }
 
+gameLayer.addEventListener('touchstart', e => {
+  if (gameOver) return;
+  e.preventDefault();
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    const el = getItemAt(t.clientX, t.clientY);
+    if (!el) continue;
+    el.classList.add('dragging');
+    el.style.transform = 'rotate(0deg) scale(1.1)';
+    const r = el.getBoundingClientRect();
+    activeDrags.set(t.identifier, {
+      el,
+      offX: t.clientX - r.left,
+      offY: t.clientY - r.top
+    });
+  }
+  updateTouchBadge();
+}, { passive: false });
+
+gameLayer.addEventListener('touchmove', e => {
+  if (gameOver) return;
+  e.preventDefault();
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    const drag = activeDrags.get(t.identifier);
+    if (!drag) continue;
+    drag.el.style.left = (t.clientX - drag.offX) + 'px';
+    drag.el.style.top = (t.clientY - drag.offY) + 'px';
+    highlightTargets(t.clientX, t.clientY);
+  }
+}, { passive: false });
+
+gameLayer.addEventListener('touchend', e => {
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    const drag = activeDrags.get(t.identifier);
+    if (!drag) { activeDrags.delete(t.identifier); continue; }
+    clearHighlights();
+    checkDrop(drag.el, t.clientX, t.clientY);
+    activeDrags.delete(t.identifier);
+  }
+  updateTouchBadge();
+});
+
+gameLayer.addEventListener('touchcancel', e => {
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    const drag = activeDrags.get(t.identifier);
+    if (drag) {
+      drag.el.classList.remove('dragging');
+      drag.el.style.left = drag.el.dataset.homeX + 'px';
+      drag.el.style.top = drag.el.dataset.homeY + 'px';
+      drag.el.style.transform = 'rotate(' + drag.el.dataset.homeRot + 'deg)';
+    }
+    activeDrags.delete(t.identifier);
+  }
+  clearHighlights();
+  updateTouchBadge();
+});
+
 let mouseDrag = null;
 
-gameArea.addEventListener('mousedown', e => {
+gameLayer.addEventListener('mousedown', e => {
   if (gameOver || e.button !== 0) return;
   const el = getItemAt(e.clientX, e.clientY);
   if (!el) return;
   el.classList.add('dragging');
+  el.style.transform = 'rotate(0deg) scale(1.1)';
   const r = el.getBoundingClientRect();
-  mouseDrag = { el, offsetX: e.clientX - r.left - r.width / 2, offsetY: e.clientY - r.top - r.height / 2 };
+  mouseDrag = { el, offX: e.clientX - r.left, offY: e.clientY - r.top };
 });
 
 window.addEventListener('mousemove', e => {
   if (!mouseDrag) return;
-  const el = mouseDrag.el;
-  const r = el.getBoundingClientRect();
-  el.style.left = (e.clientX - r.width / 2) + 'px';
-  el.style.top = (e.clientY - r.height / 2) + 'px';
-  highlightRoom(e.clientX, e.clientY);
+  mouseDrag.el.style.left = (e.clientX - mouseDrag.offX) + 'px';
+  mouseDrag.el.style.top = (e.clientY - mouseDrag.offY) + 'px';
+  highlightTargets(e.clientX, e.clientY);
 });
 
 window.addEventListener('mouseup', e => {
   if (!mouseDrag) return;
-  rooms.forEach(r => r.classList.remove('highlight'));
-  tryPlace(mouseDrag.el, e.clientX, e.clientY);
+  clearHighlights();
+  checkDrop(mouseDrag.el, e.clientX, e.clientY);
   mouseDrag = null;
 });
 
+resize();
 initGame();
 </script>
 </body>

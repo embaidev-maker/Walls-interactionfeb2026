@@ -9,7 +9,9 @@ const CATEGORIES = {
     'daily-skills': {
         title: 'Daily Skills',
         options: [
-            { name: 'Room Sorting', game: 'room-sorter' }
+            { name: 'Bedroom Cleanup', game: 'sort-bedroom' },
+            { name: 'Kitchen Cleanup', game: 'sort-kitchen' },
+            { name: 'Living Room Cleanup', game: 'sort-living' }
         ]
     }
 };
@@ -130,8 +132,14 @@ function loadGame(gameName) {
             case 'hidden-animals':
                 window.location.href = 'games/hidden-animals.html';
                 break;
-            case 'room-sorter':
-                window.location.href = 'games/room-sorter.html';
+            case 'sort-bedroom':
+                window.location.href = 'games/room-sorter.html?room=bedroom';
+                break;
+            case 'sort-kitchen':
+                window.location.href = 'games/room-sorter.html?room=kitchen';
+                break;
+            case 'sort-living':
+                window.location.href = 'games/room-sorter.html?room=living';
                 break;
             default:
                 console.log('Game not found:', gameName);
