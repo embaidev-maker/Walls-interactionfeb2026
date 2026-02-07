@@ -17,7 +17,7 @@ canvas{position:absolute;inset:0;z-index:0}
 
 .animal-btn{
   position:absolute;z-index:30;
-  font-size:clamp(32px,4.5vw,50px);
+  font-size:clamp(64px,9vw,100px);
   cursor:pointer;line-height:1;
   transition:clip-path .5s ease,filter .5s ease,opacity .5s ease,transform .5s ease;
   filter:saturate(.15) brightness(.35) hue-rotate(60deg);
@@ -387,8 +387,8 @@ function placeAnimals() {
     var el = document.createElement('div');
     el.className = 'animal-btn';
     el.textContent = a.emoji;
-    el.style.left = (a.x - 24) + 'px';
-    el.style.top = (a.y - 24) + 'px';
+    el.style.left = (a.x - 48) + 'px';
+    el.style.top = (a.y - 48) + 'px';
     el.style.clipPath = a.clipPath;
     a.el = el;
     wrap.appendChild(el);
@@ -559,7 +559,7 @@ function hitTest(px, py) {
   for (var i = 0; i < hiddenAnimals.length; i++) {
     var a = hiddenAnimals[i];
     if (a.found) continue;
-    if (Math.hypot(px - a.x, py - a.y) < 50) return i;
+    if (Math.hypot(px - a.x, py - a.y) < 80) return i;
   }
   return -1;
 }

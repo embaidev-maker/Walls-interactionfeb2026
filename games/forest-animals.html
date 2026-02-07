@@ -21,10 +21,8 @@ body{
 }
 @keyframes fly{
   0%{opacity:0;transform:translate(0,0)}
-  25%{opacity:1}
-  50%{opacity:.3;transform:translate(var(--dx),var(--dy))}
-  75%{opacity:1}
-  100%{opacity:0;transform:translate(0,0)}
+  25%{opacity:1}50%{opacity:.3;transform:translate(var(--dx),var(--dy))}
+  75%{opacity:1}100%{opacity:0;transform:translate(0,0)}
 }
 .leaf{
   position:absolute;font-size:16px;opacity:0;
@@ -36,170 +34,151 @@ body{
   100%{transform:translate(var(--dx),100vh) rotate(720deg);opacity:0}
 }
 
-.app{
-  position:relative;z-index:1;
-  width:100%;height:100%;
-  display:flex;flex-direction:column;
-}
+.app{position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column}
 
-.header{
-  flex-shrink:0;text-align:center;
-  padding:10px 20px 4px;
-}
-.header h1{
-  font-size:clamp(18px,2.8vw,28px);font-weight:800;
-  color:#a5d6a7;text-shadow:0 3px 12px rgba(0,0,0,.6);
-}
-.header p{
-  font-size:clamp(10px,1.3vw,13px);
-  color:rgba(255,255,255,.45);
-}
+.header{flex-shrink:0;text-align:center;padding:12px 20px 6px}
+.header h1{font-size:clamp(18px,2.8vw,28px);font-weight:800;color:#a5d6a7;text-shadow:0 3px 12px rgba(0,0,0,.6)}
+.header p{font-size:clamp(10px,1.3vw,13px);color:rgba(255,255,255,.45)}
 
-.page-area{
-  flex:1;position:relative;min-height:0;
-  display:flex;align-items:center;
-  padding:0 4px;
+.scroll-area{
+  flex:1;min-height:0;position:relative;
+  display:flex;align-items:stretch;
+  padding:8px 0;
 }
-
-.page-viewport{
-  flex:1;height:100%;overflow:hidden;
-  margin:0 48px;
+.scroll-track{
+  display:flex;gap:16px;
+  overflow-x:auto;overflow-y:hidden;
+  padding:0 48px;
+  scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
 }
-.page-track{
-  display:flex;height:100%;
-  transition:transform .5s cubic-bezier(.4,0,.2,1);
-}
-.page-slide{
-  min-width:100%;height:100%;
-  padding:4px 8px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  grid-template-rows:repeat(2,1fr);
-  gap:8px;
-  width:100%;height:100%;
-}
-
-.card{
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(129,199,132,.2);
-  border-radius:14px;
-  display:flex;flex-direction:column;
-  overflow:hidden;
-  transition:border-color .3s,box-shadow .3s,transform .2s;
-  cursor:pointer;
-  position:relative;
-}
-.card:hover,.card:active{
-  border-color:rgba(129,199,132,.5);
-  box-shadow:0 4px 24px rgba(0,0,0,.4),0 0 16px rgba(129,199,132,.1);
-}
-.card:active{transform:scale(.97)}
-.card.flipped .card-front{display:none}
-.card.flipped .card-back{display:flex}
-
-.card-front{
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  flex:1;padding:8px;gap:4px;
-  text-align:center;
-}
-.card-emoji{font-size:clamp(36px,5vw,56px);line-height:1.1;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))}
-.card-name{
-  font-size:clamp(13px,1.5vw,18px);font-weight:700;
-  color:#a5d6a7;
-}
-.card-latin{
-  font-size:clamp(8px,.8vw,10px);font-style:italic;
-  color:rgba(255,255,255,.3);
-}
-.card-tap{
-  font-size:clamp(8px,.7vw,9px);
-  color:rgba(255,255,255,.2);margin-top:2px;
-}
-
-.card-back{
-  display:none;flex-direction:column;
-  flex:1;padding:10px 12px;gap:6px;
-  overflow-y:auto;
-}
-.back-header{
-  display:flex;align-items:center;gap:8px;
-  padding-bottom:4px;border-bottom:1px solid rgba(129,199,132,.15);
-}
-.back-emoji{font-size:clamp(22px,2.5vw,30px)}
-.back-name{font-size:clamp(14px,1.5vw,18px);font-weight:700;color:#a5d6a7}
-.back-facts{list-style:none;padding:0;flex:1}
-.back-facts li{
-  font-size:clamp(10px,1.1vw,13px);
-  color:rgba(255,255,255,.75);
-  line-height:1.5;
-  padding:3px 0 3px 18px;
-  position:relative;
-}
-.back-facts li::before{
-  content:'';position:absolute;left:2px;top:50%;
-  transform:translateY(-50%);
-  width:8px;height:8px;border-radius:50%;
-  background:rgba(129,199,132,.5);
-  border:1px solid rgba(129,199,132,.7);
-}
-.back-facts li:nth-child(2)::before{background:rgba(255,193,7,.5);border-color:rgba(255,193,7,.7)}
-.back-facts li:nth-child(3)::before{background:rgba(79,195,247,.5);border-color:rgba(79,195,247,.7)}
-.back-facts li:nth-child(4)::before{background:rgba(239,154,154,.5);border-color:rgba(239,154,154,.7)}
-.back-facts li:nth-child(5)::before{background:rgba(206,147,216,.5);border-color:rgba(206,147,216,.7)}
-.card-sound{
-  display:flex;align-items:center;justify-content:center;gap:5px;
-  padding:5px 10px;margin-top:auto;
-  background:rgba(129,199,132,.1);
-  border:1px solid rgba(129,199,132,.3);
-  border-radius:16px;color:#a5d6a7;
-  font-size:clamp(9px,1vw,12px);font-weight:600;
-  cursor:pointer;transition:all .3s;
-  align-self:flex-start;
-}
-.card-sound:hover,.card-sound:active{background:rgba(129,199,132,.22)}
-.card-sound.playing{background:rgba(129,199,132,.3);border-color:rgba(129,199,132,.6)}
+.scroll-track::-webkit-scrollbar{display:none}
 
 .arrow-btn{
   position:absolute;top:50%;transform:translateY(-50%);
-  width:clamp(38px,4vw,48px);height:clamp(38px,4vw,48px);
+  width:clamp(36px,3.5vw,44px);height:clamp(36px,3.5vw,44px);
   border-radius:50%;
-  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+  background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
   border:2px solid rgba(129,199,132,.35);
-  color:white;font-size:clamp(14px,1.8vw,20px);
+  color:white;font-size:clamp(14px,1.6vw,18px);
   cursor:pointer;z-index:10;
   display:flex;align-items:center;justify-content:center;
   transition:all .3s;
 }
 .arrow-btn:hover{background:rgba(129,199,132,.2);border-color:rgba(129,199,132,.6)}
 .arrow-btn:active{transform:translateY(-50%) scale(.92)}
-.arrow-btn:disabled{opacity:.2;cursor:default;transform:translateY(-50%)}
-.arrow-left{left:4px}
-.arrow-right{right:4px}
+.arrow-left{left:6px}
+.arrow-right{right:6px}
 
-.page-dots{
-  flex-shrink:0;display:flex;justify-content:center;
-  gap:8px;padding:6px 0;
+.card{
+  flex-shrink:0;
+  width:clamp(280px,28vw,380px);
+  scroll-snap-align:center;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(129,199,132,.2);
+  border-radius:16px;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transition:border-color .3s,box-shadow .3s;
 }
-.dot{
-  width:10px;height:10px;border-radius:50%;
-  background:rgba(129,199,132,.15);
+.card:hover{
+  border-color:rgba(129,199,132,.45);
+  box-shadow:0 6px 30px rgba(0,0,0,.4),0 0 20px rgba(129,199,132,.08);
+}
+
+.model-area{
+  flex-shrink:0;
+  height:clamp(140px,18vh,200px);
+  background:rgba(0,0,0,.3);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  border-bottom:1px solid rgba(129,199,132,.12);
+}
+.model-placeholder{
+  perspective:300px;
+  width:90px;height:90px;
+  position:relative;
+}
+.cube{
+  width:100%;height:100%;position:relative;
+  transform-style:preserve-3d;
+  animation:spin 8s linear infinite;
+}
+@keyframes spin{
+  0%{transform:rotateX(-20deg) rotateY(0)}
+  100%{transform:rotateX(-20deg) rotateY(360deg)}
+}
+.cube-face{
+  position:absolute;width:90px;height:90px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:48px;
   border:2px solid rgba(129,199,132,.3);
-  cursor:pointer;transition:all .3s;
+  background:rgba(15,40,25,.8);
+  backface-visibility:visible;
 }
-.dot.active{background:#81c784;transform:scale(1.3);border-color:#81c784}
+.cube-face:nth-child(1){transform:rotateY(0deg) translateZ(45px)}
+.cube-face:nth-child(2){transform:rotateY(90deg) translateZ(45px)}
+.cube-face:nth-child(3){transform:rotateY(180deg) translateZ(45px)}
+.cube-face:nth-child(4){transform:rotateY(-90deg) translateZ(45px)}
+.cube-face:nth-child(5){transform:rotateX(90deg) translateZ(45px)}
+.cube-face:nth-child(6){transform:rotateX(-90deg) translateZ(45px)}
+.model-badge{
+  position:absolute;bottom:6px;right:8px;
+  font-size:9px;color:rgba(255,255,255,.3);
+  background:rgba(0,0,0,.4);padding:2px 8px;border-radius:8px;
+  letter-spacing:.5px;
+}
+
+.card-body{
+  flex:1;padding:12px 16px;display:flex;flex-direction:column;gap:6px;
+  overflow-y:auto;min-height:0;
+}
+.card-body::-webkit-scrollbar{width:3px}
+.card-body::-webkit-scrollbar-thumb{background:rgba(129,199,132,.25);border-radius:3px}
+
+.card-top{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.card-emoji{font-size:clamp(28px,3vw,38px);filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))}
+.card-titles{display:flex;flex-direction:column}
+.card-name{font-size:clamp(15px,1.6vw,20px);font-weight:700;color:#a5d6a7;line-height:1.2}
+.card-latin{font-size:clamp(9px,.9vw,11px);font-style:italic;color:rgba(255,255,255,.3)}
+
+.card-desc{font-size:clamp(11px,1.1vw,13px);color:rgba(255,255,255,.65);line-height:1.5}
+
+.facts-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:3px}
+.facts-list li{
+  font-size:clamp(10px,1vw,12px);color:rgba(255,255,255,.7);
+  line-height:1.45;padding:3px 0 3px 18px;position:relative;
+}
+.facts-list li::before{
+  content:'';position:absolute;left:2px;top:50%;transform:translateY(-50%);
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(129,199,132,.5);border:1px solid rgba(129,199,132,.7);
+}
+.facts-list li:nth-child(2)::before{background:rgba(255,193,7,.5);border-color:rgba(255,193,7,.7)}
+.facts-list li:nth-child(3)::before{background:rgba(79,195,247,.5);border-color:rgba(79,195,247,.7)}
+.facts-list li:nth-child(4)::before{background:rgba(239,154,154,.5);border-color:rgba(239,154,154,.7)}
+.facts-list li:nth-child(5)::before{background:rgba(206,147,216,.5);border-color:rgba(206,147,216,.7)}
+
+.card-sound{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 12px;margin-top:auto;align-self:flex-start;
+  background:rgba(129,199,132,.1);border:1px solid rgba(129,199,132,.3);
+  border-radius:16px;color:#a5d6a7;
+  font-size:clamp(9px,1vw,12px);font-weight:600;
+  cursor:pointer;transition:all .3s;flex-shrink:0;
+}
+.card-sound:hover,.card-sound:active{background:rgba(129,199,132,.22)}
+.card-sound.playing{background:rgba(129,199,132,.3);border-color:rgba(129,199,132,.6)}
 
 .footer{
   flex-shrink:0;text-align:center;
-  padding:2px 20px 10px;
+  padding:6px 20px 12px;
 }
 .btn-back{
   padding:8px 26px;font-size:14px;font-weight:600;
-  background:rgba(129,199,132,.1);
-  border:2px solid rgba(129,199,132,.3);
+  background:rgba(129,199,132,.1);border:2px solid rgba(129,199,132,.3);
   color:white;border-radius:50px;cursor:pointer;
   transition:all .3s;backdrop-filter:blur(8px);
 }
@@ -216,15 +195,6 @@ body{
   0%{transform:translate(-50%,-50%) scale(0);opacity:1}
   100%{transform:translate(-50%,-50%) scale(2);opacity:0}
 }
-
-@media(max-width:700px){
-  .grid{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,1fr)}
-  .page-viewport{margin:0 40px}
-}
-@media(max-width:420px){
-  .grid{gap:5px}
-  .card-back{padding:8px}
-}
 </style>
 </head>
 <body>
@@ -233,18 +203,14 @@ body{
 <div class="app">
   <div class="header">
     <h1>Forest Animals Showcase</h1>
-    <p>Tap any animal to learn fun facts -- swipe pages to see more</p>
+    <p>Scroll through the animals to learn fun facts and hear their sounds</p>
   </div>
 
-  <div class="page-area">
+  <div class="scroll-area">
     <button class="arrow-btn arrow-left" id="prevBtn">&#9664;</button>
-    <div class="page-viewport">
-      <div class="page-track" id="pageTrack"></div>
-    </div>
+    <div class="scroll-track" id="scrollTrack"></div>
     <button class="arrow-btn arrow-right" id="nextBtn">&#9654;</button>
   </div>
-
-  <div class="page-dots" id="pageDots"></div>
 
   <div class="footer">
     <button class="btn-back" id="backBtn">Back to Menu</button>
@@ -255,6 +221,7 @@ body{
 var ANIMALS = [
   {
     name:'Red Deer', latin:'Cervus elaphus', emoji:'\uD83E\uDD8C',
+    desc:'Majestic woodland herbivores found across European and Asian forests. Males grow impressive antlers each year.',
     facts:[
       'Antlers grow up to 1 inch per day -- fastest bone growth in nature!',
       'Males roar up to 20 times per minute during mating season',
@@ -266,6 +233,7 @@ var ANIMALS = [
   },
   {
     name:'Red Fox', latin:'Vulpes vulpes', emoji:'\uD83E\uDD8A',
+    desc:'Clever and adaptable predators with exceptional hearing. The most widespread wild carnivore on Earth.',
     facts:[
       'Can hear a watch ticking from 40 yards away!',
       'Use Earth\'s magnetic field like a compass to hunt',
@@ -277,6 +245,7 @@ var ANIMALS = [
   },
   {
     name:'Brown Bear', latin:'Ursus arctos', emoji:'\uD83D\uDC3B',
+    desc:'Powerful omnivores that roam vast territories. Among the largest land predators still walking the Earth.',
     facts:[
       'Can eat 90 pounds of food per day before winter sleep!',
       'Sprint at 35 mph -- faster than most horses',
@@ -288,6 +257,7 @@ var ANIMALS = [
   },
   {
     name:'Great Horned Owl', latin:'Bubo virginianus', emoji:'\uD83E\uDD89',
+    desc:'Silent nocturnal hunters with extraordinary night vision. Their feathers muffle sound for stealthy flight.',
     facts:[
       'Can turn their head 270 degrees -- almost all the way around!',
       'Fly in complete silence thanks to special feather edges',
@@ -299,6 +269,7 @@ var ANIMALS = [
   },
   {
     name:'Raccoon', latin:'Procyon lotor', emoji:'\uD83E\uDD9D',
+    desc:'Curious and intelligent creatures famous for their masked faces and dexterous front paws.',
     facts:[
       'Can remember how to solve puzzles for 3 whole years!',
       'Front paws are incredibly sensitive -- like tiny human hands',
@@ -310,6 +281,7 @@ var ANIMALS = [
   },
   {
     name:'Red Squirrel', latin:'Sciurus vulgaris', emoji:'\uD83D\uDC3F\uFE0F',
+    desc:'Acrobatic woodland gymnasts that spend their lives leaping between treetops at amazing speeds.',
     facts:[
       'Bury up to 10,000 nuts each autumn as food stores!',
       'Can leap 10 times their own body length in one jump',
@@ -321,6 +293,7 @@ var ANIMALS = [
   },
   {
     name:'Beaver', latin:'Castor fiber', emoji:'\uD83E\uDDAB',
+    desc:'Nature\'s engineers that reshape entire landscapes by building dams and lodges from wood and mud.',
     facts:[
       'Build dams that can stretch over 800 meters long!',
       'Hold their breath underwater for up to 15 minutes',
@@ -332,6 +305,7 @@ var ANIMALS = [
   },
   {
     name:'Grey Wolf', latin:'Canis lupus', emoji:'\uD83D\uDC3A',
+    desc:'Highly social pack hunters with complex communication. Each howl is unique, like a vocal fingerprint.',
     facts:[
       'Howls can be heard from 16 kilometers away!',
       'Each wolf has a unique howl -- like a voice fingerprint',
@@ -343,6 +317,7 @@ var ANIMALS = [
   },
   {
     name:'Golden Eagle', latin:'Aquila chrysaetos', emoji:'\uD83E\uDD85',
+    desc:'Apex aerial predators with incredible eyesight. They dive at speeds rivaling sports cars.',
     facts:[
       'Dive at speeds up to 240 km/h -- faster than a sports car!',
       'Can spot a rabbit from over 3 kilometers away',
@@ -354,6 +329,7 @@ var ANIMALS = [
   },
   {
     name:'Hedgehog', latin:'Erinaceus europaeus', emoji:'\uD83E\uDD94',
+    desc:'Tiny nocturnal insectivores covered in protective spines. They curl into a tight ball when threatened.',
     facts:[
       'Covered in about 7,000 spines that are replaced each year!',
       'Curl into a tight spiky ball when scared -- nearly impossible to open',
@@ -365,6 +341,7 @@ var ANIMALS = [
   },
   {
     name:'Forest Gecko', latin:'Phelsuma grandis', emoji:'\uD83E\uDD8E',
+    desc:'Masters of camouflage and climbing. Their toe pads use van der Waals forces to grip any surface.',
     facts:[
       'Can regrow their tail if a predator grabs it!',
       'Toe pads have millions of tiny hairs that stick to any surface',
@@ -376,6 +353,7 @@ var ANIMALS = [
   },
   {
     name:'European Hare', latin:'Lepus europaeus', emoji:'\uD83D\uDC07',
+    desc:'Lightning-fast runners born ready to sprint from day one. Among the fastest land animals in Europe.',
     facts:[
       'Sprint at 70 km/h -- one of the fastest land animals!',
       'Can jump 3 meters high from a standing position',
@@ -387,81 +365,53 @@ var ANIMALS = [
   }
 ];
 
-var currentPage = 0;
-var CARDS_PER_PAGE = 6;
-var totalPages = Math.ceil(ANIMALS.length / CARDS_PER_PAGE);
-var track = document.getElementById('pageTrack');
-var dotsWrap = document.getElementById('pageDots');
-var prevBtn = document.getElementById('prevBtn');
-var nextBtn = document.getElementById('nextBtn');
+var track = document.getElementById('scrollTrack');
 
-function buildPages() {
-  for (var p = 0; p < totalPages; p++) {
-    var slide = document.createElement('div');
-    slide.className = 'page-slide';
+function buildCards() {
+  ANIMALS.forEach(function(animal, idx) {
+    var card = document.createElement('div');
+    card.className = 'card';
 
-    var grid = document.createElement('div');
-    grid.className = 'grid';
+    var factsHtml = '';
+    animal.facts.forEach(function(f) { factsHtml += '<li>' + f + '</li>'; });
 
-    var start = p * CARDS_PER_PAGE;
-    var end = Math.min(start + CARDS_PER_PAGE, ANIMALS.length);
+    card.innerHTML =
+      '<div class="model-area">' +
+        '<div class="model-placeholder">' +
+          '<div class="cube">' +
+            '<div class="cube-face">' + animal.emoji + '</div>' +
+            '<div class="cube-face">' + animal.emoji + '</div>' +
+            '<div class="cube-face">' + animal.emoji + '</div>' +
+            '<div class="cube-face">' + animal.emoji + '</div>' +
+            '<div class="cube-face">' + animal.emoji + '</div>' +
+            '<div class="cube-face">' + animal.emoji + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<span class="model-badge">3D MODEL PLACEHOLDER</span>' +
+      '</div>' +
+      '<div class="card-body">' +
+        '<div class="card-top">' +
+          '<span class="card-emoji">' + animal.emoji + '</span>' +
+          '<div class="card-titles">' +
+            '<div class="card-name">' + animal.name + '</div>' +
+            '<div class="card-latin">' + animal.latin + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-desc">' + animal.desc + '</div>' +
+        '<ul class="facts-list">' + factsHtml + '</ul>' +
+        '<button class="card-sound" data-index="' + idx + '">&#128266; Play Sound</button>' +
+      '</div>';
 
-    for (var i = start; i < end; i++) {
-      var animal = ANIMALS[i];
-      var card = document.createElement('div');
-      card.className = 'card';
-      card.dataset.index = i;
+    var cubeEl = card.querySelector('.cube');
+    cubeEl.style.animationDelay = (-idx * 0.8) + 's';
 
-      var front = document.createElement('div');
-      front.className = 'card-front';
-      front.innerHTML =
-        '<div class="card-emoji">' + animal.emoji + '</div>' +
-        '<div class="card-name">' + animal.name + '</div>' +
-        '<div class="card-latin">' + animal.latin + '</div>' +
-        '<div class="card-tap">Tap for fun facts</div>';
-
-      var back = document.createElement('div');
-      back.className = 'card-back';
-      var factsHtml = '';
-      animal.facts.forEach(function(f) {
-        factsHtml += '<li>' + f + '</li>';
-      });
-      back.innerHTML =
-        '<div class="back-header"><span class="back-emoji">' + animal.emoji + '</span><span class="back-name">' + animal.name + '</span></div>' +
-        '<ul class="back-facts">' + factsHtml + '</ul>' +
-        '<button class="card-sound" data-index="' + i + '">&#128266; Play Sound</button>';
-
-      card.appendChild(front);
-      card.appendChild(back);
-      grid.appendChild(card);
-    }
-
-    slide.appendChild(grid);
-    track.appendChild(slide);
-
-    var dot = document.createElement('div');
-    dot.className = 'dot' + (p === 0 ? ' active' : '');
-    dot.dataset.page = p;
-    dotsWrap.appendChild(dot);
-  }
+    track.appendChild(card);
+  });
 }
 
-function goToPage(idx) {
-  currentPage = Math.max(0, Math.min(totalPages - 1, idx));
-  track.style.transform = 'translateX(-' + (currentPage * 100) + '%)';
-  prevBtn.disabled = currentPage === 0;
-  nextBtn.disabled = currentPage === totalPages - 1;
-  var dots = dotsWrap.querySelectorAll('.dot');
-  dots.forEach(function(d, i) { d.classList.toggle('active', i === currentPage); });
-}
-
-function handleCardTap(card) {
-  card.classList.toggle('flipped');
-}
-
-function handleSoundTap(btn) {
-  var idx = parseInt(btn.dataset.index);
-  playAnimalSound(ANIMALS[idx].sound, btn);
+function scrollBy(dir) {
+  var cardW = track.querySelector('.card').offsetWidth + 16;
+  track.scrollBy({ left: dir * cardW, behavior: 'smooth' });
 }
 
 function bindTouch(el, fn) {
@@ -476,43 +426,19 @@ function bindTouch(el, fn) {
   });
 }
 
+bindTouch(document.getElementById('prevBtn'), function() { scrollBy(-1); });
+bindTouch(document.getElementById('nextBtn'), function() { scrollBy(1); });
+bindTouch(document.getElementById('backBtn'), function() { location.href = '../index.html'; });
+
 document.addEventListener('click', function(e) {
   if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
-  handleDelegated(e);
+  var btn = e.target.closest('.card-sound');
+  if (btn) playAnimalSound(ANIMALS[parseInt(btn.dataset.index)].sound, btn);
 });
 document.addEventListener('touchend', function(e) {
-  var target = e.target;
-  if (target.closest('.card-sound') || target.closest('.card') || target.closest('.dot') || target.closest('.arrow-btn') || target.closest('.btn-back')) {
-    e.preventDefault();
-    handleDelegated(e);
-  }
+  var btn = e.target.closest('.card-sound');
+  if (btn) { e.preventDefault(); playAnimalSound(ANIMALS[parseInt(btn.dataset.index)].sound, btn); }
 });
-
-function handleDelegated(e) {
-  var target = e.target;
-
-  var soundBtn = target.closest('.card-sound');
-  if (soundBtn) {
-    handleSoundTap(soundBtn);
-    return;
-  }
-
-  var card = target.closest('.card');
-  if (card) {
-    handleCardTap(card);
-    return;
-  }
-
-  var dot = target.closest('.dot');
-  if (dot) {
-    goToPage(parseInt(dot.dataset.page));
-    return;
-  }
-}
-
-bindTouch(prevBtn, function() { goToPage(currentPage - 1); });
-bindTouch(nextBtn, function() { goToPage(currentPage + 1); });
-bindTouch(document.getElementById('backBtn'), function() { location.href = '../index.html'; });
 
 function playAnimalSound(cfg, btn) {
   if (btn.classList.contains('playing')) return;
@@ -538,8 +464,7 @@ function playAnimalSound(cfg, btn) {
     else if (cfg.type === 'bark') {
       for (var b = 0; b < 3; b++) {
         var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination);
-        o.type = 'square';
+        o.connect(g); g.connect(ac.destination); o.type = 'square';
         var t = now + b * 0.18;
         o.frequency.setValueAtTime(cfg.freq, t);
         o.frequency.exponentialRampToValueAtTime(cfg.freq * 0.5, t + cfg.dur);
@@ -577,8 +502,7 @@ function playAnimalSound(cfg, btn) {
     else if (cfg.type === 'chitter') {
       for (var c = 0; c < 12; c++) {
         var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination);
-        o.type = 'square';
+        o.connect(g); g.connect(ac.destination); o.type = 'square';
         var t = now + c * cfg.dur;
         o.frequency.value = cfg.freq + Math.random() * 200;
         g.gain.setValueAtTime(0.1, t);
@@ -589,8 +513,7 @@ function playAnimalSound(cfg, btn) {
     else if (cfg.type === 'chirp') {
       for (var ch = 0; ch < 4; ch++) {
         var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination);
-        o.type = 'sine';
+        o.connect(g); g.connect(ac.destination); o.type = 'sine';
         var t = now + ch * 0.2;
         o.frequency.setValueAtTime(cfg.freq, t);
         o.frequency.exponentialRampToValueAtTime(cfg.freq * 1.8, t + cfg.dur);
@@ -602,19 +525,15 @@ function playAnimalSound(cfg, btn) {
     else if (cfg.type === 'slap') {
       var buf = ac.createBuffer(1, ac.sampleRate * cfg.dur, ac.sampleRate);
       var data = buf.getChannelData(0);
-      for (var s = 0; s < data.length; s++) {
-        data[s] = (Math.random() * 2 - 1) * Math.exp(-s / (ac.sampleRate * 0.02));
-      }
+      for (var s = 0; s < data.length; s++) data[s] = (Math.random() * 2 - 1) * Math.exp(-s / (ac.sampleRate * 0.02));
       var src = ac.createBufferSource(), g = ac.createGain();
       src.buffer = buf; src.connect(g); g.connect(ac.destination);
-      g.gain.setValueAtTime(0.3, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
+      g.gain.setValueAtTime(0.3, now); g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
       src.start(now);
     }
     else if (cfg.type === 'howl') {
       var o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
-      o.type = 'sine';
+      o.connect(g); g.connect(ac.destination); o.type = 'sine';
       o.frequency.setValueAtTime(cfg.freq, now);
       o.frequency.linearRampToValueAtTime(cfg.freq * 2.5, now + cfg.dur * 0.4);
       o.frequency.linearRampToValueAtTime(cfg.freq * 2.2, now + cfg.dur * 0.7);
@@ -630,12 +549,10 @@ function playAnimalSound(cfg, btn) {
     }
     else if (cfg.type === 'screech') {
       var o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
-      o.type = 'sawtooth';
+      o.connect(g); g.connect(ac.destination); o.type = 'sawtooth';
       o.frequency.setValueAtTime(cfg.freq, now);
       o.frequency.exponentialRampToValueAtTime(cfg.freq * 0.4, now + cfg.dur);
-      g.gain.setValueAtTime(0.1, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
+      g.gain.setValueAtTime(0.1, now); g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
       o.start(now); o.stop(now + cfg.dur);
     }
     else if (cfg.type === 'snuffle') {
@@ -648,43 +565,37 @@ function playAnimalSound(cfg, btn) {
         filt.type = 'lowpass'; filt.frequency.value = cfg.freq;
         src.buffer = buf; src.connect(filt); filt.connect(g); g.connect(ac.destination);
         var t = now + sn * 0.12;
-        g.gain.setValueAtTime(0.12, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+        g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
         src.start(t);
       }
     }
     else if (cfg.type === 'click') {
       for (var ck = 0; ck < 3; ck++) {
         var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination);
-        o.type = 'sine'; o.frequency.value = cfg.freq;
+        o.connect(g); g.connect(ac.destination); o.type = 'sine'; o.frequency.value = cfg.freq;
         var t = now + ck * 0.1;
-        g.gain.setValueAtTime(0.2, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
+        g.gain.setValueAtTime(0.2, t); g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
         o.start(t); o.stop(t + cfg.dur);
       }
     }
     else if (cfg.type === 'thump') {
       for (var th = 0; th < 3; th++) {
         var o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination);
-        o.type = 'sine'; o.frequency.value = cfg.freq;
+        o.connect(g); g.connect(ac.destination); o.type = 'sine'; o.frequency.value = cfg.freq;
         var t = now + th * 0.2;
-        g.gain.setValueAtTime(0.25, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
+        g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
         o.start(t); o.stop(t + cfg.dur);
       }
     }
 
-    var totalDur = cfg.type === 'howl' ? cfg.dur : (cfg.type === 'bark' ? 0.6 : cfg.type === 'chitter' ? 0.8 : cfg.type === 'chirp' ? 0.8 : cfg.type === 'hoot' ? 1.1 : cfg.type === 'snuffle' ? 0.7 : cfg.type === 'click' ? 0.3 : cfg.type === 'thump' ? 0.6 : cfg.dur + 0.1);
+    var totalDur = cfg.type === 'howl' ? cfg.dur : cfg.type === 'bark' ? 0.6 : cfg.type === 'chitter' ? 0.8 : cfg.type === 'chirp' ? 0.8 : cfg.type === 'hoot' ? 1.1 : cfg.type === 'snuffle' ? 0.7 : cfg.type === 'click' ? 0.3 : cfg.type === 'thump' ? 0.6 : cfg.dur + 0.1;
     setTimeout(function() { btn.classList.remove('playing'); }, totalDur * 1000);
   } catch (e) {
     btn.classList.remove('playing');
   }
 }
 
-buildPages();
-goToPage(0);
+buildCards();
 
 var sc = document.getElementById('scene');
 for (var i = 0; i < 20; i++) {
@@ -719,18 +630,6 @@ document.addEventListener('touchstart', function(e) {
     ring.style.top = t.clientY + 'px';
     document.body.appendChild(ring);
     ring.addEventListener('animationend', function() { this.remove(); });
-  }
-}, { passive: true });
-
-var touchStartX = 0;
-track.addEventListener('touchstart', function(e) {
-  touchStartX = e.changedTouches[0].clientX;
-}, { passive: true });
-track.addEventListener('touchend', function(e) {
-  var dx = e.changedTouches[0].clientX - touchStartX;
-  if (Math.abs(dx) > 50) {
-    if (dx < 0) goToPage(currentPage + 1);
-    else goToPage(currentPage - 1);
   }
 }, { passive: true });
 </script>
