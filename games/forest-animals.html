@@ -33,8 +33,7 @@ body{
 }
 @keyframes leafDrop{
   0%{transform:translate(0,-20px) rotate(0);opacity:0}
-  10%{opacity:.6}
-  90%{opacity:.4}
+  10%{opacity:.6}90%{opacity:.4}
   100%{transform:translate(var(--dx),100vh) rotate(720deg);opacity:0}
 }
 
@@ -46,119 +45,147 @@ body{
 
 .header{
   flex-shrink:0;text-align:center;
-  padding:16px 20px 8px;
+  padding:12px 20px 4px;
 }
 .header h1{
-  font-size:clamp(22px,3.5vw,38px);font-weight:800;
+  font-size:clamp(20px,3vw,32px);font-weight:800;
   color:#a5d6a7;text-shadow:0 3px 12px rgba(0,0,0,.6);
-  margin-bottom:4px;
 }
 .header p{
-  font-size:clamp(12px,1.8vw,16px);
-  color:rgba(255,255,255,.6);
+  font-size:clamp(11px,1.5vw,14px);
+  color:rgba(255,255,255,.5);
 }
 
-.walls{
-  flex:1;display:flex;gap:0;
-  padding:8px 12px 8px;
-  perspective:1400px;
-  min-height:0;
+.carousel-area{
+  flex:1;display:flex;align-items:center;
+  position:relative;min-height:0;
+  padding:4px 0;
 }
 
-.wall{
-  flex:1;display:grid;
-  grid-template-columns:1fr 1fr;
-  grid-template-rows:1fr 1fr;
-  gap:10px;padding:10px;
-  border-radius:16px;
-  min-height:0;
-  transform-style:preserve-3d;
-  transition:transform .4s ease;
+.carousel-viewport{
+  flex:1;height:100%;overflow:hidden;
+  margin:0 60px;
 }
-.wall-left{
-  background:rgba(129,199,132,.04);
-  border:1px solid rgba(129,199,132,.15);
-  transform-origin:right center;
-  transform:rotateY(12deg);
+.carousel-track{
+  display:flex;height:100%;
+  transition:transform .45s cubic-bezier(.4,0,.2,1);
 }
-.wall-center{
-  background:rgba(129,199,132,.06);
-  border:1px solid rgba(129,199,132,.2);
-  margin:0 6px;
+.carousel-card{
+  min-width:100%;height:100%;
+  padding:4px 10%;
 }
-.wall-right{
-  background:rgba(129,199,132,.04);
-  border:1px solid rgba(129,199,132,.15);
-  transform-origin:left center;
-  transform:rotateY(-12deg);
-}
-
-.card{
+.card-inner{
+  width:100%;height:100%;
   background:rgba(255,255,255,.05);
   border:1px solid rgba(129,199,132,.2);
-  border-radius:14px;
+  border-radius:18px;
   display:flex;flex-direction:column;
   overflow:hidden;
   transition:border-color .3s,box-shadow .3s;
-  min-height:0;
 }
-.card:hover,.card.active{
-  border-color:rgba(129,199,132,.6);
-  box-shadow:0 4px 24px rgba(0,0,0,.4),0 0 16px rgba(129,199,132,.15);
+.card-inner:hover{
+  border-color:rgba(129,199,132,.5);
+  box-shadow:0 4px 30px rgba(0,0,0,.4),0 0 20px rgba(129,199,132,.12);
 }
 
 .model-wrap{
   flex:1;position:relative;min-height:0;
-  background:radial-gradient(ellipse at center,rgba(129,199,132,.08),transparent);
+  background:radial-gradient(ellipse at center,rgba(129,199,132,.06),transparent);
+  cursor:grab;
 }
 .model-wrap model-viewer{
   width:100%;height:100%;
   --poster-color:transparent;
+  touch-action:none;
 }
-.model-wrap model-viewer::part(default-progress-bar){
-  background:rgba(129,199,132,.3);
-}
+.model-wrap model-viewer::part(default-progress-bar){background:rgba(129,199,132,.3)}
 .placeholder-label{
-  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
-  font-size:10px;color:rgba(255,255,255,.3);
+  position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+  font-size:9px;color:rgba(255,255,255,.25);
   background:rgba(0,0,0,.3);padding:2px 8px;border-radius:8px;
   pointer-events:none;
 }
 
-.card-info{
-  flex-shrink:0;padding:8px 12px;
+.card-content{
+  flex-shrink:0;padding:10px 16px 10px;
   border-top:1px solid rgba(129,199,132,.1);
+  max-height:50%;overflow-y:auto;
 }
-.card-name{
-  font-size:clamp(13px,1.5vw,17px);font-weight:700;
-  color:#81c784;margin-bottom:2px;
-}
-.card-latin{
-  font-size:clamp(9px,1vw,11px);font-style:italic;
-  color:rgba(255,255,255,.4);margin-bottom:4px;
-}
-.card-facts{display:flex;flex-wrap:wrap;gap:4px}
+.card-name{font-size:clamp(16px,2vw,22px);font-weight:700;color:#81c784;margin-bottom:1px}
+.card-latin{font-size:clamp(9px,1vw,12px);font-style:italic;color:rgba(255,255,255,.35);margin-bottom:5px}
+.card-desc{font-size:clamp(11px,1.2vw,14px);color:rgba(255,255,255,.65);line-height:1.5;margin-bottom:6px}
+.card-facts{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
 .fact{
-  background:rgba(129,199,132,.12);
+  background:rgba(129,199,132,.1);
   border:1px solid rgba(129,199,132,.25);
   padding:2px 8px;border-radius:12px;
   font-size:clamp(8px,.9vw,11px);color:#a5d6a7;
 }
+.card-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sound-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 14px;
+  background:rgba(129,199,132,.12);
+  border:1px solid rgba(129,199,132,.3);
+  border-radius:20px;color:#a5d6a7;
+  font-size:clamp(10px,1.1vw,13px);font-weight:600;
+  cursor:pointer;transition:all .3s;
+  flex-shrink:0;
+}
+.sound-btn:hover{background:rgba(129,199,132,.22);transform:scale(1.05)}
+.sound-btn.playing{background:rgba(129,199,132,.3);border-color:rgba(129,199,132,.6)}
+.card-emojis{
+  font-size:clamp(12px,1.3vw,16px);letter-spacing:3px;
+  color:rgba(255,255,255,.45);
+}
+
+.arrow-btn{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:clamp(42px,5vw,56px);height:clamp(42px,5vw,56px);
+  border-radius:50%;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+  border:2px solid rgba(129,199,132,.35);
+  color:white;font-size:clamp(16px,2vw,22px);
+  cursor:pointer;z-index:10;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .3s;
+}
+.arrow-btn:hover{
+  background:rgba(129,199,132,.2);
+  border-color:rgba(129,199,132,.6);
+  transform:translateY(-50%) scale(1.1);
+}
+.arrow-btn:disabled{opacity:.25;cursor:default;transform:translateY(-50%)}
+.arrow-btn:disabled:hover{background:rgba(0,0,0,.55);border-color:rgba(129,199,132,.35)}
+.arrow-left{left:6px}
+.arrow-right{right:6px}
+
+.carousel-dots{
+  flex-shrink:0;display:flex;justify-content:center;
+  gap:6px;padding:4px 0;
+}
+.dot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(129,199,132,.15);
+  border:1px solid rgba(129,199,132,.3);
+  cursor:pointer;transition:all .3s;
+}
+.dot.active{background:#81c784;transform:scale(1.3)}
 
 .footer{
   flex-shrink:0;text-align:center;
-  padding:8px 20px 14px;
+  padding:4px 20px 10px;
 }
 .btn-back{
-  padding:10px 30px;font-size:15px;font-weight:600;
-  background:rgba(129,199,132,.12);
-  border:2px solid rgba(129,199,132,.35);
+  padding:8px 26px;font-size:14px;font-weight:600;
+  background:rgba(129,199,132,.1);
+  border:2px solid rgba(129,199,132,.3);
   color:white;border-radius:50px;cursor:pointer;
   transition:all .3s;backdrop-filter:blur(8px);
 }
 .btn-back:hover{
-  background:rgba(129,199,132,.22);
-  border-color:rgba(129,199,132,.6);
+  background:rgba(129,199,132,.2);
+  border-color:rgba(129,199,132,.5);
   transform:scale(1.05);
 }
 
@@ -175,19 +202,14 @@ body{
 }
 
 @media(max-width:900px){
-  .walls{flex-direction:column;padding:4px 8px}
-  .wall{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
-  .wall-left{transform:none;transform-origin:center}
-  .wall-right{transform:none;transform-origin:center}
-  .wall-center{margin:4px 0}
-  .header{padding:10px 16px 4px}
-  .footer{padding:6px 16px 10px}
+  .carousel-card{padding:4px 4%}
+  .carousel-viewport{margin:0 50px}
 }
 @media(max-width:600px){
-  .walls{gap:4px}
-  .wall{gap:6px;padding:6px}
-  .card-info{padding:5px 8px}
-  .card-facts{display:none}
+  .carousel-card{padding:4px 2%}
+  .carousel-viewport{margin:0 44px}
+  .card-content{padding:8px 12px}
+  .card-desc{display:none}
 }
 </style>
 </head>
@@ -197,14 +219,18 @@ body{
 <div class="app">
   <div class="header">
     <h1>Forest Animals Showcase</h1>
-    <p>Touch and drag the 3D models to rotate them</p>
+    <p>Swipe the 3D models to rotate -- use arrows to browse</p>
   </div>
 
-  <div class="walls">
-    <div class="wall wall-left" id="wallLeft"></div>
-    <div class="wall wall-center" id="wallCenter"></div>
-    <div class="wall wall-right" id="wallRight"></div>
+  <div class="carousel-area">
+    <button class="arrow-btn arrow-left" id="prevBtn">&#9664;</button>
+    <div class="carousel-viewport">
+      <div class="carousel-track" id="carouselTrack"></div>
+    </div>
+    <button class="arrow-btn arrow-right" id="nextBtn">&#9654;</button>
   </div>
+
+  <div class="carousel-dots" id="carouselDots"></div>
 
   <div class="footer">
     <button class="btn-back" onclick="location.href='../index.html'">Back to Menu</button>
@@ -212,152 +238,433 @@ body{
 </div>
 
 <script>
-const ANIMALS = [
+var ANIMALS = [
   {
     name:'Red Deer', latin:'Cervus elaphus',
+    desc:'Majestic woodland giants with impressive antlers that can weigh up to 5 kg each. Males clash antlers in autumn to win mates.',
     facts:['Herbivore','Up to 40 mph','Antlers regrow yearly'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDF32\uD83E\uDD8C\uD83C\uDF3F\uD83C\uDF42',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'bellow',freq:130,dur:0.9}
   },
   {
     name:'Red Fox', latin:'Vulpes vulpes',
+    desc:'Clever and adaptable, foxes can hear a watch ticking from 40 yards away. They use the Earth\'s magnetic field to hunt.',
     facts:['Omnivore','40+ vocalizations','Magnetic field sense'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDF19\uD83E\uDD8A\uD83D\uDC3E\uD83C\uDF32',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'bark',freq:800,dur:0.12}
   },
   {
     name:'Brown Bear', latin:'Ursus arctos',
+    desc:'One of the largest land predators, brown bears can eat up to 90 pounds of food per day before hibernation.',
     facts:['Omnivore','35 mph sprint','Hibernates 5-7 months'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDFD4\uFE0F\uD83D\uDC3B\uD83C\uDF4F\uD83D\uDCA4',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'growl',freq:75,dur:1.2}
   },
   {
     name:'Great Horned Owl', latin:'Bubo virginianus',
+    desc:'Silent hunters of the night with eyesight 100 times better than humans. Their wing feathers muffle sound in flight.',
     facts:['Carnivore','270\u00B0 head turn','Silent flight'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDF1C\uD83E\uDD89\uD83C\uDF32\u2B50',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'hoot',freq:300,dur:0.4}
   },
   {
     name:'Raccoon', latin:'Procyon lotor',
+    desc:'Highly intelligent animals that can remember solutions to tasks for up to three years. Their nimble paws work like human hands.',
     facts:['Omnivore','Dexterous paws','Nocturnal'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDF19\uD83E\uDD9D\uD83D\uDE4C\uD83C\uDF3F',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'chitter',freq:600,dur:0.06}
   },
   {
     name:'Red Squirrel', latin:'Sciurus vulgaris',
+    desc:'Acrobatic tree dwellers that can leap 10 times their body length. They bury thousands of nuts each autumn as food stores.',
     facts:['Herbivore','10x body leap','Hides 10K nuts/yr'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDF30\uD83D\uDC3F\uFE0F\uD83C\uDF33\uD83C\uDF42',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'chirp',freq:900,dur:0.15}
   },
   {
     name:'Beaver', latin:'Castor fiber',
+    desc:'Nature\'s greatest engineers, beavers build dams that can stretch over 800 meters. They can hold their breath for 15 minutes.',
     facts:['Herbivore','Dam builder','Holds breath 15 min'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDF0A\uD83E\uDDAB\uD83C\uDF33\uD83E\uDEB5',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'slap',freq:200,dur:0.15}
   },
   {
     name:'Grey Wolf', latin:'Canis lupus',
+    desc:'Social pack hunters whose howls can be heard up to 16 km away. Each wolf has a unique howl, like a fingerprint.',
     facts:['Carnivore','Pack hunter','Howl carries 16 km'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDF1D\uD83D\uDC3A\uD83D\uDC3E\uD83C\uDFD4\uFE0F',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'howl',freq:220,dur:2.0}
   },
   {
     name:'Golden Eagle', latin:'Aquila chrysaetos',
+    desc:'Masters of the sky that can spot a rabbit from over 3 km away. They dive at speeds up to 240 km/h to catch prey.',
     facts:['Carnivore','240 km/h dive','8x human vision'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\u2600\uFE0F\uD83E\uDD85\uD83C\uDFD4\uFE0F\uD83D\uDCA8',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'screech',freq:1800,dur:0.6}
   },
   {
     name:'Hedgehog', latin:'Erinaceus europaeus',
+    desc:'Spiny insectivores with around 7,000 quills that are replaced every year. They curl into a tight ball for protection.',
     facts:['Insectivore','~7000 spines','Immune to venom'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDF3F\uD83E\uDD94\uD83D\uDC1B\uD83C\uDF43',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'snuffle',freq:400,dur:0.5}
   },
   {
     name:'Forest Gecko', latin:'Phelsuma grandis',
+    desc:'Color-changing lizards with toe pads that let them cling to almost any surface, even glass. Their tails regrow if lost.',
     facts:['Insectivore','Tail regeneration','Sticky toe pads'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDF3F\uD83E\uDD8E\u2600\uFE0F\uD83C\uDF32',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'click',freq:1500,dur:0.04}
   },
   {
     name:'European Hare', latin:'Lepus europaeus',
+    desc:'Swift runners that can reach speeds of 70 km/h and jump 3 meters high. They have nearly 360-degree vision.',
     facts:['Herbivore','70 km/h speed','360\u00B0 vision'],
-    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+    emojis:'\uD83C\uDF3E\uD83D\uDC07\uD83C\uDF3F\uD83C\uDF3B',
+    model:'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+    sound:{type:'thump',freq:55,dur:0.12}
   }
 ];
 
-function buildCard(animal) {
-  const card = document.createElement('div');
-  card.className = 'card';
+var currentIndex = 0;
+var totalSlides = ANIMALS.length;
+var track = document.getElementById('carouselTrack');
+var dotsWrap = document.getElementById('carouselDots');
+var prevBtn = document.getElementById('prevBtn');
+var nextBtn = document.getElementById('nextBtn');
 
-  const mw = document.createElement('div');
-  mw.className = 'model-wrap';
+function buildCards() {
+  ANIMALS.forEach(function(animal, i) {
+    var slide = document.createElement('div');
+    slide.className = 'carousel-card';
 
-  const mv = document.createElement('model-viewer');
-  mv.setAttribute('src', animal.model);
-  mv.setAttribute('camera-controls', '');
-  mv.setAttribute('auto-rotate', '');
-  mv.setAttribute('auto-rotate-delay', '0');
-  mv.setAttribute('rotation-per-second', '24deg');
-  mv.setAttribute('interaction-prompt', 'auto');
-  mv.setAttribute('touch-action', 'none');
-  mv.setAttribute('camera-orbit', '45deg 75deg auto');
-  mv.setAttribute('min-camera-orbit', 'auto auto auto');
-  mv.setAttribute('max-camera-orbit', 'auto auto auto');
-  mv.setAttribute('shadow-intensity', '0.6');
-  mv.setAttribute('shadow-softness', '0.8');
-  mv.setAttribute('environment-image', 'neutral');
-  mv.setAttribute('exposure', '0.8');
-  mv.setAttribute('alt', animal.name + ' 3D model');
-  mv.style.cssText = 'width:100%;height:100%;--poster-color:transparent;background:transparent';
-  mw.appendChild(mv);
+    var inner = document.createElement('div');
+    inner.className = 'card-inner';
 
-  const label = document.createElement('div');
-  label.className = 'placeholder-label';
-  label.textContent = 'Placeholder 3D Model';
-  mw.appendChild(label);
-  card.appendChild(mw);
+    var mw = document.createElement('div');
+    mw.className = 'model-wrap';
 
-  const info = document.createElement('div');
-  info.className = 'card-info';
-  info.innerHTML =
-    '<div class="card-name">' + animal.name + '</div>' +
-    '<div class="card-latin">' + animal.latin + '</div>' +
-    '<div class="card-facts">' + animal.facts.map(function(f){return '<span class="fact">'+f+'</span>'}).join('') + '</div>';
-  card.appendChild(info);
+    var mv = document.createElement('model-viewer');
+    mv.setAttribute('src', animal.model);
+    mv.setAttribute('camera-controls', '');
+    mv.setAttribute('auto-rotate', '');
+    mv.setAttribute('auto-rotate-delay', '0');
+    mv.setAttribute('rotation-per-second', '24deg');
+    mv.setAttribute('interaction-prompt', 'none');
+    mv.setAttribute('touch-action', 'none');
+    mv.setAttribute('camera-orbit', '45deg 75deg auto');
+    mv.setAttribute('disable-pan', '');
+    mv.setAttribute('disable-zoom', '');
+    mv.setAttribute('shadow-intensity', '0.6');
+    mv.setAttribute('shadow-softness', '0.8');
+    mv.setAttribute('environment-image', 'neutral');
+    mv.setAttribute('exposure', '0.8');
+    mv.setAttribute('alt', animal.name + ' 3D model');
+    mv.style.cssText = 'width:100%;height:100%;--poster-color:transparent;background:transparent;touch-action:none;';
+    mw.appendChild(mv);
 
-  return card;
+    var label = document.createElement('div');
+    label.className = 'placeholder-label';
+    label.textContent = 'Drag to rotate 3D model';
+    mw.appendChild(label);
+    inner.appendChild(mw);
+
+    var content = document.createElement('div');
+    content.className = 'card-content';
+
+    var nameEl = document.createElement('div');
+    nameEl.className = 'card-name';
+    nameEl.textContent = animal.name;
+    content.appendChild(nameEl);
+
+    var latinEl = document.createElement('div');
+    latinEl.className = 'card-latin';
+    latinEl.textContent = animal.latin;
+    content.appendChild(latinEl);
+
+    var descEl = document.createElement('div');
+    descEl.className = 'card-desc';
+    descEl.textContent = animal.desc;
+    content.appendChild(descEl);
+
+    var factsEl = document.createElement('div');
+    factsEl.className = 'card-facts';
+    animal.facts.forEach(function(f) {
+      var tag = document.createElement('span');
+      tag.className = 'fact';
+      tag.textContent = f;
+      factsEl.appendChild(tag);
+    });
+    content.appendChild(factsEl);
+
+    var bottom = document.createElement('div');
+    bottom.className = 'card-bottom';
+
+    var soundBtn = document.createElement('button');
+    soundBtn.className = 'sound-btn';
+    soundBtn.innerHTML = '\uD83D\uDD0A Play Sound';
+    soundBtn.dataset.index = i;
+    soundBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      playAnimalSound(ANIMALS[this.dataset.index].sound, this);
+    });
+    soundBtn.addEventListener('touchend', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      playAnimalSound(ANIMALS[this.dataset.index].sound, this);
+    });
+    bottom.appendChild(soundBtn);
+
+    var emojisEl = document.createElement('div');
+    emojisEl.className = 'card-emojis';
+    emojisEl.textContent = animal.emojis;
+    bottom.appendChild(emojisEl);
+
+    content.appendChild(bottom);
+    inner.appendChild(content);
+    slide.appendChild(inner);
+    track.appendChild(slide);
+
+    var dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.dataset.index = i;
+    dot.addEventListener('click', function() { goToSlide(parseInt(this.dataset.index)); });
+    dotsWrap.appendChild(dot);
+  });
 }
 
-const wallLeft = document.getElementById('wallLeft');
-const wallCenter = document.getElementById('wallCenter');
-const wallRight = document.getElementById('wallRight');
+function goToSlide(idx) {
+  currentIndex = Math.max(0, Math.min(totalSlides - 1, idx));
+  track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+  updateArrows();
+  updateDots();
+}
 
-ANIMALS.forEach(function(animal, i) {
-  var wall;
-  if (i < 4) wall = wallLeft;
-  else if (i < 8) wall = wallCenter;
-  else wall = wallRight;
-  wall.appendChild(buildCard(animal));
-});
+function updateArrows() {
+  prevBtn.disabled = currentIndex === 0;
+  nextBtn.disabled = currentIndex === totalSlides - 1;
+}
+
+function updateDots() {
+  var dots = dotsWrap.querySelectorAll('.dot');
+  dots.forEach(function(d, i) {
+    d.classList.toggle('active', i === currentIndex);
+  });
+}
+
+prevBtn.addEventListener('click', function() { goToSlide(currentIndex - 1); });
+nextBtn.addEventListener('click', function() { goToSlide(currentIndex + 1); });
+prevBtn.addEventListener('touchend', function(e) { e.preventDefault(); goToSlide(currentIndex - 1); });
+nextBtn.addEventListener('touchend', function(e) { e.preventDefault(); goToSlide(currentIndex + 1); });
+
+function playAnimalSound(cfg, btn) {
+  if (btn.classList.contains('playing')) return;
+  btn.classList.add('playing');
+  try {
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    var now = ac.currentTime;
+
+    if (cfg.type === 'bellow') {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'triangle'; o.frequency.setValueAtTime(cfg.freq, now);
+      o.frequency.linearRampToValueAtTime(cfg.freq * 0.8, now + cfg.dur);
+      var lfo = ac.createOscillator(), lfoG = ac.createGain();
+      lfo.connect(lfoG); lfoG.connect(o.frequency);
+      lfo.frequency.value = 5; lfoG.gain.value = 15; lfo.start(now);
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.2, now + 0.1);
+      g.gain.linearRampToValueAtTime(0.15, now + cfg.dur * 0.7);
+      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
+      o.start(now); o.stop(now + cfg.dur); lfo.stop(now + cfg.dur);
+    }
+    else if (cfg.type === 'bark') {
+      for (var b = 0; b < 3; b++) {
+        var o = ac.createOscillator(), g = ac.createGain();
+        o.connect(g); g.connect(ac.destination);
+        o.type = 'square';
+        var t = now + b * 0.18;
+        o.frequency.setValueAtTime(cfg.freq, t);
+        o.frequency.exponentialRampToValueAtTime(cfg.freq * 0.5, t + cfg.dur);
+        g.gain.setValueAtTime(0.15, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
+        o.start(t); o.stop(t + cfg.dur);
+      }
+    }
+    else if (cfg.type === 'growl') {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'sawtooth'; o.frequency.value = cfg.freq;
+      var lfo = ac.createOscillator(), lfoG = ac.createGain();
+      lfo.connect(lfoG); lfoG.connect(o.frequency);
+      lfo.frequency.value = 3; lfoG.gain.value = 10; lfo.start(now);
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.12, now + 0.2);
+      g.gain.setValueAtTime(0.12, now + cfg.dur * 0.6);
+      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
+      o.start(now); o.stop(now + cfg.dur); lfo.stop(now + cfg.dur);
+    }
+    else if (cfg.type === 'hoot') {
+      [cfg.freq, cfg.freq * 0.82].forEach(function(f, i) {
+        var o = ac.createOscillator(), g = ac.createGain();
+        o.connect(g); g.connect(ac.destination);
+        o.type = 'sine'; o.frequency.value = f;
+        var t = now + i * (cfg.dur + 0.15);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.18, t + 0.05);
+        g.gain.setValueAtTime(0.18, t + cfg.dur * 0.7);
+        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
+        o.start(t); o.stop(t + cfg.dur);
+      });
+    }
+    else if (cfg.type === 'chitter') {
+      for (var c = 0; c < 12; c++) {
+        var o = ac.createOscillator(), g = ac.createGain();
+        o.connect(g); g.connect(ac.destination);
+        o.type = 'square';
+        var t = now + c * cfg.dur;
+        o.frequency.value = cfg.freq + Math.random() * 200;
+        g.gain.setValueAtTime(0.1, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur * 0.8);
+        o.start(t); o.stop(t + cfg.dur);
+      }
+    }
+    else if (cfg.type === 'chirp') {
+      for (var ch = 0; ch < 4; ch++) {
+        var o = ac.createOscillator(), g = ac.createGain();
+        o.connect(g); g.connect(ac.destination);
+        o.type = 'sine';
+        var t = now + ch * 0.2;
+        o.frequency.setValueAtTime(cfg.freq, t);
+        o.frequency.exponentialRampToValueAtTime(cfg.freq * 1.8, t + cfg.dur);
+        g.gain.setValueAtTime(0.15, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
+        o.start(t); o.stop(t + cfg.dur);
+      }
+    }
+    else if (cfg.type === 'slap') {
+      var buf = ac.createBuffer(1, ac.sampleRate * cfg.dur, ac.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var s = 0; s < data.length; s++) {
+        data[s] = (Math.random() * 2 - 1) * Math.exp(-s / (ac.sampleRate * 0.02));
+      }
+      var src = ac.createBufferSource(), g = ac.createGain();
+      src.buffer = buf; src.connect(g); g.connect(ac.destination);
+      g.gain.setValueAtTime(0.3, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
+      src.start(now);
+    }
+    else if (cfg.type === 'howl') {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(cfg.freq, now);
+      o.frequency.linearRampToValueAtTime(cfg.freq * 2.5, now + cfg.dur * 0.4);
+      o.frequency.linearRampToValueAtTime(cfg.freq * 2.2, now + cfg.dur * 0.7);
+      o.frequency.linearRampToValueAtTime(cfg.freq * 1.5, now + cfg.dur);
+      var lfo = ac.createOscillator(), lfoG = ac.createGain();
+      lfo.connect(lfoG); lfoG.connect(o.frequency);
+      lfo.frequency.value = 4; lfoG.gain.value = 8; lfo.start(now);
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.18, now + 0.15);
+      g.gain.setValueAtTime(0.18, now + cfg.dur * 0.6);
+      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
+      o.start(now); o.stop(now + cfg.dur); lfo.stop(now + cfg.dur);
+    }
+    else if (cfg.type === 'screech') {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(cfg.freq, now);
+      o.frequency.exponentialRampToValueAtTime(cfg.freq * 0.4, now + cfg.dur);
+      g.gain.setValueAtTime(0.1, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + cfg.dur);
+      o.start(now); o.stop(now + cfg.dur);
+    }
+    else if (cfg.type === 'snuffle') {
+      for (var sn = 0; sn < 5; sn++) {
+        var buf = ac.createBuffer(1, ac.sampleRate * 0.08, ac.sampleRate);
+        var data = buf.getChannelData(0);
+        for (var s = 0; s < data.length; s++) data[s] = (Math.random() * 2 - 1) * 0.3;
+        var src = ac.createBufferSource(), g = ac.createGain();
+        var filt = ac.createBiquadFilter();
+        filt.type = 'lowpass'; filt.frequency.value = cfg.freq;
+        src.buffer = buf; src.connect(filt); filt.connect(g); g.connect(ac.destination);
+        var t = now + sn * 0.12;
+        g.gain.setValueAtTime(0.12, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+        src.start(t);
+      }
+    }
+    else if (cfg.type === 'click') {
+      for (var ck = 0; ck < 3; ck++) {
+        var o = ac.createOscillator(), g = ac.createGain();
+        o.connect(g); g.connect(ac.destination);
+        o.type = 'sine'; o.frequency.value = cfg.freq;
+        var t = now + ck * 0.1;
+        g.gain.setValueAtTime(0.2, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
+        o.start(t); o.stop(t + cfg.dur);
+      }
+    }
+    else if (cfg.type === 'thump') {
+      for (var th = 0; th < 3; th++) {
+        var o = ac.createOscillator(), g = ac.createGain();
+        o.connect(g); g.connect(ac.destination);
+        o.type = 'sine'; o.frequency.value = cfg.freq;
+        var t = now + th * 0.2;
+        g.gain.setValueAtTime(0.25, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur);
+        o.start(t); o.stop(t + cfg.dur);
+      }
+    }
+
+    var totalDur = cfg.type === 'howl' ? cfg.dur : (cfg.type === 'bark' ? 0.6 : cfg.type === 'chitter' ? 0.8 : cfg.type === 'chirp' ? 0.8 : cfg.type === 'hoot' ? 1.1 : cfg.type === 'snuffle' ? 0.7 : cfg.type === 'click' ? 0.3 : cfg.type === 'thump' ? 0.6 : cfg.dur + 0.1);
+    setTimeout(function() { btn.classList.remove('playing'); }, totalDur * 1000);
+  } catch (e) {
+    btn.classList.remove('playing');
+  }
+}
+
+buildCards();
+updateArrows();
 
 function buildParticles() {
   var sc = document.getElementById('scene');
-
-  for (var i = 0; i < 24; i++) {
+  for (var i = 0; i < 20; i++) {
     var f = document.createElement('div');
     f.className = 'firefly';
     f.style.left = (Math.random() * 100) + '%';
     f.style.top = (Math.random() * 100) + '%';
     f.style.setProperty('--dur', (3 + Math.random() * 5) + 's');
-    f.style.setProperty('--dx', ((Math.random()-.5)*100) + 'px');
-    f.style.setProperty('--dy', ((Math.random()-.5)*100) + 'px');
+    f.style.setProperty('--dx', ((Math.random() - .5) * 100) + 'px');
+    f.style.setProperty('--dy', ((Math.random() - .5) * 100) + 'px');
     f.style.animationDelay = (Math.random() * 5) + 's';
     sc.appendChild(f);
   }
-
-  var leafEmojis = ['\uD83C\uDF43','\uD83C\uDF42','\uD83C\uDF41'];
-  for (var i = 0; i < 10; i++) {
+  var leafEmojis = ['\uD83C\uDF43', '\uD83C\uDF42', '\uD83C\uDF41'];
+  for (var i = 0; i < 8; i++) {
     var l = document.createElement('div');
     l.className = 'leaf';
     l.textContent = leafEmojis[Math.floor(Math.random() * leafEmojis.length)];
     l.style.left = (Math.random() * 100) + '%';
     l.style.setProperty('--dur', (8 + Math.random() * 6) + 's');
-    l.style.setProperty('--dx', ((Math.random()-.5)*150) + 'px');
+    l.style.setProperty('--dx', ((Math.random() - .5) * 150) + 'px');
     l.style.animationDelay = (Math.random() * 10) + 's';
     sc.appendChild(l);
   }
 }
-
 buildParticles();
 
 function spawnRing(x, y) {
@@ -366,25 +673,14 @@ function spawnRing(x, y) {
   ring.style.left = x + 'px';
   ring.style.top = y + 'px';
   document.body.appendChild(ring);
-  ring.addEventListener('animationend', function(){ring.remove()});
+  ring.addEventListener('animationend', function() { ring.remove(); });
 }
 
 document.addEventListener('touchstart', function(e) {
   for (var i = 0; i < e.changedTouches.length; i++) {
-    var t = e.changedTouches[i];
-    spawnRing(t.clientX, t.clientY);
-    var el = document.elementFromPoint(t.clientX, t.clientY);
-    var card = el && el.closest('.card');
-    if (card) card.classList.add('active');
+    spawnRing(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
   }
-}, {passive:true});
-
-document.addEventListener('touchend', function(e) {
-  for (var i = 0; i < e.changedTouches.length; i++) {
-    var t = e.changedTouches[i];
-    document.querySelectorAll('.card.active').forEach(function(c){c.classList.remove('active')});
-  }
-});
+}, { passive: true });
 </script>
 </body>
 </html>
