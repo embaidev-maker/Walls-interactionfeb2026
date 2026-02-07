@@ -13,6 +13,14 @@ const CATEGORIES = {
             { name: 'Kitchen Cleanup', game: 'sort-kitchen' },
             { name: 'Living Room Cleanup', game: 'sort-living' }
         ]
+    },
+    'learning': {
+        title: 'Learning',
+        options: [
+            { name: 'Alphabet Explorer', game: 'alphabet-explorer' },
+            { name: 'Number Fun', game: 'number-fun' },
+            { name: 'Colors & Shapes', game: 'colors-shapes' }
+        ]
     }
 };
 
@@ -173,6 +181,15 @@ function loadGame(gameName) {
                 break;
             case 'sort-living':
                 window.location.href = 'games/room-sorter.html?room=living';
+                break;
+            case 'alphabet-explorer':
+                window.location.href = 'games/alphabet-explorer.html';
+                break;
+            case 'number-fun':
+                window.location.href = 'games/number-fun.html';
+                break;
+            case 'colors-shapes':
+                window.location.href = 'games/colors-shapes.html';
                 break;
             default:
                 console.log('Game not found:', gameName);
