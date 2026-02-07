@@ -56,10 +56,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="header">
     <h1>Alphabet Explorer</h1>
     <div class="header-right">
-      <div class="lang-toggle">
-        <div class="lang-btn active" data-lang="en">English</div>
-        <div class="lang-btn" data-lang="ml">Malayalam</div>
-      </div>
       <button class="btn-back" id="btnBack">Back</button>
     </div>
   </div>
@@ -72,6 +68,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 
   <div class="letter-list">
+    <div style="display:flex;justify-content:center;margin-bottom:8px">
+      <div class="lang-toggle">
+        <div class="lang-btn active" data-lang="en">English</div>
+        <div class="lang-btn" data-lang="ml">Malayalam</div>
+      </div>
+    </div>
     <div class="list-label" id="listLabel">Tap a letter to explore</div>
     <div class="list-scroll" id="letterList"></div>
     <div class="nav-arrows">

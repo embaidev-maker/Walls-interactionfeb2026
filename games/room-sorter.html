@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Room Cleanup</title>
+<title>Daily Skills</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif}
@@ -83,7 +83,7 @@ body{-webkit-user-select:none;user-select:none;touch-action:none;background:#1a1
   border-radius:14px;padding:10px 18px;text-align:center;
 }
 .hud-label{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px}
-.hud-val{font-size:clamp(20px,3vw,28px);font-weight:800;color:white}
+.hud-val{font-size:clamp(24px,3.5vw,34px);font-weight:800;color:white}
 
 .room-title{
   position:absolute;top:14px;left:50%;transform:translateX(-50%);
@@ -238,6 +238,61 @@ var LIVING_POOL = [
   { emoji:'\u{1F56F}\uFE0F', name:'Candle', targetX:.42, targetY:.58, targetW:60, targetH:75, targetLabel:'On table' }
 ];
 
+var GROCERY_POOL = [
+  { emoji:'\u{1F95B}', name:'Milk', targetX:.82, targetY:.30, targetW:70, targetH:75, targetLabel:'In the fridge' },
+  { emoji:'\u{1F34E}', name:'Apple', targetX:.42, targetY:.42, targetW:80, targetH:70, targetLabel:'On counter' },
+  { emoji:'\u{1F35E}', name:'Bread', targetX:.24, targetY:.22, targetW:80, targetH:70, targetLabel:'In cabinet' },
+  { emoji:'\u{1F9C0}', name:'Cheese', targetX:.80, targetY:.36, targetW:70, targetH:65, targetLabel:'In the fridge' },
+  { emoji:'\u{1F34C}', name:'Banana', targetX:.46, targetY:.44, targetW:75, targetH:65, targetLabel:'On counter' },
+  { emoji:'\u{1F95C}', name:'Cereal', targetX:.28, targetY:.20, targetW:75, targetH:70, targetLabel:'In cabinet' },
+  { emoji:'\u{1F95A}', name:'Eggs', targetX:.78, targetY:.42, targetW:80, targetH:70, targetLabel:'In the fridge' },
+  { emoji:'\u{1F36A}', name:'Cookies', targetX:.32, targetY:.24, targetW:70, targetH:65, targetLabel:'In cabinet' }
+];
+
+var LAUNDRY_POOL = [
+  { emoji:'\u{1F455}', name:'T-Shirt', targetX:.20, targetY:.40, targetW:90, targetH:80, targetLabel:'In washer' },
+  { emoji:'\u{1F9E6}', name:'Socks', targetX:.24, targetY:.44, targetW:70, targetH:65, targetLabel:'In washer' },
+  { emoji:'\u{1F9E5}', name:'Jacket', targetX:.78, targetY:.28, targetW:80, targetH:80, targetLabel:'In closet' },
+  { emoji:'\u{1F9F4}', name:'Detergent', targetX:.40, targetY:.30, targetW:70, targetH:75, targetLabel:'On shelf' },
+  { emoji:'\u{1F456}', name:'Jeans', targetX:.22, targetY:.36, targetW:85, targetH:80, targetLabel:'In washer' },
+  { emoji:'\u{1F9E2}', name:'Cap', targetX:.82, targetY:.24, targetW:70, targetH:65, targetLabel:'In closet' },
+  { emoji:'\u{1F9E3}', name:'Scarf', targetX:.80, targetY:.34, targetW:75, targetH:70, targetLabel:'In closet' },
+  { emoji:'\u{1F6CF}\uFE0F', name:'Blanket', targetX:.42, targetY:.42, targetW:90, targetH:80, targetLabel:'In dryer' }
+];
+
+var RECYCLE_POOL = [
+  { emoji:'\u{1F4F0}', name:'Newspaper', targetX:.18, targetY:.42, targetW:85, targetH:75, targetLabel:'Paper bin' },
+  { emoji:'\u{1F9F4}', name:'Plastic Bottle', targetX:.42, targetY:.42, targetW:70, targetH:80, targetLabel:'Plastic bin' },
+  { emoji:'\u{1FAD9}', name:'Glass Jar', targetX:.66, targetY:.42, targetW:70, targetH:80, targetLabel:'Glass bin' },
+  { emoji:'\u{1F4E6}', name:'Cardboard', targetX:.20, targetY:.38, targetW:85, targetH:75, targetLabel:'Paper bin' },
+  { emoji:'\u{1F96B}', name:'Tin Can', targetX:.42, targetY:.38, targetW:65, targetH:70, targetLabel:'Metal bin' },
+  { emoji:'\u{1F34C}', name:'Banana Peel', targetX:.86, targetY:.42, targetW:80, targetH:70, targetLabel:'Compost' },
+  { emoji:'\u{1F6CD}\uFE0F', name:'Plastic Bag', targetX:.44, targetY:.46, targetW:75, targetH:70, targetLabel:'Plastic bin' },
+  { emoji:'\u{1F34E}', name:'Apple Core', targetX:.84, targetY:.38, targetW:70, targetH:65, targetLabel:'Compost' }
+];
+
+var SCHOOLBAG_POOL = [
+  { emoji:'\u270F\uFE0F', name:'Pencil', targetX:.58, targetY:.38, targetW:70, targetH:65, targetLabel:'Pencil case' },
+  { emoji:'\u{1F4D5}', name:'Textbook', targetX:.80, targetY:.42, targetW:85, targetH:80, targetLabel:'On shelf' },
+  { emoji:'\u{1F4CF}', name:'Ruler', targetX:.60, targetY:.36, targetW:75, targetH:60, targetLabel:'Pencil case' },
+  { emoji:'\u{1F371}', name:'Lunch Box', targetX:.64, targetY:.42, targetW:80, targetH:75, targetLabel:'On the desk' },
+  { emoji:'\u{1F9F4}', name:'Water Bottle', targetX:.40, targetY:.42, targetW:65, targetH:80, targetLabel:'Nightstand' },
+  { emoji:'\u{1F4DD}', name:'Notebook', targetX:.66, targetY:.38, targetW:80, targetH:75, targetLabel:'On the desk' },
+  { emoji:'\u{1F58D}\uFE0F', name:'Crayons', targetX:.56, targetY:.40, targetW:70, targetH:65, targetLabel:'Pencil case' },
+  { emoji:'\u{1F392}', name:'Backpack', targetX:.80, targetY:.42, targetW:80, targetH:85, targetLabel:'On shelf' }
+];
+
+var TABLE_POOL = [
+  { emoji:'\u{1F37D}\uFE0F', name:'Plate', targetX:.50, targetY:.48, targetW:90, targetH:80, targetLabel:'Center of table' },
+  { emoji:'\u{1F374}', name:'Fork', targetX:.38, targetY:.48, targetW:60, targetH:75, targetLabel:'Left side' },
+  { emoji:'\u{1F52A}', name:'Knife', targetX:.62, targetY:.48, targetW:60, targetH:75, targetLabel:'Right side' },
+  { emoji:'\u{1F944}', name:'Spoon', targetX:.66, targetY:.46, targetW:55, targetH:70, targetLabel:'Right side' },
+  { emoji:'\u{1F95B}', name:'Glass', targetX:.58, targetY:.34, targetW:65, targetH:70, targetLabel:'Top right' },
+  { emoji:'\u{1F9FB}', name:'Napkin', targetX:.34, targetY:.46, targetW:70, targetH:65, targetLabel:'Left side' },
+  { emoji:'\u{1F963}', name:'Bowl', targetX:.50, targetY:.44, targetW:80, targetH:70, targetLabel:'On plate' },
+  { emoji:'\u2615', name:'Cup', targetX:.60, targetY:.32, targetW:65, targetH:65, targetLabel:'Top right' }
+];
+
 var ROOMS = {
   bedroom: {
     name:'Bedroom Cleanup', pool:BEDROOM_POOL, count:5,
@@ -268,6 +323,56 @@ var ROOMS = {
     floor1:'#6D4C28', floor2:'#5A3E1E', trim:'#3E2723',
     accent:'#1565C0', accentLight:'#64B5F6',
     drawRoom: drawLiving
+  },
+  grocery: {
+    name:'Grocery Sorting', pool:GROCERY_POOL, count:5,
+    progressColor:'linear-gradient(90deg,#A5D6A7,#43A047)',
+    overlayBg:'linear-gradient(135deg,#E8F5E9,#C8E6C9)',
+    overlayBorder:'#66BB6A', overlayTitleColor:'#2E7D32',
+    wall1:'#F0F4F0', wall2:'#E4EBE4', backWall1:'#F5F5F5', backWall2:'#EEEEEE',
+    floor1:'#E0E0E0', floor2:'#BDBDBD', trim:'#455A64',
+    accent:'#43A047', accentLight:'#A5D6A7',
+    drawRoom: drawKitchen
+  },
+  laundry: {
+    name:'Laundry Sorting', pool:LAUNDRY_POOL, count:5,
+    progressColor:'linear-gradient(90deg,#CE93D8,#8E24AA)',
+    overlayBg:'linear-gradient(135deg,#F3E5F5,#E1BEE7)',
+    overlayBorder:'#BA68C8', overlayTitleColor:'#6A1B9A',
+    wall1:'#F5F0F5', wall2:'#EBE4EB', backWall1:'#F8F5F8', backWall2:'#F0EAF0',
+    floor1:'#D7CCC8', floor2:'#BCAAA4', trim:'#5D4037',
+    accent:'#8E24AA', accentLight:'#CE93D8',
+    drawRoom: drawLaundry
+  },
+  recycling: {
+    name:'Recycling Sort', pool:RECYCLE_POOL, count:5,
+    progressColor:'linear-gradient(90deg,#81C784,#2E7D32)',
+    overlayBg:'linear-gradient(135deg,#E8F5E9,#A5D6A7)',
+    overlayBorder:'#4CAF50', overlayTitleColor:'#1B5E20',
+    wall1:'#E8F0E8', wall2:'#D8E8D8', backWall1:'#F0F5F0', backWall2:'#E0EBE0',
+    floor1:'#B0BEC5', floor2:'#90A4AE', trim:'#37474F',
+    accent:'#2E7D32', accentLight:'#81C784',
+    drawRoom: drawRecycling
+  },
+  schoolbag: {
+    name:'School Bag Packing', pool:SCHOOLBAG_POOL, count:5,
+    progressColor:'linear-gradient(90deg,#FFB74D,#F57C00)',
+    overlayBg:'linear-gradient(135deg,#FFF3E0,#FFE0B2)',
+    overlayBorder:'#FFA726', overlayTitleColor:'#E65100',
+    wall1:'#F5E6D3', wall2:'#ECD9C6', backWall1:'#F0E4D8', backWall2:'#E8D8C8',
+    floor1:'#C4A06A', floor2:'#A88B52', trim:'#5D4037',
+    accent:'#F57C00', accentLight:'#FFB74D',
+    drawRoom: drawBedroom
+  },
+  table: {
+    name:'Table Setting', pool:TABLE_POOL, count:5,
+    progressColor:'linear-gradient(90deg,#FFCC80,#FF8F00)',
+    overlayBg:'linear-gradient(135deg,#FFF8E1,#FFECB3)',
+    overlayBorder:'#FFB300', overlayTitleColor:'#FF6F00',
+    wall1:'#F5EDE4', wall2:'#EBE0D4', backWall1:'#F8F2EC', backWall2:'#F0E8E0',
+    floor1:'#8D6E63', floor2:'#6D4C41', trim:'#3E2723',
+    accent:'#FF8F00', accentLight:'#FFCC80',
+    drawRoom: drawDining
   }
 };
 
@@ -792,6 +897,195 @@ function drawLiving(ctx, W, H, cfg) {
   ctx.beginPath();
   ctx.ellipse(plantX + 6, plantY + 14, 12, 16, -0.3, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function drawLaundry(ctx, W, H, cfg) {
+  var r = perspectiveRoom(ctx, W, H, cfg);
+  var rw = r.bwR - r.bwL, rh = r.bwB - r.bwT;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(0, H); ctx.lineTo(r.bwL, r.bwB); ctx.lineTo(r.bwR, r.bwB); ctx.lineTo(W, H); ctx.closePath();
+  ctx.clip();
+  var ts = 28;
+  ctx.strokeStyle = '#B0BEC540';
+  ctx.lineWidth = 0.5;
+  for (var ty = r.bwB; ty < H + ts; ty += ts) {
+    ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(W, ty); ctx.stroke();
+  }
+  for (var tx = 0; tx < W + ts; tx += ts) {
+    ctx.beginPath(); ctx.moveTo(tx, r.bwB); ctx.lineTo(tx, H); ctx.stroke();
+  }
+  ctx.restore();
+  drawBaseboard(ctx, r, W, H, '#546E7A');
+
+  var wX = r.bwL + rw * .06, wY = r.bwB - rh * .52, wW = rw * .22, wH = rh * .48;
+  ctx.fillStyle = '#ECEFF1';
+  ctx.fillRect(wX, wY, wW, wH);
+  ctx.strokeStyle = '#B0BEC5'; ctx.lineWidth = 2;
+  ctx.strokeRect(wX, wY, wW, wH);
+  ctx.beginPath();
+  ctx.arc(wX + wW / 2, wY + wH * .55, wW * .28, 0, Math.PI * 2);
+  ctx.fillStyle = '#78909C'; ctx.fill();
+  ctx.strokeStyle = '#90A4AE'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.fillStyle = '#90A4AE';
+  ctx.beginPath(); ctx.arc(wX + wW * .25, wY + wH * .12, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(wX + wW * .5, wY + wH * .12, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(wX + wW * .75, wY + wH * .12, 5, 0, Math.PI * 2); ctx.fill();
+
+  var dX = r.bwL + rw * .30, dY = wY, dW = wW, dH = wH;
+  ctx.fillStyle = '#ECEFF1';
+  ctx.fillRect(dX, dY, dW, dH);
+  ctx.strokeStyle = '#B0BEC5'; ctx.lineWidth = 2;
+  ctx.strokeRect(dX, dY, dW, dH);
+  ctx.beginPath();
+  ctx.arc(dX + dW / 2, dY + dH * .55, dW * .28, 0, Math.PI * 2);
+  ctx.fillStyle = '#B0BEC5'; ctx.fill();
+  ctx.strokeStyle = '#90A4AE'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.fillStyle = '#90A4AE';
+  ctx.beginPath(); ctx.arc(dX + dW * .5, dY + dH * .12, 5, 0, Math.PI * 2); ctx.fill();
+
+  var shX = r.bwL + rw * .30, shY = r.bwT + rh * .04, shW = rw * .24, shH = rh * .30;
+  ctx.fillStyle = '#ECEFF1';
+  ctx.fillRect(shX, shY, shW, shH);
+  ctx.strokeStyle = '#B0BEC5'; ctx.lineWidth = 1;
+  ctx.strokeRect(shX, shY, shW, shH);
+  for (var s = 0; s < 2; s++) {
+    ctx.fillStyle = '#CFD8DC';
+    ctx.fillRect(shX + 3, shY + 4 + s * (shH / 2), shW - 6, 4);
+  }
+
+  var cX = r.bwR - rw * .26, cY = r.bwT + rh * .05, cW = rw * .22, cH = rh * .88;
+  ctx.fillStyle = '#5D4037';
+  ctx.fillRect(cX, cY, cW, cH);
+  ctx.strokeStyle = '#4E342E'; ctx.lineWidth = 2;
+  ctx.strokeRect(cX, cY, cW, cH);
+  ctx.strokeStyle = '#6D4C4180'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(cX + cW / 2, cY); ctx.lineTo(cX + cW / 2, cY + cH); ctx.stroke();
+  ctx.fillStyle = '#795548';
+  ctx.fillRect(cX + cW / 2 - 8, cY + cH * .35, 5, 14);
+  ctx.fillRect(cX + cW / 2 + 3, cY + cH * .35, 5, 14);
+
+  var bkX = r.bwL + rw * .58, bkY = r.bwB - rh * .30;
+  ctx.fillStyle = '#8D6E63';
+  ctx.beginPath();
+  ctx.moveTo(bkX, bkY); ctx.lineTo(bkX + rw * .13, bkY);
+  ctx.lineTo(bkX + rw * .11, bkY + rh * .24);
+  ctx.lineTo(bkX + rw * .02, bkY + rh * .24);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#6D4C41'; ctx.lineWidth = 1; ctx.stroke();
+
+  drawWindow(ctx, r.bwL + rw * .08, r.bwT + 12, rw * .16, rh * .28);
+}
+
+function drawRecycling(ctx, W, H, cfg) {
+  var r = perspectiveRoom(ctx, W, H, cfg);
+  var rw = r.bwR - r.bwL, rh = r.bwB - r.bwT;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(0, H); ctx.lineTo(r.bwL, r.bwB); ctx.lineTo(r.bwR, r.bwB); ctx.lineTo(W, H); ctx.closePath();
+  ctx.clip();
+  ctx.fillStyle = '#90A4AE30';
+  ctx.fillRect(0, r.bwB, W, H - r.bwB);
+  ctx.restore();
+  drawBaseboard(ctx, r, W, H, '#455A64');
+
+  var binColors = ['#1565C0','#FDD835','#2E7D32','#E53935','#6D4C41'];
+  var binLabels = ['Paper','Plastic','Glass','Metal','Compost'];
+  var binCount = 5;
+  var binW = rw * .14, binH = rh * .50;
+  var totalBinW = binCount * binW + (binCount - 1) * rw * .03;
+  var startX = r.bwL + (rw - totalBinW) / 2;
+
+  for (var b = 0; b < binCount; b++) {
+    var bx = startX + b * (binW + rw * .03);
+    var by = r.bwB - binH;
+    ctx.fillStyle = binColors[b];
+    ctx.beginPath();
+    ctx.moveTo(bx + 4, by);
+    ctx.lineTo(bx + binW - 4, by);
+    ctx.lineTo(bx + binW, by + binH);
+    ctx.lineTo(bx, by + binH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.15)';
+    ctx.fillRect(bx + 4, by, binW * .3, binH);
+    ctx.fillStyle = 'rgba(0,0,0,.2)';
+    ctx.fillRect(bx, by, binW, 8);
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold ' + Math.floor(rw * .018) + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(binLabels[b], bx + binW / 2, by + binH * .55);
+  }
+
+  drawWindow(ctx, r.bwL + rw * .10, r.bwT + 12, rw * .18, rh * .30);
+  drawWindow(ctx, r.bwR - rw * .30, r.bwT + 12, rw * .18, rh * .30);
+
+  var pX = r.bwL + rw * .38, pY = r.bwT + 14;
+  drawPainting(ctx, pX, pY, rw * .18, rh * .16, '#81C784', '#4CAF50');
+}
+
+function drawDining(ctx, W, H, cfg) {
+  var r = perspectiveRoom(ctx, W, H, cfg);
+  var rw = r.bwR - r.bwL, rh = r.bwB - r.bwT;
+
+  drawFloorPlanks(ctx, r, W, H, '#6D4C4140', '#5D403730');
+  drawBaseboard(ctx, r, W, H, '#5D4037');
+
+  var tX = r.bwL + rw * .18, tY = r.bwB - rh * .36, tW = rw * .58, tH = rh * .12;
+  var tableGrad = ctx.createLinearGradient(tX, tY, tX + tW, tY);
+  tableGrad.addColorStop(0, '#6D4C41');
+  tableGrad.addColorStop(0.5, '#8D6E63');
+  tableGrad.addColorStop(1, '#6D4C41');
+  ctx.fillStyle = tableGrad;
+  ctx.fillRect(tX, tY, tW, tH);
+  ctx.fillStyle = '#5D4037';
+  ctx.fillRect(tX, tY, tW, 4);
+  ctx.fillStyle = '#4E342E';
+  ctx.fillRect(tX + 18, tY + tH, 12, rh * .34);
+  ctx.fillRect(tX + tW - 30, tY + tH, 12, rh * .34);
+  ctx.fillStyle = 'rgba(255,255,255,.04)';
+  ctx.fillRect(tX + 6, tY + 4, tW - 12, tH - 6);
+
+  var chW = rw * .10, chH = rh * .28;
+  var chY = r.bwB - rh * .44;
+  var chairs = [r.bwL + rw * .25, r.bwL + rw * .45, r.bwL + rw * .65];
+  chairs.forEach(function(cx) {
+    ctx.fillStyle = '#5D4037';
+    ctx.fillRect(cx - chW / 2, chY - chH * .5, chW, chH * .5);
+    ctx.fillStyle = '#795548';
+    ctx.fillRect(cx - chW / 2 - 2, chY, chW + 4, chH * .2);
+    ctx.fillStyle = '#6D4C41';
+    ctx.fillRect(cx - chW / 2 + 2, chY + chH * .2, 6, chH * .3);
+    ctx.fillRect(cx + chW / 2 - 8, chY + chH * .2, 6, chH * .3);
+  });
+
+  var shX = r.bwR - rw * .18, shY = r.bwT + rh * .08, shW = rw * .14, shH = rh * .70;
+  ctx.fillStyle = '#5D4037';
+  ctx.fillRect(shX, shY, shW, shH);
+  for (var s = 0; s < 4; s++) {
+    ctx.fillStyle = '#6D4C41';
+    ctx.fillRect(shX + 3, shY + 4 + s * (shH / 4), shW - 6, 4);
+  }
+  ctx.fillStyle = '#A1887F40';
+  ctx.fillRect(shX + shW * .15, shY + shH * .04, shW * .3, shH * .18);
+  ctx.fillStyle = '#FFB74D40';
+  ctx.fillRect(shX + shW * .55, shY + shH * .06, shW * .25, shH * .14);
+
+  drawWindow(ctx, r.bwL + rw * .08, r.bwT + 14, rw * .18, rh * .34);
+
+  var pX = r.bwL + rw * .35, pY = r.bwT + 14;
+  drawPainting(ctx, pX, pY, rw * .22, rh * .18, '#FFCC80', '#FFB74D');
+
+  ctx.fillStyle = '#8D6E6340';
+  ctx.fillRect(r.bwL + rw * .06, r.bwT + 14 + rh * .34, rw * .22, 6);
+
+  var rugCx = tX + tW / 2, rugCy = r.bwB + (H - r.bwB) * .35;
+  ctx.beginPath();
+  ctx.ellipse(rugCx, rugCy, rw * .22, (H - r.bwB) * .25, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#FF8F0015'; ctx.fill();
+  ctx.strokeStyle = '#FFB30020'; ctx.lineWidth = 2; ctx.stroke();
 }
 
 function randomFloorPos() {

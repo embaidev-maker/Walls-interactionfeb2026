@@ -12,7 +12,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;gap:12px}
 .header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#38bdf8}
 .stats{display:flex;gap:16px;font-size:clamp(12px,1.3vw,16px);font-weight:600}
-.stat-val{color:#fbbf24;font-weight:800}
+.stat-val{color:#fbbf24;font-weight:800;font-size:clamp(20px,2.5vw,28px)}
 
 .toolbar-toggle{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 0;cursor:pointer;font-size:clamp(11px,1.1vw,13px);font-weight:700;color:rgba(255,255,255,.4);transition:color .3s}
 .toolbar-toggle:hover{color:rgba(255,255,255,.7)}
@@ -71,21 +71,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="stat">Best: <span class="stat-val" id="best">0</span></div>
     </div>
   </div>
+  <div class="instructions">Tap two adjacent numbers to multiply them. Products over 100 explode for bonus points!</div>
+  <div class="game-area">
+    <div class="grid-wrapper" id="gridWrapper">
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
   <div class="toolbar-toggle" id="toolbarToggle">
     <span>Difficulty: Easy</span>
-    <span class="toggle-arrow" id="toggleArrow">&#9660;</span>
+    <span class="toggle-arrow" id="toggleArrow">&#9650;</span>
   </div>
   <div class="toolbar-drawer" id="toolbarDrawer">
     <div class="toolbar-options">
       <div class="diff-btn active" data-diff="easy">Easy</div>
       <div class="diff-btn" data-diff="medium">Medium</div>
       <div class="diff-btn" data-diff="hard">Hard</div>
-    </div>
-  </div>
-  <div class="instructions">Tap two adjacent numbers to multiply them. Products over 100 explode for bonus points!</div>
-  <div class="game-area">
-    <div class="grid-wrapper" id="gridWrapper">
-      <div class="grid" id="grid"></div>
     </div>
   </div>
   <div class="footer">

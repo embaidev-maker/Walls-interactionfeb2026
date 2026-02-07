@@ -8,6 +8,20 @@ const CATEGORIES = {
     },
     'daily-skills': {
         title: 'Daily Skills',
+        subcategories: [
+            { name: 'Room Cleanup', key: 'daily-room' }
+        ],
+        options: [
+            { name: 'Grocery Sorting', game: 'sort-grocery' },
+            { name: 'Laundry Sorting', game: 'sort-laundry' },
+            { name: 'Recycling Sort', game: 'sort-recycling' },
+            { name: 'School Bag Packing', game: 'sort-schoolbag' },
+            { name: 'Table Setting', game: 'sort-table' }
+        ]
+    },
+    'daily-room': {
+        title: 'Room Cleanup',
+        parent: 'daily-skills',
         options: [
             { name: 'Bedroom Cleanup', game: 'sort-bedroom' },
             { name: 'Kitchen Cleanup', game: 'sort-kitchen' },
@@ -239,6 +253,21 @@ function loadGame(gameName) {
                 break;
             case 'sort-living':
                 window.location.href = 'games/room-sorter.html?room=living';
+                break;
+            case 'sort-grocery':
+                window.location.href = 'games/room-sorter.html?room=grocery';
+                break;
+            case 'sort-laundry':
+                window.location.href = 'games/room-sorter.html?room=laundry';
+                break;
+            case 'sort-recycling':
+                window.location.href = 'games/room-sorter.html?room=recycling';
+                break;
+            case 'sort-schoolbag':
+                window.location.href = 'games/room-sorter.html?room=schoolbag';
+                break;
+            case 'sort-table':
+                window.location.href = 'games/room-sorter.html?room=table';
                 break;
             case 'arithmetica':
                 window.location.href = 'games/arithmetica.html';

@@ -12,7 +12,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;gap:8px}
 .header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#4ade80}
 .stats{display:flex;gap:14px;font-size:clamp(11px,1.2vw,15px);font-weight:600}
-.stat-val{color:#fbbf24;font-weight:800}
+.stat-val{color:#fbbf24;font-weight:800;font-size:clamp(20px,2.5vw,28px)}
 
 .toolbar-toggle{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 0;cursor:pointer;font-size:clamp(11px,1.1vw,13px);font-weight:700;color:rgba(255,255,255,.4);transition:color .3s}
 .toolbar-toggle:hover{color:rgba(255,255,255,.7)}
@@ -71,9 +71,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="stat">Q: <span class="stat-val" id="qNum">1</span></div>
     </div>
   </div>
+  <div class="game-area">
+    <div class="fruit-display" id="fruitDisplay"></div>
+    <div class="equation-text" id="equationText"></div>
+    <div class="result-zone" id="resultZone"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
   <div class="toolbar-toggle" id="toolbarToggle">
     <span>Mode: Addition</span>
-    <span class="toggle-arrow" id="toggleArrow">&#9660;</span>
+    <span class="toggle-arrow" id="toggleArrow">&#9650;</span>
   </div>
   <div class="toolbar-drawer" id="toolbarDrawer">
     <div class="toolbar-options">
@@ -83,13 +90,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="mode-btn" data-mode="division">Division</div>
       <div class="mode-btn" data-mode="factors">Factors</div>
     </div>
-  </div>
-  <div class="game-area">
-    <div class="fruit-display" id="fruitDisplay"></div>
-    <div class="equation-text" id="equationText"></div>
-    <div class="result-zone" id="resultZone"></div>
-    <div class="answers" id="answers"></div>
-    <div class="feedback" id="feedback"></div>
   </div>
   <div class="footer">
     <button class="btn-back" id="btnBack">Back to Menu</button>
