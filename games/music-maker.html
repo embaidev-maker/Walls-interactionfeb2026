@@ -1,86 +1,446 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Music Maker</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Music Lab</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    touch-action: manipulation;
+}
 
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
+body {
+    font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 100vh;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        .container {
-            text-align: center;
-            padding: 2rem;
-        }
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 20px;
+    gap: 10px;
+}
 
-        h1 {
-            font-size: 4rem;
-            margin-bottom: 2rem;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-        }
+.title {
+    text-align: center;
+    color: white;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
 
-        .placeholder-text {
-            font-size: 2rem;
-            margin-bottom: 3rem;
-            opacity: 0.8;
-        }
+.title h1 {
+    font-size: 42px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    margin-bottom: 5px;
+}
 
-        .back-button {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 1.5rem 3rem;
-            font-size: 1.5rem;
-            background: rgba(255, 255, 255, 0.2);
-            border: 3px solid white;
-            color: white;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s;
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-        }
+.title p {
+    font-size: 18px;
+    opacity: 0.9;
+}
 
-        .back-button:hover {
-            background: white;
-            color: #667eea;
-            transform: scale(1.1);
-        }
+.instruments {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+    padding: 10px 0;
+}
 
-        .icon {
-            font-size: 8rem;
-            margin-bottom: 2rem;
-            animation: float 3s ease-in-out infinite;
-        }
+.instrument {
+    flex: 1;
+    min-height: 80px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    user-select: none;
+    padding: 10px;
+    margin: 5px 0;
+}
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-    </style>
+.instrument:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(0.98);
+}
+
+.instrument:active {
+    transform: scale(0.95);
+}
+
+.instrument.playing {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: white;
+    animation: pulse 0.3s ease;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+.emoji {
+    font-size: 48px;
+    margin-right: 20px;
+    filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.3));
+}
+
+.instrument-info {
+    color: white;
+    flex: 1;
+}
+
+.instrument-name {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.instrument-desc {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.controls {
+    flex-shrink: 0;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    padding: 20px 0;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    margin-top: 10px;
+}
+
+.control-btn {
+    padding: 15px 30px;
+    font-size: 18px;
+    border: none;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: bold;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+}
+
+.bubble {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    animation: floatUp 1s ease-out forwards;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) scale(1);
+        opacity: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+        gap: 5px;
+    }
+    
+    .title h1 {
+        font-size: 32px;
+    }
+    
+    .instrument {
+        min-height: 70px;
+    }
+    
+    .emoji {
+        font-size: 36px;
+        margin-right: 15px;
+    }
+    
+    .instrument-name {
+        font-size: 20px;
+    }
+    
+    .instrument-desc {
+        font-size: 14px;
+    }
+    
+    .control-btn {
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">🎵</div>
-        <h1>Music Maker</h1>
-        <p class="placeholder-text">Coming Soon!</p>
-        <p class="placeholder-text" style="font-size: 1.5rem;">Create amazing sounds and beats with interactive instruments</p>
-        <button class="back-button" onclick="window.location.href='../index.html'">Back to Menu</button>
+<div class="container">
+    <div class="title">
+        <h1>🎵 Simple Music Lab</h1>
+        <p>Tap any instrument to play!</p>
     </div>
+    
+    <div class="instruments" id="instrumentsContainer">
+        <!-- Instruments will be added here -->
+    </div>
+    
+    <div class="controls">
+        <button class="control-btn" id="playAllBtn">Play All</button>
+        <button class="control-btn" id="stopBtn">Stop</button>
+    </div>
+</div>
+
+<script>
+// Simple instruments with emojis
+const instruments = [
+    {
+        emoji: "🥁",
+        name: "Drums",
+        desc: "Tap for beats",
+        sound: "drum",
+        color: "#FF6B6B"
+    },
+    {
+        emoji: "🎹",
+        name: "Piano",
+        desc: "Tap for melody",
+        sound: "piano",
+        color: "#4ECDC4"
+    },
+    {
+        emoji: "🎸",
+        name: "Guitar",
+        desc: "Tap for chords",
+        sound: "guitar",
+        color: "#FFD166"
+    },
+    {
+        emoji: "🎷",
+        name: "Saxophone",
+        desc: "Tap for jazz",
+        sound: "sax",
+        color: "#06D6A0"
+    },
+    {
+        emoji: "🎻",
+        name: "Violin",
+        desc: "Tap for strings",
+        sound: "violin",
+        color: "#118AB2"
+    },
+    {
+        emoji: "🎺",
+        name: "Trumpet",
+        desc: "Tap for brass",
+        sound: "trumpet",
+        color: "#EF476F"
+    },
+    {
+        emoji: "🪘",
+        name: "Bongos",
+        desc: "Tap for rhythm",
+        sound: "bongo",
+        color: "#FF9A76"
+    },
+    {
+        emoji: "🪕",
+        name: "Banjo",
+        desc: "Tap for folk",
+        sound: "banjo",
+        color: "#7BC950"
+    }
+];
+
+// Simple sound generator
+function playSound(instrument) {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioContext.currentTime;
+    
+    // Create oscillator
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Set different frequencies for different instruments
+    let frequency = 440; // Default A4
+    let type = 'sine';
+    let duration = 0.5;
+    
+    switch(instrument.sound) {
+        case 'drum':
+            frequency = 150;
+            type = 'sine';
+            duration = 0.3;
+            break;
+        case 'piano':
+            frequency = 523.25; // C5
+            type = 'sine';
+            duration = 0.8;
+            break;
+        case 'guitar':
+            frequency = 329.63; // E4
+            type = 'sawtooth';
+            duration = 0.6;
+            break;
+        case 'sax':
+            frequency = 349.23; // F4
+            type = 'sawtooth';
+            duration = 1.0;
+            break;
+        case 'violin':
+            frequency = 440; // A4
+            type = 'sine';
+            duration = 0.9;
+            break;
+        case 'trumpet':
+            frequency = 523.25; // C5
+            type = 'square';
+            duration = 0.4;
+            break;
+        case 'bongo':
+            frequency = 200;
+            type = 'sine';
+            duration = 0.2;
+            break;
+        case 'banjo':
+            frequency = 392; // G4
+            type = 'sawtooth';
+            duration = 0.7;
+            break;
+    }
+    
+    // Apply slight random variation to make it more natural
+    frequency += Math.random() * 10 - 5;
+    
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, now);
+    
+    // Envelope
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(0.3, now + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    
+    // Start and stop
+    oscillator.start(now);
+    oscillator.stop(now + duration);
+    
+    // Create visual bubble
+    createBubble(instrument.color);
+}
+
+// Create visual bubble effect
+function createBubble(color) {
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    
+    const size = 20 + Math.random() * 30;
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.background = color;
+    bubble.style.left = `${Math.random() * 100}%`;
+    bubble.style.bottom = '0';
+    
+    document.body.appendChild(bubble);
+    
+    // Remove bubble after animation
+    setTimeout(() => {
+        bubble.remove();
+    }, 1000);
+}
+
+// Initialize the app
+function initApp() {
+    const container = document.getElementById('instrumentsContainer');
+    
+    // Create instrument buttons
+    instruments.forEach(instrument => {
+        const div = document.createElement('div');
+        div.className = 'instrument';
+        div.innerHTML = `
+            <div class="emoji">${instrument.emoji}</div>
+            <div class="instrument-info">
+                <div class="instrument-name">${instrument.name}</div>
+                <div class="instrument-desc">${instrument.desc}</div>
+            </div>
+        `;
+        
+        // Add click/touch event
+        div.addEventListener('click', () => {
+            playSound(instrument);
+            div.classList.add('playing');
+            setTimeout(() => {
+                div.classList.remove('playing');
+            }, 300);
+        });
+        
+        container.appendChild(div);
+    });
+    
+    // Play All button
+    document.getElementById('playAllBtn').addEventListener('click', () => {
+        const allInstruments = document.querySelectorAll('.instrument');
+        let delay = 0;
+        
+        allInstruments.forEach((inst, index) => {
+            setTimeout(() => {
+                playSound(instruments[index]);
+                inst.classList.add('playing');
+                setTimeout(() => {
+                    inst.classList.remove('playing');
+                }, 300);
+            }, delay);
+            delay += 300; // 300ms between each instrument
+        });
+    });
+    
+    // Stop button (doesn't actually stop Web Audio, just visual)
+    document.getElementById('stopBtn').addEventListener('click', () => {
+        document.querySelectorAll('.instrument').forEach(inst => {
+            inst.classList.remove('playing');
+        });
+    });
+    
+    // Touch support for mobile
+    document.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.instrument')) {
+            e.preventDefault(); // Prevent scrolling when tapping instruments
+        }
+    }, { passive: false });
+}
+
+// Start when page loads
+window.addEventListener('DOMContentLoaded', initApp);
+</script>
 </body>
 </html>
