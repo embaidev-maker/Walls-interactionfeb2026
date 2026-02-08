@@ -109,8 +109,8 @@ canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
 .creature:active{filter:brightness(.9)!important}
 
 .creature-emoji{
-  font-size:48px;
-  text-shadow:0 6px 28px rgba(0,0,0,.45),0 0 40px rgba(0,80,180,.15);
+  font-size:80px;
+  text-shadow:0 8px 32px rgba(0,0,0,.5),0 0 50px rgba(0,80,180,.2);
   transition:transform .3s;
 }
 .creature:hover .creature-emoji{
@@ -443,7 +443,7 @@ var DATA = {
     }
   },
   seahorse: {
-    emoji: '🐴',
+    emoji: '🐠',
     name: { en: 'Seahorse', ml: 'കടൽക്കുതിര' },
     latin: 'Hippocampus',
     sz: 58, spd: .35,
@@ -497,36 +497,36 @@ var DATA = {
     }
   },
   parrotfish: {
-    emoji: '🦜',
+    emoji: '🐟',
     name: { en: 'Parrotfish', ml: 'തത്ത മത്സ്യം' },
     latin: 'Scaridae',
     sz: 80, spd: 1.4,
     facts: {
       en: [
-        {i:'🦜', t:'Named for its beak-like teeth that crunch coral for food'},
+        {i:'🐟', t:'Named for its beak-like teeth that crunch coral for food'},
         {i:'🏖️', t:'Creates white sand beaches -- one fish makes 200 pounds of sand a year!'},
         {i:'😴', t:'Sleeps inside a bubble of its own mucus for protection at night'}
       ],
       ml: [
-        {i:'🦜', t:'ഭക്ഷണത്തിനായി പവിഴം കടിച്ചുതകർക്കുന്ന കൊക്ക് പോലെയുള്ള പല്ലുകൾ കാരണം ഈ പേര്'},
+        {i:'🐟', t:'ഭക്ഷണത്തിനായി പവിഴം കടിച്ചുതകർക്കുന്ന കൊക്ക് പോലെയുള്ള പല്ലുകൾ കാരണം ഈ പേര്'},
         {i:'🏖️', t:'വെള്ള മണൽ കടൽത്തീരങ്ങൾ സൃഷ്ടിക്കുന്നു -- ഒരു മത്സ്യം വർഷത്തിൽ 200 പൗണ്ട് മണൽ ഉണ്ടാക്കുന്നു!'},
         {i:'😴', t:'രാത്രിയിൽ സംരക്ഷണത്തിനായി സ്വന്തം കഫത്തിന്റെ കുമിളയ്ക്കുള്ളിൽ ഉറങ്ങുന്നു'}
       ]
     }
   },
   anemone: {
-    emoji: '🌺',
+    emoji: '🪸',
     name: { en: 'Sea Anemone', ml: 'കടൽ അനെമോൺ' },
     latin: 'Actiniaria',
     sz: 55, spd: .1,
     facts: {
       en: [
-        {i:'🌺', t:'Looks like a beautiful flower but is actually a predatory animal'},
+        {i:'🪸', t:'Looks like a beautiful flower but is actually a predatory animal'},
         {i:'🐠', t:'Best friends with clownfish -- they protect each other'},
         {i:'⏳', t:'Some sea anemones can live for over 80 years'}
       ],
       ml: [
-        {i:'🌺', t:'സുന്ദരമായ ഒരു പുഷ്പം പോലെ കാണപ്പെടുന്നു, പക്ഷേ യഥാർത്ഥത്തിൽ വേട്ടയാടുന്ന ഒരു മൃഗമാണ്'},
+        {i:'🪸', t:'സുന്ദരമായ ഒരു പുഷ്പം പോലെ കാണപ്പെടുന്നു, പക്ഷേ യഥാർത്ഥത്തിൽ വേട്ടയാടുന്ന ഒരു മൃഗമാണ്'},
         {i:'🐠', t:'കോമാളി മത്സ്യവുമായി ഉറ്റ സുഹൃത്തുക്കൾ -- അവർ പരസ്പരം സംരക്ഷിക്കുന്നു'},
         {i:'⏳', t:'ചില കടൽ അനെമോണുകൾക്ക് 80 വർഷത്തിലധികം ജീവിക്കാൻ കഴിയും'}
       ]
@@ -605,7 +605,7 @@ var DATA = {
     }
   },
   swordfish: {
-    emoji: '🗡️',
+    emoji: '🐟',
     name: { en: 'Swordfish', ml: 'വാൾമത്സ്യം' },
     latin: 'Xiphias gladius',
     sz: 100, spd: 2.8,
@@ -641,7 +641,7 @@ var DATA = {
     }
   },
   hammerhead: {
-    emoji: '🔨',
+    emoji: '🦈',
     name: { en: 'Hammerhead Shark', ml: 'ഹാമർഹെഡ് സ്രാവ്' },
     latin: 'Sphyrnidae',
     sz: 125, spd: 2.0,
@@ -731,7 +731,7 @@ var DATA = {
     }
   },
   moonJelly: {
-    emoji: '🌙',
+    emoji: '🪼',
     name: { en: 'Moon Jellyfish', ml: 'ചന്ദ്ര ജെല്ലിഫിഷ്' },
     latin: 'Aurelia aurita',
     sz: 90, spd: .4,
@@ -767,18 +767,18 @@ var DATA = {
     }
   },
   lionsMane: {
-    emoji: '🦁',
+    emoji: '🪼',
     name: { en: "Lion's Mane Jellyfish", ml: 'സിംഹ മേനി ജെല്ലിഫിഷ്' },
     latin: 'Cyanea capillata',
     sz: 100, spd: .3,
     facts: {
       en: [
-        {i:'🦁', t:'The largest jellyfish species in the entire world!'},
+        {i:'🪼', t:'The largest jellyfish species in the entire world!'},
         {i:'📏', t:'Tentacles can stretch over 100 feet -- longer than a blue whale'},
         {i:'❄️', t:'Prefers cold arctic waters where it grows to enormous sizes'}
       ],
       ml: [
-        {i:'🦁', t:'ലോകത്തിലെ ഏറ്റവും വലിയ ജെല്ലിഫിഷ് ഇനം!'},
+        {i:'🪼', t:'ലോകത്തിലെ ഏറ്റവും വലിയ ജെല്ലിഫിഷ് ഇനം!'},
         {i:'📏', t:'ടെന്റക്കിളുകൾ 100 അടിയിലേറെ നീളാൻ കഴിയും -- ഒരു നീല തിമിംഗലത്തേക്കാൾ നീളമുള്ളത്'},
         {i:'❄️', t:'തണുത്ത ആർട്ടിക് വെള്ളമാണ് ഇഷ്ടപ്പെടുന്നത്, അവിടെ ഭീമാകാരമായി വളരുന്നു'}
       ]
@@ -803,18 +803,18 @@ var DATA = {
     }
   },
   blueJelly: {
-    emoji: '🔵',
+    emoji: '🪼',
     name: { en: 'Blue Jellyfish', ml: 'നീല ജെല്ലിഫിഷ്' },
     latin: 'Cyanea lamarckii',
     sz: 80, spd: .35,
     facts: {
       en: [
-        {i:'🔵', t:'Its beautiful blue glow helps it blend into the deep ocean'},
+        {i:'🪼', t:'Its beautiful blue glow helps it blend into the deep ocean'},
         {i:'🌊', t:'Drifts with ocean currents -- an expert ocean traveler'},
         {i:'💡', t:'Some jellyfish are bioluminescent and glow in the dark!'}
       ],
       ml: [
-        {i:'🔵', t:'അതിന്റെ മനോഹരമായ നീല തിളക്കം ആഴമേറിയ സമുദ്രത്തിൽ കലരാൻ സഹായിക്കുന്നു'},
+        {i:'🪼', t:'അതിന്റെ മനോഹരമായ നീല തിളക്കം ആഴമേറിയ സമുദ്രത്തിൽ കലരാൻ സഹായിക്കുന്നു'},
         {i:'🌊', t:'സമുദ്ര പ്രവാഹങ്ങളോടൊപ്പം ഒഴുകുന്നു -- വിദഗ്ദ്ധ സമുദ്ര യാത്രികൻ'},
         {i:'💡', t:'ചില ജെല്ലിഫിഷുകൾ ബയോലുമിനെസെന്റ് ആണ്, ഇരുട്ടിൽ തിളങ്ങുന്നു!'}
       ]
@@ -1099,40 +1099,58 @@ function spawnCreatures() {
 
     alive.push({
       el: el, x: sx, y: sy,
-      vx: (Math.random() - .5) * d.spd * 2,
-      vy: (Math.random() - .5) * d.spd,
       sz: d.sz, spd: d.spd,
-      ang: Math.random() * Math.PI * 2,
-      ts: .004 + Math.random() * .012,
-      wp: Math.random() * Math.PI * 2,
-      dp: .55 + Math.random() * .45
+      phaseOffset: Math.random() * Math.PI * 2,
+      dp: 0.7 + Math.random() * 0.3
     });
   });
 }
 
+var globalAngle = 0;
+var globalWave = 0;
+var globalDir = 1;
+var turnTimer = 0;
+
 function tick() {
   var mx = W - 40;
   var my = H - 170;
-  alive.forEach(function(c) {
-    c.ang += (Math.random() - .5) * c.ts;
-    c.wp += .018;
-    c.vx += Math.cos(c.ang) * c.spd * .018;
-    c.vy += Math.sin(c.ang) * c.spd * .008 + Math.sin(c.wp) * .04;
-    var mag = Math.sqrt(c.vx * c.vx + c.vy * c.vy);
-    if (mag > c.spd) { c.vx = (c.vx / mag) * c.spd; c.vy = (c.vy / mag) * c.spd; }
-    c.vx *= .996; c.vy *= .996;
-    c.x += c.vx; c.y += c.vy;
 
-    if (c.x < 30) { c.x = 30; c.vx = Math.abs(c.vx) * .7; c.ang = Math.random() * Math.PI - Math.PI / 2; }
-    if (c.x > mx - c.sz) { c.x = mx - c.sz; c.vx = -Math.abs(c.vx) * .7; c.ang = Math.PI + (Math.random() - .5) * Math.PI; }
-    if (c.y < 60) { c.y = 60; c.vy = Math.abs(c.vy) * .7; }
-    if (c.y > my - c.sz) { c.y = my - c.sz; c.vy = -Math.abs(c.vy) * .7; }
+  globalWave += 0.025;
+  turnTimer++;
+
+  if (turnTimer > 180 + Math.random() * 120) {
+    globalAngle += (Math.random() - 0.5) * 0.8;
+    if (globalAngle > Math.PI / 4) globalAngle = Math.PI / 4;
+    if (globalAngle < -Math.PI / 4) globalAngle = -Math.PI / 4;
+    turnTimer = 0;
+  }
+
+  var baseVx = Math.cos(globalAngle) * 0.6 * globalDir;
+  var baseVy = Math.sin(globalAngle) * 0.3;
+
+  alive.forEach(function(c, i) {
+    var phase = globalWave + c.phaseOffset;
+    var waveY = Math.sin(phase) * 12;
+    var waveX = Math.cos(phase * 0.5) * 4;
+
+    c.x += baseVx * c.spd + waveX * 0.08;
+    c.y += baseVy * c.spd * 0.5 + Math.sin(phase) * 0.15;
+
+    if (c.x < 30) {
+      c.x = 30;
+      if (globalDir > 0) { globalDir = -1; globalAngle = Math.PI + (Math.random() - 0.5) * 0.5; }
+    }
+    if (c.x > mx - c.sz) {
+      c.x = mx - c.sz;
+      if (globalDir < 0) { globalDir = 1; globalAngle = (Math.random() - 0.5) * 0.5; }
+    }
+    if (c.y < 80) { c.y = 80; globalAngle = Math.abs(globalAngle) * 0.5; }
+    if (c.y > my - c.sz) { c.y = my - c.sz; globalAngle = -Math.abs(globalAngle) * 0.5; }
 
     c.el.style.left = c.x + 'px';
     c.el.style.top = c.y + 'px';
-    var dir = c.vx < 0 ? -1 : 1;
-    var bob = Math.sin(c.wp) * 4;
-    c.el.style.transform = 'scaleX(' + dir + ') translateY(' + bob + 'px)';
+    var dir = globalDir;
+    c.el.style.transform = 'scaleX(' + dir + ') translateY(' + waveY + 'px)';
     c.el.style.opacity = c.dp;
   });
 }
@@ -1180,6 +1198,9 @@ function switchZone(z) {
 
   setTimeout(function() {
     zone = z;
+    globalAngle = 0;
+    globalDir = 1;
+    turnTimer = 0;
     document.body.className = 'zone-' + z + ' ' + (goingDeeper ? 'dive-enter-down' : 'dive-enter-up');
     document.getElementById('zone-desc').textContent = TRANSLATIONS[currentLang].zones[z].desc;
     document.querySelectorAll('.zone-tab').forEach(function(t) { t.classList.toggle('active', t.dataset.z === z); });
