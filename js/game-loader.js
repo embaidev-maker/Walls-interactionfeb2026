@@ -293,6 +293,12 @@ function loadGame(gameName) {
             case 'word-creator':
                 window.location.href = 'games/word-creator.html';
                 break;
+            case 'music-maker':
+                window.location.href = 'games/music-maker.html';
+                break;
+            case 'creature-creator':
+                window.location.href = 'games/creature-creator.html';
+                break;
             default:
                 console.log('Game not found:', gameName);
                 mainMenu.style.display = 'block';

@@ -25,8 +25,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif
 }
 .zone-deep .caustic-layer{opacity:.03}
 @keyframes causticShift{
-  0%{background-position:0 0, 0 0, 0 0}
-  100%{background-position:40px 20px, -30px 15px, 20px -10px}
+  0%{background-position:0 0,0 0,0 0}
+  100%{background-position:40px 20px,-30px 15px,20px -10px}
 }
 
 #light-rays{position:fixed;top:-10%;left:0;right:0;height:65%;z-index:1;pointer-events:none;transition:opacity 1.8s}
@@ -46,21 +46,65 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif
 
 canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
 
-#coral-bed{
-  position:fixed;bottom:0;left:0;right:0;height:28vh;z-index:3;
+#seabed{
+  position:fixed;bottom:0;left:0;right:0;z-index:3;
   pointer-events:none;overflow:hidden;transition:opacity 1.8s,transform 1.8s;
+  height:32vh;
 }
-.zone-reef #coral-bed{opacity:1;transform:translateY(0)}
-.zone-open #coral-bed{opacity:.2;transform:translateY(40%)}
-.zone-deep #coral-bed{opacity:.03;transform:translateY(80%)}
-#coral-bed img{
+.zone-reef #seabed{opacity:1;transform:translateY(0)}
+.zone-open #seabed{opacity:.15;transform:translateY(50%)}
+.zone-deep #seabed{opacity:.03;transform:translateY(80%)}
+
+.seabed-img{
   width:100%;height:100%;object-fit:cover;object-position:top center;
   filter:brightness(.55) saturate(1.3);
   mask-image:linear-gradient(to bottom,transparent 0%,black 35%);
   -webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 35%);
 }
 
-#creatures{position:fixed;inset:0;z-index:5}
+.kelp{
+  position:fixed;bottom:0;z-index:3;pointer-events:none;
+  transition:opacity 1.8s,transform 1.8s;
+}
+.zone-open .kelp{opacity:.2;transform:translateY(30%)}
+.zone-deep .kelp{opacity:.02;transform:translateY(60%)}
+.kelp-strand{
+  position:absolute;bottom:0;width:18px;border-radius:50% 50% 0 0;
+  animation:kelpSway var(--dur,6s) ease-in-out infinite alternate;
+  transform-origin:bottom center;
+}
+@keyframes kelpSway{
+  0%{transform:rotate(-8deg) scaleY(1)}
+  50%{transform:rotate(5deg) scaleY(1.04)}
+  100%{transform:rotate(-6deg) scaleY(.97)}
+}
+
+.seagrass{
+  position:fixed;bottom:0;z-index:3;pointer-events:none;
+  transition:opacity 1.8s;
+}
+.zone-open .seagrass{opacity:.15}
+.zone-deep .seagrass{opacity:.02}
+.grass-blade{
+  position:absolute;bottom:0;width:4px;border-radius:3px 3px 0 0;
+  animation:grassSway var(--dur,4s) ease-in-out infinite alternate;
+  transform-origin:bottom center;
+}
+@keyframes grassSway{
+  0%{transform:rotate(-12deg)}
+  100%{transform:rotate(12deg)}
+}
+
+#dive-layer{
+  position:fixed;inset:0;z-index:5;
+  transition:transform .9s cubic-bezier(.4,0,.2,1),opacity .7s ease;
+}
+.dive-down #dive-layer{transform:translateY(-120vh);opacity:0}
+.dive-up #dive-layer{transform:translateY(120vh);opacity:0}
+.dive-enter-down #dive-layer{transform:translateY(120vh);opacity:0}
+.dive-enter-up #dive-layer{transform:translateY(-120vh);opacity:0}
+
+#creatures{position:absolute;inset:0}
 .creature{
   position:absolute;cursor:pointer;
   will-change:transform,left,top;
@@ -104,10 +148,11 @@ canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
   border:2px solid rgba(100,200,255,.15);
   box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 80px rgba(0,100,200,.1);
   animation:infoIn .45s cubic-bezier(.175,.885,.32,1.275);
+  max-height:90vh;overflow-y:auto;
 }
 @keyframes infoIn{from{transform:scale(.7) translateY(50px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
 
-.info-img{width:100%;height:260px;object-fit:cover;display:block;border-bottom:1px solid rgba(100,200,255,.1)}
+.info-img{width:100%;height:240px;object-fit:cover;display:block;border-bottom:1px solid rgba(100,200,255,.1)}
 .info-body{padding:22px 26px 26px}
 .info-title{font-size:26px;font-weight:900;color:#64d2ff;margin-bottom:2px;text-shadow:0 2px 10px rgba(100,210,255,.25)}
 .info-latin{font-size:12px;color:rgba(255,255,255,.35);font-style:italic;margin-bottom:14px}
@@ -169,15 +214,26 @@ canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
 }
 .hdr p{font-size:clamp(11px,1.4vw,14px);font-weight:600;color:rgba(100,210,255,.6);margin-top:1px}
 
-.depth-dots{
+.depth-indicator{
   position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:100;
-  display:flex;flex-direction:column;gap:8px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.depth-line{width:2px;height:60px;background:rgba(255,255,255,.1);border-radius:2px;position:relative}
+.depth-fill{
+  position:absolute;top:0;left:0;width:100%;border-radius:2px;
+  background:linear-gradient(180deg,#64d2ff,#0077b6);
+  transition:height .8s ease;
 }
 .d-dot{
   width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.15);
   border:2px solid rgba(255,255,255,.25);transition:all .5s;cursor:pointer;
 }
 .d-dot.on{background:#64d2ff;border-color:#64d2ff;box-shadow:0 0 12px rgba(100,210,255,.5);transform:scale(1.3)}
+.d-label{
+  font-size:9px;font-weight:700;color:rgba(255,255,255,.3);
+  writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:1px;
+  margin-top:6px;
+}
 
 .floating-particle{
   position:fixed;pointer-events:none;z-index:4;border-radius:50%;
@@ -197,6 +253,18 @@ canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
 .zone-reef .glow-orb{opacity:0}
 .zone-open .glow-orb{opacity:.3}
 .zone-deep .glow-orb{opacity:.8}
+
+.depth-arrow{
+  position:fixed;left:50%;bottom:80px;z-index:99;
+  transform:translateX(-50%);pointer-events:none;
+  animation:arrowBounce 2s ease-in-out infinite;
+  opacity:.4;transition:opacity 1s;
+}
+.depth-arrow svg{width:32px;height:32px;fill:rgba(100,210,255,.6)}
+@keyframes arrowBounce{
+  0%,100%{transform:translateX(-50%) translateY(0)}
+  50%{transform:translateX(-50%) translateY(8px)}
+}
 </style>
 </head>
 <body class="zone-reef">
@@ -206,11 +274,16 @@ canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
 <div id="light-rays"></div>
 <canvas id="bubble-cv"></canvas>
 
-<div id="coral-bed">
-  <img src="https://images.pexels.com/photos/3100361/pexels-photo-3100361.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750" alt="coral reef floor">
+<div id="seabed">
+  <img class="seabed-img" src="https://images.pexels.com/photos/3100361/pexels-photo-3100361.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750" alt="coral reef floor">
 </div>
 
-<div id="creatures"></div>
+<div id="kelp-container"></div>
+<div id="seagrass-container"></div>
+
+<div id="dive-layer">
+  <div id="creatures"></div>
+</div>
 
 <div class="hdr">
   <h1>Underwater Explorer</h1>
@@ -219,16 +292,19 @@ canvas#bubble-cv{position:fixed;inset:0;z-index:2;pointer-events:none}
 
 <a href="../index.html" class="back-link">&#x2190; Menu</a>
 
-<div class="depth-dots">
+<div class="depth-indicator">
   <div class="d-dot on" data-z="reef"></div>
+  <div class="depth-line"><div class="depth-fill" id="depth-fill" style="height:0%"></div></div>
   <div class="d-dot" data-z="open"></div>
+  <div class="depth-line"><div class="depth-fill" style="height:0%"></div></div>
   <div class="d-dot" data-z="deep"></div>
+  <div class="d-label">DEPTH</div>
 </div>
 
 <nav class="ui-bar">
-  <button class="zone-tab active" data-z="reef">Coral Reef</button>
-  <button class="zone-tab" data-z="open">Open Ocean</button>
-  <button class="zone-tab" data-z="deep">Deep Sea</button>
+  <button class="zone-tab active" data-z="reef">&#x1F3DD;&#xFE0F; Coral Reef</button>
+  <button class="zone-tab" data-z="open">&#x1F30A; Open Ocean</button>
+  <button class="zone-tab" data-z="deep">&#x1F311; Deep Sea</button>
 </nav>
 
 <div id="info-panel">
@@ -250,59 +326,70 @@ var W = window.innerWidth;
 var H = window.innerHeight;
 var zone = 'reef';
 var layer = document.getElementById('creatures');
+var diveLayer = document.getElementById('dive-layer');
 var alive = [];
 var raf;
+var ZONE_ORDER = ['reef','open','deep'];
 
 function px(id, w) {
   return 'https://images.pexels.com/photos/' + id + '/pexels-photo-' + id + '.jpeg?auto=compress&cs=tinysrgb&w=' + (w || 400);
 }
 
 var ZONE_CFG = {
-  reef: { desc: 'Coral Reef -- Tap any creature to learn about it!', ids: ['clownfish','seaTurtle','morayEel','blueTang','starfish','seahorse'] },
-  open: { desc: 'Open Ocean -- Discover amazing sea animals!', ids: ['dolphin','mantaRay','whaleShark','swordfish','schoolFish','stingray'] },
-  deep: { desc: 'Deep Sea -- Explore the mysterious depths!', ids: ['moonJelly','octopus','lionsMane','giantSquid','blueJelly','deepCoral'] }
+  reef: {
+    desc: 'Coral Reef -- Tap any creature to learn about it!',
+    ids: ['clownfish','seaTurtle','morayEel','blueTang','starfish','seahorse','crab','pufferfish','parrotfish','anemone','shrimp']
+  },
+  open: {
+    desc: 'Open Ocean -- Discover amazing sea animals!',
+    ids: ['dolphin','mantaRay','whaleShark','swordfish','stingray','hammerhead','seaLion','flyingFish','barracuda','marlin']
+  },
+  deep: {
+    desc: 'Deep Sea -- Explore the mysterious depths!',
+    ids: ['moonJelly','octopus','lionsMane','giantSquid','blueJelly','anglerfish','nautilus','deepCoral','lobster','cuttlefish']
+  }
 };
 
 var DATA = {
   clownfish: {
     name:'Clownfish', latin:'Amphiprioninae',
-    img: px(3482719), photo: px(3482719, 600), sz: 78, spd: 1.8,
+    img: px(3482719), photo: px(3482719, 600), sz: 72, spd: 1.8,
     facts:[
-      {i:'\uD83C\uDFE0', t:'Lives safely inside stinging sea anemones that protect it from predators'},
+      {i:'\uD83D\uDC20', t:'Lives safely inside stinging sea anemones that protect it from predators'},
       {i:'\uD83D\uDC23', t:'All clownfish are born male -- the biggest one becomes female!'},
-      {i:'\u2B50', t:'Made famous as "Nemo" in the movie Finding Nemo'}
+      {i:'\uD83C\uDFA5', t:'Made famous as "Nemo" in the movie Finding Nemo'}
     ]
   },
   seaTurtle: {
     name:'Green Sea Turtle', latin:'Chelonia mydas',
-    img: px(847393), photo: px(847393, 600), sz: 110, spd: .75,
+    img: px(847393), photo: px(847393, 600), sz: 105, spd: .75,
     facts:[
-      {i:'\uD83C\uDF82', t:'Can live over 100 years -- older than your great-grandparents!'},
+      {i:'\uD83D\uDC22', t:'Can live over 100 years -- older than your great-grandparents!'},
       {i:'\uD83C\uDF0D', t:'Travels thousands of miles across entire oceans every year'},
       {i:'\uD83D\uDCA8', t:'Must swim to the surface to breathe air, just like us'}
     ]
   },
   morayEel: {
     name:'Moray Eel', latin:'Muraenidae',
-    img: px(10999876), photo: px(10999876, 600), sz: 88, spd: .55,
+    img: px(10999876), photo: px(10999876, 600), sz: 85, spd: .55,
     facts:[
       {i:'\uD83D\uDE2E', t:'Has a secret second set of jaws hiding inside its throat!'},
-      {i:'\uD83C\uDFE0', t:'Hides in dark holes and crevices in the coral reef'},
+      {i:'\uD83D\uDC1A', t:'Hides in dark holes and crevices in the coral reef'},
       {i:'\uD83E\uDD1D', t:'Sometimes teams up with grouper fish to hunt together'}
     ]
   },
   blueTang: {
     name:'Blue Tang', latin:'Paracanthurus hepatus',
-    img: px(3181208), photo: px(3181208, 600), sz: 72, spd: 2.1,
+    img: px(3181208), photo: px(3181208, 600), sz: 68, spd: 2.1,
     facts:[
-      {i:'\uD83D\uDC99', t:'This stunning blue fish is also called a Regal Tang'},
-      {i:'\u2B50', t:'Famous as "Dory" from the movie Finding Dory!'},
+      {i:'\uD83D\uDC20', t:'This stunning blue fish is also called a Regal Tang'},
+      {i:'\uD83C\uDFA5', t:'Famous as "Dory" from the movie Finding Dory!'},
       {i:'\u26A0\uFE0F', t:'Has a razor-sharp spine near its tail for self-defense'}
     ]
   },
   starfish: {
     name:'Starfish', latin:'Asteroidea',
-    img: px(17693471), photo: px(17693471, 600), sz: 68, spd: .25,
+    img: px(17693471), photo: px(17693471, 600), sz: 65, spd: .25,
     facts:[
       {i:'\uD83D\uDCAA', t:'Can regrow a lost arm -- some regrow their entire body from just one arm!'},
       {i:'\uD83E\uDDE0', t:'Has no brain and no blood -- uses seawater instead of blood'},
@@ -311,18 +398,63 @@ var DATA = {
   },
   seahorse: {
     name:'Seahorse', latin:'Hippocampus',
-    img: px(17652296), photo: px(17652296, 600), sz: 62, spd: .35,
+    img: px(17652296), photo: px(17652296, 600), sz: 58, spd: .35,
     facts:[
       {i:'\uD83D\uDC68', t:'The father carries and gives birth to the babies, not the mother!'},
       {i:'\uD83D\uDC40', t:'Each eye moves independently, like a chameleon'},
       {i:'\uD83D\uDC95', t:'Pairs greet each other every morning with a special dance'}
     ]
   },
+  crab: {
+    name:'Hermit Crab', latin:'Paguroidea',
+    img: px(2531546), photo: px(2531546, 600), sz: 60, spd: .4,
+    facts:[
+      {i:'\uD83E\uDD80', t:'Carries its home on its back and moves to a bigger shell as it grows'},
+      {i:'\uD83D\uDC40', t:'Can see in almost every direction thanks to eyes on stalks'},
+      {i:'\uD83D\uDCAA', t:'Has one claw much bigger than the other for defense'}
+    ]
+  },
+  pufferfish: {
+    name:'Pufferfish', latin:'Tetraodontidae',
+    img: px(3369102), photo: px(3369102, 600), sz: 70, spd: .6,
+    facts:[
+      {i:'\uD83D\uDC21', t:'Puffs up to 3 times its size when scared to look bigger to predators'},
+      {i:'\u2620\uFE0F', t:'Contains enough poison to be dangerous -- 1200 times more toxic than cyanide'},
+      {i:'\uD83C\uDFA8', t:'Males create beautiful sand patterns on the ocean floor to attract mates'}
+    ]
+  },
+  parrotfish: {
+    name:'Parrotfish', latin:'Scaridae',
+    img: px(2765872), photo: px(2765872, 600), sz: 80, spd: 1.4,
+    facts:[
+      {i:'\uD83E\uDD9C', t:'Named for its beak-like teeth that crunch coral for food'},
+      {i:'\uD83C\uDFD6\uFE0F', t:'Creates white sand beaches -- one fish makes 200 pounds of sand a year!'},
+      {i:'\uD83D\uDE34', t:'Sleeps inside a bubble of its own mucus for protection at night'}
+    ]
+  },
+  anemone: {
+    name:'Sea Anemone', latin:'Actiniaria',
+    img: px(9718224), photo: px(9718224, 600), sz: 55, spd: .1,
+    facts:[
+      {i:'\uD83C\uDF3A', t:'Looks like a beautiful flower but is actually a predatory animal'},
+      {i:'\uD83D\uDC20', t:'Best friends with clownfish -- they protect each other'},
+      {i:'\u23F3', t:'Some sea anemones can live for over 80 years'}
+    ]
+  },
+  shrimp: {
+    name:'Cleaner Shrimp', latin:'Lysmata amboinensis',
+    img: px(1446504), photo: px(1446504, 600), sz: 48, spd: .7,
+    facts:[
+      {i:'\uD83E\uDD90', t:'Runs a "cleaning station" where fish line up to get parasites removed'},
+      {i:'\uD83D\uDC83', t:'Does a special dance to advertise its cleaning services to passing fish'},
+      {i:'\uD83D\uDD2C', t:'Has such good eyesight it can see colors invisible to humans'}
+    ]
+  },
   dolphin: {
     name:'Bottlenose Dolphin', latin:'Tursiops truncatus',
     img: px(4961025), photo: px(4961025, 600), sz: 120, spd: 2.4,
     facts:[
-      {i:'\uD83E\uDDE0', t:'One of the smartest animals on Earth -- they have names for each other!'},
+      {i:'\uD83D\uDC2C', t:'One of the smartest animals on Earth -- they have names for each other!'},
       {i:'\uD83D\uDD0A', t:'Uses echolocation (sound waves) to find food in dark water'},
       {i:'\uD83D\uDE34', t:'Sleeps with only half its brain -- one eye stays open!'}
     ]
@@ -340,27 +472,18 @@ var DATA = {
     name:'Whale Shark', latin:'Rhincodon typus',
     img: px(5967768), photo: px(5967768, 600), sz: 140, spd: .65,
     facts:[
-      {i:'\uD83D\uDC33', t:'The biggest fish in the entire ocean -- up to 40 feet long!'},
+      {i:'\uD83D\uDC0B', t:'The biggest fish in the entire ocean -- up to 40 feet long!'},
       {i:'\uD83C\uDF7D\uFE0F', t:'Despite its huge size, it only eats tiny plankton and small fish'},
-      {i:'\u2B50', t:'Each whale shark has a unique spot pattern, like human fingerprints'}
+      {i:'\uD83D\uDC20', t:'Each whale shark has a unique spot pattern, like human fingerprints'}
     ]
   },
   swordfish: {
     name:'Swordfish', latin:'Xiphias gladius',
     img: px(17668217), photo: px(17668217, 600), sz: 100, spd: 2.8,
     facts:[
-      {i:'\u2694\uFE0F', t:'Has a long flat bill shaped like a sword!'},
+      {i:'\u2694\uFE0F', t:'Has a long flat bill shaped like a sword used to slash prey'},
       {i:'\uD83C\uDFC3', t:'One of the fastest fish in the ocean -- up to 60 mph!'},
-      {i:'\uD83C\uDF21\uFE0F', t:'Has special organs that heat its eyes and brain for better vision'}
-    ]
-  },
-  schoolFish: {
-    name:'Coral Reef Fish', latin:'Various species',
-    img: px(3181208), photo: px(3181208, 600), sz: 90, spd: 1.5,
-    facts:[
-      {i:'\uD83D\uDC1F', t:'Fish swim in schools for safety -- predators get confused by the group!'},
-      {i:'\uD83C\uDFA8', t:'Coral reef fish are some of the most colorful animals on Earth'},
-      {i:'\uD83C\uDF0D', t:'Coral reefs are home to over 25% of all ocean fish species'}
+      {i:'\uD83C\uDF21\uFE0F', t:'Has special organs that heat its eyes and brain for better hunting'}
     ]
   },
   stingray: {
@@ -368,13 +491,58 @@ var DATA = {
     img: px(2570524), photo: px(2570524, 600), sz: 105, spd: 1.3,
     facts:[
       {i:'\uD83D\uDC40', t:'Has eyes on top of its flat body and mouth underneath'},
-      {i:'\u26A1', t:'Can sense the electrical signals of animals hiding in sand'},
+      {i:'\u26A1', t:'Can sense the electrical signals of animals hiding in the sand'},
       {i:'\uD83E\uDD88', t:'Related to sharks -- both have skeletons made of bendy cartilage'}
+    ]
+  },
+  hammerhead: {
+    name:'Hammerhead Shark', latin:'Sphyrnidae',
+    img: px(4666754), photo: px(4666754, 600), sz: 125, spd: 2.0,
+    facts:[
+      {i:'\uD83E\uDD88', t:'Hammer-shaped head gives it 360-degree vision to spot prey everywhere'},
+      {i:'\u26A1', t:'Head is packed with sensors that detect electrical fields of hidden prey'},
+      {i:'\uD83D\uDC1F', t:'Hunts in schools of up to 500 sharks during the day'}
+    ]
+  },
+  seaLion: {
+    name:'Sea Lion', latin:'Otariinae',
+    img: px(2889679), photo: px(2889679, 600), sz: 110, spd: 1.8,
+    facts:[
+      {i:'\uD83E\uDDAD', t:'Can hold its breath for up to 20 minutes while diving for food'},
+      {i:'\uD83D\uDDE3\uFE0F', t:'Barks and honks loudly to communicate with its colony'},
+      {i:'\uD83C\uDFC3', t:'Swims up to 25 mph and can walk on land using its flippers'}
+    ]
+  },
+  flyingFish: {
+    name:'Flying Fish', latin:'Exocoetidae',
+    img: px(932638), photo: px(932638, 600), sz: 70, spd: 3.0,
+    facts:[
+      {i:'\uD83D\uDC1F', t:'Leaps out of the water and glides through the air for over 600 feet!'},
+      {i:'\uD83E\uDEB6', t:'Uses its large wing-like fins to glide and escape predators'},
+      {i:'\uD83D\uDCA8', t:'Can reach speeds of 35 mph and stay airborne for 45 seconds'}
+    ]
+  },
+  barracuda: {
+    name:'Great Barracuda', latin:'Sphyraena barracuda',
+    img: px(2534523), photo: px(2534523, 600), sz: 95, spd: 2.5,
+    facts:[
+      {i:'\uD83E\uDD88', t:'Lightning-fast predator that strikes at speeds up to 36 mph'},
+      {i:'\uD83D\uDC41\uFE0F', t:'Has excellent eyesight and is attracted to shiny, reflective objects'},
+      {i:'\uD83E\uDDB7', t:'Has razor-sharp teeth arranged in two rows like a set of daggers'}
+    ]
+  },
+  marlin: {
+    name:'Blue Marlin', latin:'Makaira nigricans',
+    img: px(128756), photo: px(128756, 600), sz: 115, spd: 2.6,
+    facts:[
+      {i:'\uD83D\uDC1F', t:'One of the fastest fish alive -- can swim up to 68 mph!'},
+      {i:'\uD83D\uDCCF', t:'Can grow over 14 feet long and weigh over 1,800 pounds'},
+      {i:'\uD83C\uDF21\uFE0F', t:'Changes color from blue to silver when excited or hunting prey'}
     ]
   },
   moonJelly: {
     name:'Moon Jellyfish', latin:'Aurelia aurita',
-    img: px(1683888), photo: px(1683888, 600), sz: 95, spd: .4,
+    img: px(1683888), photo: px(1683888, 600), sz: 90, spd: .4,
     facts:[
       {i:'\uD83D\uDCA7', t:'Made of 95% water -- almost invisible in the ocean!'},
       {i:'\uD83E\uDDE0', t:'Has no brain, no heart, and no blood at all'},
@@ -385,7 +553,7 @@ var DATA = {
     name:'Giant Pacific Octopus', latin:'Enteroctopus dofleini',
     img: px(3046629), photo: px(3046629, 600), sz: 108, spd: .9,
     facts:[
-      {i:'\u2764\uFE0F', t:'Has THREE hearts and BLUE blood!'},
+      {i:'\uD83D\uDC19', t:'Has THREE hearts and BLUE blood!'},
       {i:'\uD83E\uDDE0', t:'Super smart -- can solve puzzles, open jars, and use tools'},
       {i:'\uD83C\uDFA8', t:'Changes color and texture in milliseconds to camouflage'}
     ]
@@ -403,7 +571,7 @@ var DATA = {
     name:'Giant Squid', latin:'Architeuthis dux',
     img: px(60578), photo: px(60578, 600), sz: 115, spd: 1.2,
     facts:[
-      {i:'\uD83D\uDC40', t:'Has the largest eyes of any animal -- the size of dinner plates!'},
+      {i:'\uD83E\uDD91', t:'Has the largest eyes of any animal -- the size of dinner plates!'},
       {i:'\uD83D\uDCCF', t:'Can grow over 40 feet long -- longer than a school bus'},
       {i:'\uD83D\uDD75\uFE0F', t:'So mysterious that a live one was only first filmed in 2004'}
     ]
@@ -417,13 +585,49 @@ var DATA = {
       {i:'\uD83D\uDCA1', t:'Some jellyfish are bioluminescent and glow in the dark!'}
     ]
   },
-  deepCoral: {
-    name:'Deep Sea Anemone', latin:'Actiniaria',
-    img: px(9718224), photo: px(9718224, 600), sz: 70, spd: .15,
+  anglerfish: {
+    name:'Anglerfish', latin:'Lophiiformes',
+    img: px(1350197), photo: px(1350197, 600), sz: 75, spd: .5,
     facts:[
-      {i:'\uD83C\uDF3A', t:'Sea anemones look like flowers but are actually animals!'},
-      {i:'\uD83E\uDD1D', t:'Partners with clownfish -- they protect each other'},
-      {i:'\u23F3', t:'Some sea anemones can live for over 80 years'}
+      {i:'\uD83D\uDCA1', t:'Has a glowing lure on its head to attract prey in total darkness'},
+      {i:'\uD83C\uDF11', t:'Lives in pitch-black water up to 5,000 feet below the surface'},
+      {i:'\uD83D\uDE31', t:'Females are 10 times larger than males -- males fuse to the female!'}
+    ]
+  },
+  nautilus: {
+    name:'Chambered Nautilus', latin:'Nautilus pompilius',
+    img: px(1295138), photo: px(1295138, 600), sz: 70, spd: .45,
+    facts:[
+      {i:'\uD83D\uDC1A', t:'A living fossil -- been around for 500 million years, unchanged!'},
+      {i:'\uD83C\uDFE0', t:'Lives in a spiral shell with up to 30 chambers filled with gas to float'},
+      {i:'\uD83D\uDC40', t:'Has up to 90 tentacles but no suckers -- uses a sticky grip instead'}
+    ]
+  },
+  deepCoral: {
+    name:'Deep Sea Coral', latin:'Lophelia pertusa',
+    img: px(2397651), photo: px(2397651, 600), sz: 65, spd: .08,
+    facts:[
+      {i:'\uD83E\uDEB8', t:'Grows in total darkness thousands of feet below the surface'},
+      {i:'\u23F3', t:'Grows extremely slowly -- just a few millimeters per year'},
+      {i:'\uD83C\uDF0D', t:'Deep sea coral reefs can be thousands of years old'}
+    ]
+  },
+  lobster: {
+    name:'Deep Sea Lobster', latin:'Homarus gammarus',
+    img: px(1390361), photo: px(1390361, 600), sz: 80, spd: .35,
+    facts:[
+      {i:'\uD83E\uDD9E', t:'Can live for over 100 years and never stops growing!'},
+      {i:'\uD83E\uDDB7', t:'Crushes shells with one claw and cuts with the other like scissors'},
+      {i:'\uD83D\uDCA7', t:'Tastes food with its feet and chews with its stomach'}
+    ]
+  },
+  cuttlefish: {
+    name:'Cuttlefish', latin:'Sepiida',
+    img: px(2859178), photo: px(2859178, 600), sz: 85, spd: .7,
+    facts:[
+      {i:'\uD83C\uDFA8', t:'The ultimate master of disguise -- changes color, pattern, and even shape'},
+      {i:'\uD83E\uDDE0', t:'Has one of the largest brain-to-body ratios of all invertebrates'},
+      {i:'\uD83D\uDC40', t:'Has W-shaped pupils that give it incredible vision in murky water'}
     ]
   }
 };
@@ -443,8 +647,50 @@ function buildRays() {
   }
 }
 
+function buildKelp() {
+  var container = document.getElementById('kelp-container');
+  var kelpColors = ['#1a6b3c','#0d5c2e','#2d8a4e','#145530','#1f7a3f'];
+  for (var i = 0; i < 12; i++) {
+    var kelp = document.createElement('div');
+    kelp.className = 'kelp';
+    kelp.style.left = (2 + Math.random() * 96) + '%';
+    var numStrands = 2 + Math.floor(Math.random() * 3);
+    for (var j = 0; j < numStrands; j++) {
+      var strand = document.createElement('div');
+      strand.className = 'kelp-strand';
+      var h = 80 + Math.random() * 160;
+      strand.style.height = h + 'px';
+      strand.style.left = (j * 10 - 8) + 'px';
+      strand.style.background = 'linear-gradient(180deg,' + kelpColors[Math.floor(Math.random() * kelpColors.length)] + ' 0%,rgba(10,60,30,.3) 100%)';
+      strand.style.setProperty('--dur', (4 + Math.random() * 5) + 's');
+      strand.style.animationDelay = (Math.random() * 4) + 's';
+      strand.style.opacity = .3 + Math.random() * .3;
+      kelp.appendChild(strand);
+    }
+    container.appendChild(kelp);
+  }
+}
+
+function buildSeagrass() {
+  var container = document.getElementById('seagrass-container');
+  for (var i = 0; i < 40; i++) {
+    var grass = document.createElement('div');
+    grass.className = 'seagrass';
+    grass.style.left = Math.random() * 100 + '%';
+    var blade = document.createElement('div');
+    blade.className = 'grass-blade';
+    var h = 30 + Math.random() * 70;
+    blade.style.height = h + 'px';
+    blade.style.background = 'linear-gradient(180deg,rgba(20,100,50,' + (.15 + Math.random() * .2) + ') 0%,rgba(10,60,30,.05) 100%)';
+    blade.style.setProperty('--dur', (3 + Math.random() * 4) + 's');
+    blade.style.animationDelay = (Math.random() * 5) + 's';
+    grass.appendChild(blade);
+    container.appendChild(grass);
+  }
+}
+
 function buildParticles() {
-  for (var i = 0; i < 15; i++) {
+  for (var i = 0; i < 18; i++) {
     var p = document.createElement('div');
     p.className = 'floating-particle';
     var sz = 3 + Math.random() * 8;
@@ -485,7 +731,7 @@ var bubbles = [];
 function resizeBubbles() { bCv.width = window.innerWidth; bCv.height = window.innerHeight; }
 
 function addBubble() {
-  if (bubbles.length > 40) return;
+  if (bubbles.length > 50) return;
   bubbles.push({
     x: Math.random() * W, y: H + 10,
     r: 1.5 + Math.random() * 5,
@@ -622,19 +868,48 @@ function closeInfo() { document.getElementById('info-panel').classList.remove('o
 document.getElementById('ip-close').addEventListener('click', closeInfo);
 document.getElementById('info-panel').addEventListener('click', function(e) { if (e.target === this) closeInfo(); });
 
+var transitioning = false;
+
 function switchZone(z) {
-  if (z === zone) return;
-  zone = z;
-  document.body.className = 'zone-' + z;
-  document.getElementById('zone-desc').textContent = ZONE_CFG[z].desc;
-  document.querySelectorAll('.zone-tab').forEach(function(t) { t.classList.toggle('active', t.dataset.z === z); });
-  document.querySelectorAll('.d-dot').forEach(function(d) { d.classList.toggle('on', d.dataset.z === z); });
-  layer.style.opacity = '0';
-  layer.style.transition = 'opacity .5s';
+  if (z === zone || transitioning) return;
+  transitioning = true;
+
+  var oldIdx = ZONE_ORDER.indexOf(zone);
+  var newIdx = ZONE_ORDER.indexOf(z);
+  var goingDeeper = newIdx > oldIdx;
+
+  document.body.classList.add(goingDeeper ? 'dive-down' : 'dive-up');
+
   setTimeout(function() {
+    zone = z;
+    document.body.className = 'zone-' + z + ' ' + (goingDeeper ? 'dive-enter-down' : 'dive-enter-up');
+    document.getElementById('zone-desc').textContent = ZONE_CFG[z].desc;
+    document.querySelectorAll('.zone-tab').forEach(function(t) { t.classList.toggle('active', t.dataset.z === z); });
+    document.querySelectorAll('.d-dot').forEach(function(d) { d.classList.toggle('on', d.dataset.z === z); });
+    updateDepthFill(z);
     spawnCreatures();
-    layer.style.opacity = '1';
-  }, 500);
+
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        document.body.className = 'zone-' + z;
+        transitioning = false;
+      });
+    });
+  }, 700);
+}
+
+function updateDepthFill(z) {
+  var fills = document.querySelectorAll('.depth-fill');
+  if (z === 'reef') {
+    fills[0].style.height = '0%';
+    fills[1].style.height = '0%';
+  } else if (z === 'open') {
+    fills[0].style.height = '100%';
+    fills[1].style.height = '0%';
+  } else {
+    fills[0].style.height = '100%';
+    fills[1].style.height = '100%';
+  }
 }
 
 document.querySelectorAll('.zone-tab').forEach(function(b) { b.addEventListener('click', function() { switchZone(this.dataset.z); }); });
@@ -657,7 +932,7 @@ function playPop() {
 function loop() {
   tick();
   drawBubbles();
-  if (Math.random() < .14) addBubble();
+  if (Math.random() < .16) addBubble();
   raf = requestAnimationFrame(loop);
 }
 
@@ -670,6 +945,8 @@ function onResize() {
 window.addEventListener('resize', onResize);
 
 buildRays();
+buildKelp();
+buildSeagrass();
 buildParticles();
 buildGlowOrbs();
 resizeBubbles();
