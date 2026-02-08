@@ -59,8 +59,8 @@ if (webglSupported) {
         originalX: sphere.position.x,
         originalY: sphere.position.y,
         originalZ: sphere.position.z,
-        floatSpeed: 0.2 + Math.random() * 0.3,
-        floatRange: 1.5 + Math.random() * 2.5,
+        floatSpeed: 0.04 + Math.random() * 0.06,
+        floatRange: 0.5 + Math.random() * 0.8,
         offset: Math.random() * Math.PI * 2
       };
       scene.add(sphere);
@@ -69,13 +69,13 @@ if (webglSupported) {
 
     let time = 0;
     function animateLoading() {
-      time += 0.005;
+      time += 0.001;
       spheres.forEach((sphere, index) => {
         sphere.position.y = sphere.userData.originalY +
           Math.sin(time * sphere.userData.floatSpeed + sphere.userData.offset) * sphere.userData.floatRange;
         sphere.position.x = sphere.userData.originalX +
-          Math.sin(time * 0.5 + sphere.userData.offset) * 1;
-        const scale = 1 + Math.sin(time + index) * 0.02;
+          Math.sin(time * 0.1 + sphere.userData.offset) * 0.3;
+        const scale = 1 + Math.sin(time + index) * 0.01;
         sphere.scale.set(scale, scale, scale);
       });
       renderer.render(scene, camera);
@@ -111,7 +111,7 @@ if (!webglSupported) {
         y: Math.random() * canvas3d.height,
         r: 20 + Math.random() * 50,
         color: colorHex[Math.floor(Math.random() * colorHex.length)],
-        speed: 0.3 + Math.random() * 0.5,
+        speed: 0.05 + Math.random() * 0.08,
         offset: Math.random() * Math.PI * 2,
         opacity: 0.25 + Math.random() * 0.35
       });
@@ -119,7 +119,7 @@ if (!webglSupported) {
 
     let t = 0;
     function fallbackAnimate() {
-      t += 0.01;
+      t += 0.002;
       ctx2d.fillStyle = '#ffffff';
       ctx2d.fillRect(0, 0, canvas3d.width, canvas3d.height);
       bubbles.forEach(b => {

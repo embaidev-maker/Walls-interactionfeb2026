@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
 app.commandLine.appendSwitch('disable-gpu-compositing');
@@ -18,20 +19,18 @@ function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
       webgl: true,
-      enableWebSQL: false
+      enableWebSQL: false,
+      webSecurity: false,
+      allowRunningInsecureContent: true
     }
   });
 
   mainWindow.loadFile('index.html');
 
-  // Open DevTools in development
-  // mainWindow.webContents.openDevTools();
-
   mainWindow.on('closed', function () {
     mainWindow = null;
   });
 
-  // Handle escape key to exit fullscreen
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.key === 'Escape') {
       if (mainWindow.isFullScreen()) {

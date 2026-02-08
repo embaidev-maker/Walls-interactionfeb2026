@@ -13,6 +13,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .header h1{font-size:clamp(18px,2.5vw,28px);font-weight:800;color:#38bdf8}
 .stats{display:flex;gap:16px;font-size:clamp(12px,1.3vw,16px);font-weight:600}
 .stat-val{color:#fbbf24;font-weight:800;font-size:clamp(20px,2.5vw,28px)}
+.stat-val.urgent{color:#ef4444;animation:pulseRed 0.5s ease-in-out infinite alternate}
+@keyframes pulseRed{0%{transform:scale(1);color:#ef4444}100%{transform:scale(1.15);color:#ff6b6b}}
+.combo-display{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:clamp(48px,8vw,80px);font-weight:900;pointer-events:none;z-index:100;opacity:0;transition:opacity .3s}
+.combo-display.show{opacity:1;animation:comboFlash .6s ease}
+@keyframes comboFlash{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}50%{transform:translate(-50%,-50%) scale(1.2);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.combo-display.x2{color:#22c55e;text-shadow:0 0 30px rgba(34,197,94,.6)}
+.combo-display.x3{color:#3b82f6;text-shadow:0 0 30px rgba(59,130,246,.6)}
+.combo-display.x4{color:#a855f7;text-shadow:0 0 30px rgba(168,85,247,.6)}
+.combo-display.x5{color:#ef4444;text-shadow:0 0 30px rgba(239,68,68,.6)}
+.streak-bar{position:absolute;bottom:0;left:0;height:4px;background:linear-gradient(90deg,#22c55e,#3b82f6,#ef4444);transition:width .3s;border-radius:0 2px 2px 0}
+.time-bonus-popup{position:fixed;top:20%;left:50%;transform:translateX(-50%);font-size:28px;font-weight:800;color:#22c55e;pointer-events:none;z-index:100;animation:timeBonusFly 1.2s ease forwards}
+@keyframes timeBonusFly{0%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}100%{opacity:0;transform:translateX(-50%) translateY(-60px) scale(1.3)}}
 
 .toolbar-toggle{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 0;cursor:pointer;font-size:clamp(11px,1.1vw,13px);font-weight:700;color:rgba(255,255,255,.4);transition:color .3s}
 .toolbar-toggle:hover{color:rgba(255,255,255,.7)}
@@ -68,6 +80,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="stats">
       <div class="stat">Score: <span class="stat-val" id="score">0</span></div>
       <div class="stat">Time: <span class="stat-val" id="timer">90</span>s</div>
+      <div class="stat">Combo: <span class="stat-val" id="comboVal">x1</span></div>
       <div class="stat">Best: <span class="stat-val" id="best">0</span></div>
     </div>
   </div>
@@ -94,11 +107,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<div class="combo-display" id="comboDisplay"></div>
+
 <div class="overlay" id="gameOverlay">
   <h2>Time's Up!</h2>
   <div class="final-label">Your Score</div>
   <div class="final-score" id="finalScore">0</div>
   <div class="final-label" id="bestMsg"></div>
+  <div class="final-label" id="statsMsg"></div>
   <button class="overlay-btn" id="btnRestart">Play Again</button>
   <button class="overlay-btn" id="btnBackOver">Back to Menu</button>
 </div>
@@ -117,6 +133,8 @@ var selectedCell = null;
 var score = 0, bestScore = 0;
 var timeLeft, timerInterval;
 var cellSize;
+var combo = 1, streak = 0, lastMergeTime = 0, maxCombo = 1, totalMerges = 0;
+var COMBO_WINDOW = 2500;
 
 function applyDifficulty() {
   var cfg = DIFF_CFG[difficulty];
@@ -202,17 +220,39 @@ function handleCellTap(r, c) {
   var val2 = board[r][c];
   var product = val1 * val2;
   var points = product;
+  var now = Date.now();
+  totalMerges++;
+
+  if (now - lastMergeTime < COMBO_WINDOW) {
+    streak++;
+    combo = Math.min(5, 1 + Math.floor(streak / 2));
+  } else {
+    streak = 1;
+    combo = 1;
+  }
+  lastMergeTime = now;
+  if (combo > maxCombo) maxCombo = combo;
+
+  points = Math.floor(points * combo);
+  document.getElementById('comboVal').textContent = 'x' + combo;
+
+  if (combo >= 2) showCombo(combo);
+  if (streak > 0 && streak % 5 === 0) {
+    timeLeft = Math.min(timeLeft + 3, DIFF_CFG[difficulty].time);
+    document.getElementById('timer').textContent = timeLeft;
+    showTimeBonus('+3s');
+  }
 
   board[selectedCell.r][selectedCell.c] = 0;
 
   if (product > 100) {
     board[r][c] = 0;
-    points += 50;
-    showScorePopup(r, c, '+' + points + ' BOOM!');
+    points += 50 * combo;
+    showScorePopup(r, c, '+' + points + ' BOOM! x' + combo);
     playTone(800, 0.3);
   } else {
     board[r][c] = product;
-    showScorePopup(r, c, '+' + points);
+    showScorePopup(r, c, '+' + points + (combo > 1 ? ' x' + combo : ''));
     playTone(600, 0.15);
   }
 
@@ -270,15 +310,43 @@ function fillEmpty() {
   }
 }
 
+function showCombo(c) {
+  var el = document.getElementById('comboDisplay');
+  el.className = 'combo-display show x' + c;
+  el.textContent = 'x' + c + ' COMBO!';
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.className = 'combo-display'; }, 900);
+}
+
+function showTimeBonus(text) {
+  var el = document.createElement('div');
+  el.className = 'time-bonus-popup';
+  el.textContent = text;
+  document.body.appendChild(el);
+  el.addEventListener('animationend', function() { el.remove(); });
+}
+
 function startTimer() {
   timeLeft = DIFF_CFG[difficulty].time;
   document.getElementById('timer').textContent = timeLeft;
   clearInterval(timerInterval);
   timerInterval = setInterval(function() {
     timeLeft--;
-    document.getElementById('timer').textContent = Math.max(0, timeLeft);
+    var timerEl = document.getElementById('timer');
+    timerEl.textContent = Math.max(0, timeLeft);
+    if (timeLeft <= 10 && timeLeft > 0) {
+      timerEl.classList.add('urgent');
+      playTone(1000, 0.05);
+    } else {
+      timerEl.classList.remove('urgent');
+    }
+    if (Date.now() - lastMergeTime > COMBO_WINDOW && combo > 1) {
+      combo = 1; streak = 0;
+      document.getElementById('comboVal').textContent = 'x1';
+    }
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
+      timerEl.classList.remove('urgent');
       endGame();
     }
   }, 1000);
@@ -293,12 +361,14 @@ function endGame() {
     document.getElementById('bestMsg').textContent = 'Best: ' + bestScore;
   }
   document.getElementById('finalScore').textContent = score;
+  document.getElementById('statsMsg').textContent = 'Merges: ' + totalMerges + ' | Max Combo: x' + maxCombo;
   document.getElementById('gameOverlay').classList.add('active');
 }
 
 function newGame() {
-  score = 0; selectedCell = null;
+  score = 0; selectedCell = null; combo = 1; streak = 0; lastMergeTime = 0; maxCombo = 1; totalMerges = 0;
   document.getElementById('score').textContent = 0;
+  document.getElementById('comboVal').textContent = 'x1';
   document.getElementById('gameOverlay').classList.remove('active');
   applyDifficulty();
   initBoard();

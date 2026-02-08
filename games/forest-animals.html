@@ -391,6 +391,19 @@ var ANIMALS = [
 
 var track = document.getElementById('scrollTrack');
 
+function resolveModelPath(relPath) {
+  if (typeof process !== 'undefined' && process.versions && process.versions.electron) {
+    var path = require('path');
+    var fs = require('fs');
+    var appPath = path.dirname(__dirname);
+    var normal = path.join(appPath, relPath.replace(/^\.\.\//, ''));
+    var unpacked = normal.replace('app.asar', 'app.asar.unpacked');
+    if (fs.existsSync(unpacked)) return 'file://' + unpacked.replace(/\\/g, '/');
+    if (fs.existsSync(normal)) return 'file://' + normal.replace(/\\/g, '/');
+  }
+  return relPath;
+}
+
 function buildCards() {
   ANIMALS.forEach(function(animal, idx) {
     var card = document.createElement('div');
@@ -401,9 +414,10 @@ function buildCards() {
 
     var modelHtml;
     if (animal.model) {
+      var modelSrc = resolveModelPath(animal.model);
       modelHtml =
         '<div class="model-area" data-idx="' + idx + '">' +
-          '<model-viewer class="animal-viewer" src="' + animal.model + '" auto-rotate camera-controls interaction-prompt="none" shadow-intensity="0.4" exposure="1.2" camera-orbit="0deg 75deg 2.5m"></model-viewer>' +
+          '<model-viewer class="animal-viewer" src="' + modelSrc + '" auto-rotate camera-controls interaction-prompt="none" shadow-intensity="0.4" exposure="1.2" camera-orbit="0deg 75deg 2.5m"></model-viewer>' +
           '<span class="model-badge">3D MODEL</span>' +
         '</div>';
     } else {

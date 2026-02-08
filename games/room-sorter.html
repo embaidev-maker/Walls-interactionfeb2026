@@ -208,12 +208,13 @@ function shuffle(arr) {
 var BEDROOM_POOL = [
   { emoji:'\u{1F9F8}', name:'Teddy Bear', targetX:.20, targetY:.38, targetW:90, targetH:90, targetLabel:'On the bed' },
   { emoji:'\u{1F4DA}', name:'Books', targetX:.64, targetY:.36, targetW:80, targetH:75, targetLabel:'On the desk' },
-  { emoji:'\u{1F45F}', name:'Shoes', targetX:.86, targetY:.80, targetW:95, targetH:65, targetLabel:'By the door' },
+  { emoji:'\u{1F45F}', name:'Shoes', targetX:.12, targetY:.78, targetW:95, targetH:65, targetLabel:'Shoe rack' },
   { emoji:'\u23F0', name:'Alarm Clock', targetX:.40, targetY:.40, targetW:70, targetH:70, targetLabel:'Nightstand' },
   { emoji:'\u{1F392}', name:'Backpack', targetX:.80, targetY:.42, targetW:80, targetH:85, targetLabel:'On shelf' },
   { emoji:'\u{1F9E2}', name:'Cap', targetX:.76, targetY:.28, targetW:75, targetH:70, targetLabel:'On the hook' },
   { emoji:'\u{1F3AE}', name:'Controller', targetX:.58, targetY:.38, targetW:80, targetH:70, targetLabel:'On the desk' },
-  { emoji:'\u{1F4A1}', name:'Lamp', targetX:.36, targetY:.34, targetW:70, targetH:80, targetLabel:'Nightstand' }
+  { emoji:'\u{1F4A1}', name:'Lamp', targetX:.36, targetY:.34, targetW:70, targetH:80, targetLabel:'Nightstand' },
+  { emoji:'\u{1FA74}', name:'Slippers', targetX:.12, targetY:.78, targetW:95, targetH:65, targetLabel:'Shoe rack' }
 ];
 
 var KITCHEN_POOL = [
@@ -628,6 +629,27 @@ function drawBedroom(ctx, W, H, cfg) {
   ctx.strokeStyle = '#D4764E30';
   ctx.lineWidth = 3;
   ctx.stroke();
+
+  var srX = r.bwL * .3, srY = H * .62, srW = W * .12, srH = H * .28;
+  ctx.fillStyle = '#5D4037';
+  ctx.fillRect(srX, srY, srW, srH);
+  ctx.fillStyle = '#6D4C41';
+  ctx.fillRect(srX + 2, srY + 2, srW - 4, srH - 4);
+  ctx.fillStyle = '#4E342E';
+  ctx.fillRect(srX, srY, srW, 5);
+  var shelfCount = 3;
+  for (var sh = 1; sh <= shelfCount; sh++) {
+    var sy = srY + sh * (srH / (shelfCount + 1));
+    ctx.fillStyle = '#8D6E63';
+    ctx.fillRect(srX + 3, sy, srW - 6, 4);
+    ctx.fillStyle = '#5D4037';
+    ctx.fillRect(srX + 3, sy + 4, srW - 6, 1);
+  }
+  ctx.fillStyle = '#4E342E';
+  ctx.fillRect(srX, srY, 3, srH);
+  ctx.fillRect(srX + srW - 3, srY, 3, srH);
+  ctx.fillStyle = '#A1887F';
+  ctx.fillRect(srX, srY + srH - 3, srW, 3);
 }
 
 function drawKitchen(ctx, W, H, cfg) {

@@ -150,6 +150,11 @@ var ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth * 2;
 canvas.height = window.innerHeight * 2;
 
+var outlineCanvas = document.createElement('canvas');
+outlineCanvas.width = canvas.width;
+outlineCanvas.height = canvas.height;
+var outlineCtx = outlineCanvas.getContext('2d');
+
 var COLORS = [
   '#FF6B6B','#FF1493','#FF6347','#FFA07A','#FFD700','#F7DC6F',
   '#4ECDC4','#45B7D1','#20B2AA','#98D8C8','#52B788','#BB8FCE',
@@ -159,6 +164,7 @@ var COLORS = [
 var currentColor = COLORS[0];
 var brushSize = 25;
 var isEraser = false;
+var isFillMode = true;
 var currentTemplate = 'elephant';
 var scale = 1;
 var offsetX = 0, offsetY = 0;
@@ -195,6 +201,12 @@ function buildColorBar() {
   div2.className = 'bar-divider';
   bar.appendChild(div2);
 
+  var fillBtn = document.createElement('button');
+  fillBtn.className = 'tool-btn' + (isFillMode && !isEraser ? ' active' : '');
+  fillBtn.textContent = '\uD83C\uDFA8';
+  fillBtn.id = 'fillBtn';
+  bar.appendChild(fillBtn);
+
   var eraser = document.createElement('button');
   eraser.className = 'tool-btn' + (isEraser ? ' active' : '');
   eraser.textContent = '\uD83E\uDDFD';
@@ -229,6 +241,69 @@ function clearCanvas() {
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   templates[currentTemplate].draw();
+  outlineCanvas.width = canvas.width;
+  outlineCanvas.height = canvas.height;
+  outlineCtx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
+  outlineCtx.drawImage(canvas, 0, 0);
+}
+
+function redrawOutlines() {
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(outlineCanvas, 0, 0);
+  ctx.restore();
+}
+
+function floodFill(startX, startY, fillColor) {
+  startX = Math.round(startX);
+  startY = Math.round(startY);
+  if (startX < 0 || startX >= canvas.width || startY < 0 || startY >= canvas.height) return;
+
+  var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  var data = imgData.data;
+  var w = canvas.width;
+  var idx = (startY * w + startX) * 4;
+  var sr = data[idx], sg = data[idx+1], sb = data[idx+2], sa = data[idx+3];
+
+  var tmp = document.createElement('canvas');
+  tmp.width = 1; tmp.height = 1;
+  var tmpCtx = tmp.getContext('2d');
+  tmpCtx.fillStyle = fillColor;
+  tmpCtx.fillRect(0, 0, 1, 1);
+  var fc = tmpCtx.getImageData(0, 0, 1, 1).data;
+  var fr = fc[0], fg = fc[1], fb = fc[2], fa = fc[3];
+
+  if (sr === fr && sg === fg && sb === fb && sa === fa) return;
+
+  var tolerance = 40;
+  function match(i) {
+    return Math.abs(data[i] - sr) <= tolerance &&
+           Math.abs(data[i+1] - sg) <= tolerance &&
+           Math.abs(data[i+2] - sb) <= tolerance &&
+           Math.abs(data[i+3] - sa) <= tolerance;
+  }
+
+  var stack = [[startX, startY]];
+  var visited = new Uint8Array(w * canvas.height);
+  var maxPixels = canvas.width * canvas.height * 0.5;
+  var filled = 0;
+
+  while (stack.length > 0 && filled < maxPixels) {
+    var pt = stack.pop();
+    var px = pt[0], py = pt[1];
+    if (px < 0 || px >= w || py < 0 || py >= canvas.height) continue;
+    var vi = py * w + px;
+    if (visited[vi]) continue;
+    var pi = vi * 4;
+    if (!match(pi)) continue;
+    visited[vi] = 1;
+    data[pi] = fr; data[pi+1] = fg; data[pi+2] = fb; data[pi+3] = fa;
+    filled++;
+    stack.push([px+1, py], [px-1, py], [px, py+1], [px, py-1]);
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+  redrawOutlines();
 }
 
 function applyTransform() {
@@ -248,6 +323,7 @@ function drawStroke(fromX, fromY, toX, toY, color, size) {
   ctx.moveTo(fromX, fromY);
   ctx.lineTo(toX, toY);
   ctx.stroke();
+  redrawOutlines();
 }
 
 function handlePointerDown(e) {
@@ -261,10 +337,23 @@ function handlePointerDown(e) {
     target.classList.add('active');
     var eb = document.getElementById('eraserBtn');
     if (eb) eb.classList.remove('active');
+    var fb = document.getElementById('fillBtn');
+    if (fb) fb.classList.toggle('active', isFillMode);
+    return;
+  }
+  if (target.id === 'fillBtn') {
+    isFillMode = !isFillMode;
+    isEraser = false;
+    var eb = document.getElementById('eraserBtn');
+    if (eb) eb.classList.remove('active');
+    target.classList.toggle('active', isFillMode);
     return;
   }
   if (target.id === 'eraserBtn') {
     isEraser = !isEraser;
+    isFillMode = false;
+    var fb = document.getElementById('fillBtn');
+    if (fb) fb.classList.remove('active');
     target.classList.toggle('active');
     if (isEraser) document.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active') });
     return;
@@ -285,6 +374,12 @@ function handlePointerDown(e) {
   if (target !== canvas) return;
 
   var coords = getCanvasCoords(e.clientX, e.clientY);
+
+  if (isFillMode && !isEraser) {
+    floodFill(Math.round(coords.x), Math.round(coords.y), currentColor);
+    return;
+  }
+
   activePointers[e.pointerId] = { x: coords.x, y: coords.y, color: isEraser ? 'white' : currentColor };
 
   var dot = document.getElementById('pdot-' + e.pointerId);
@@ -488,9 +583,16 @@ window.addEventListener('resize', function() {
   var tmpCtx = tmp.getContext('2d');
   tmp.width = canvas.width; tmp.height = canvas.height;
   tmpCtx.drawImage(canvas, 0, 0);
+  var tmpO = document.createElement('canvas');
+  var tmpOCtx = tmpO.getContext('2d');
+  tmpO.width = outlineCanvas.width; tmpO.height = outlineCanvas.height;
+  tmpOCtx.drawImage(outlineCanvas, 0, 0);
   canvas.width = window.innerWidth * 2;
   canvas.height = window.innerHeight * 2;
   ctx.drawImage(tmp, 0, 0);
+  outlineCanvas.width = canvas.width;
+  outlineCanvas.height = canvas.height;
+  outlineCtx.drawImage(tmpO, 0, 0);
   applyTransform();
 });
 </script>

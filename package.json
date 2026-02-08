@@ -45,6 +45,9 @@
     "linux": {
       "target": ["AppImage"],
       "icon": "icon.png"
-    }
+    },
+    "asarUnpack": [
+      "3dmodels/**/*.glb"
+    ]
   }
 }
