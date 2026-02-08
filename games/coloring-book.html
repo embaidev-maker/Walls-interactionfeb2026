@@ -21,7 +21,7 @@ body{
   box-shadow:0 8px 40px rgba(0,0,0,.4);
   overflow:hidden;
 }
-#paintCanvas{display:block;background:#fff;cursor:crosshair}
+#paintCanvas{display:block;cursor:crosshair}
 #lineCanvas{position:absolute;top:0;left:0;pointer-events:none}
 
 .template-panel{
@@ -156,6 +156,9 @@ var renderCtx = renderCanvas.getContext('2d');
 
 var cW = 0, cH = 0;
 var outlineMask = null;
+var paintableMask = null;
+
+var EXT_R = 220, EXT_G = 225, EXT_B = 220;
 
 var COLORS = [
   '#FF6B6B','#FF1493','#FF6347','#FFA07A','#FFD700','#F7DC6F',
@@ -203,33 +206,99 @@ function sizeCanvases() {
   paintCtx.lineJoin = 'round';
 }
 
-function buildOutlineMask() {
+function dilateMask(mask, w, h, iterations) {
+  var curr = new Uint8Array(mask);
+  for (var iter = 0; iter < iterations; iter++) {
+    var next = new Uint8Array(w * h);
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        var i = y * w + x;
+        if (curr[i]) { next[i] = 1; continue; }
+        if (x > 0 && curr[i - 1]) { next[i] = 1; continue; }
+        if (x < w - 1 && curr[i + 1]) { next[i] = 1; continue; }
+        if (y > 0 && curr[i - w]) { next[i] = 1; continue; }
+        if (y < h - 1 && curr[i + w]) { next[i] = 1; continue; }
+      }
+    }
+    curr = next;
+  }
+  return curr;
+}
+
+function buildMasks() {
   renderCtx.fillStyle = '#fff';
   renderCtx.fillRect(0, 0, cW, cH);
   templates[currentTemplate].draw(renderCtx, cW, cH);
 
   var img = renderCtx.getImageData(0, 0, cW, cH);
   var d = img.data;
-  outlineMask = new Uint8Array(cW * cH);
-  var lineData = new Uint8ClampedArray(d.length);
 
+  outlineMask = new Uint8Array(cW * cH);
   for (var i = 0; i < cW * cH; i++) {
-    var r = d[i*4], g = d[i*4+1], b = d[i*4+2];
-    var lum = r * 0.299 + g * 0.587 + b * 0.114;
-    if (lum < 180) {
-      outlineMask[i] = 1;
-      lineData[i*4]   = d[i*4];
-      lineData[i*4+1] = d[i*4+1];
-      lineData[i*4+2] = d[i*4+2];
-      lineData[i*4+3] = 255;
-    }
+    var lum = d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114;
+    if (lum < 180) outlineMask[i] = 1;
   }
 
+  var dilated = dilateMask(outlineMask, cW, cH, 3);
+
+  var exterior = new Uint8Array(cW * cH);
+  var stack = [];
+  for (var x = 0; x < cW; x++) {
+    if (!dilated[x]) { exterior[x] = 1; stack.push(x, 0); }
+    var bi = (cH - 1) * cW + x;
+    if (!dilated[bi]) { exterior[bi] = 1; stack.push(x, cH - 1); }
+  }
+  for (var y = 1; y < cH - 1; y++) {
+    var li = y * cW;
+    if (!dilated[li]) { exterior[li] = 1; stack.push(0, y); }
+    var ri = y * cW + cW - 1;
+    if (!dilated[ri]) { exterior[ri] = 1; stack.push(cW - 1, y); }
+  }
+
+  while (stack.length > 0) {
+    var sy = stack.pop();
+    var sx = stack.pop();
+    var ni, nx, ny;
+    nx = sx + 1; ny = sy; ni = ny * cW + nx;
+    if (nx < cW && !exterior[ni] && !dilated[ni]) { exterior[ni] = 1; stack.push(nx, ny); }
+    nx = sx - 1; ny = sy; ni = ny * cW + nx;
+    if (nx >= 0 && !exterior[ni] && !dilated[ni]) { exterior[ni] = 1; stack.push(nx, ny); }
+    nx = sx; ny = sy + 1; ni = ny * cW + nx;
+    if (ny < cH && !exterior[ni] && !dilated[ni]) { exterior[ni] = 1; stack.push(nx, ny); }
+    nx = sx; ny = sy - 1; ni = ny * cW + nx;
+    if (ny >= 0 && !exterior[ni] && !dilated[ni]) { exterior[ni] = 1; stack.push(nx, ny); }
+  }
+
+  paintableMask = new Uint8Array(cW * cH);
+  for (var i = 0; i < cW * cH; i++) {
+    if (!outlineMask[i] && !exterior[i]) paintableMask[i] = 1;
+  }
+
+  var lineData = new Uint8ClampedArray(cW * cH * 4);
+  for (var i = 0; i < cW * cH; i++) {
+    if (outlineMask[i]) {
+      lineData[i * 4] = d[i * 4];
+      lineData[i * 4 + 1] = d[i * 4 + 1];
+      lineData[i * 4 + 2] = d[i * 4 + 2];
+      lineData[i * 4 + 3] = 255;
+    }
+  }
   lineCtx.clearRect(0, 0, cW, cH);
   lineCtx.putImageData(new ImageData(lineData, cW, cH), 0, 0);
 
   paintCtx.fillStyle = '#fff';
   paintCtx.fillRect(0, 0, cW, cH);
+  var pImg = paintCtx.getImageData(0, 0, cW, cH);
+  var pd = pImg.data;
+  for (var i = 0; i < cW * cH; i++) {
+    if (exterior[i] || outlineMask[i]) {
+      pd[i * 4] = EXT_R;
+      pd[i * 4 + 1] = EXT_G;
+      pd[i * 4 + 2] = EXT_B;
+      pd[i * 4 + 3] = 255;
+    }
+  }
+  paintCtx.putImageData(pImg, 0, 0);
 }
 
 function hexToRgb(hex) {
@@ -245,21 +314,20 @@ function floodFill(sx, sy, color) {
   sx = Math.round(sx);
   sy = Math.round(sy);
   if (sx < 0 || sx >= cW || sy < 0 || sy >= cH) return;
-  if (outlineMask[sy * cW + sx]) return;
+  if (!paintableMask[sy * cW + sx]) return;
 
   var imgData = paintCtx.getImageData(0, 0, cW, cH);
   var data = imgData.data;
-  var startIdx = (sy * cW + sx) * 4;
-  var sr = data[startIdx], sg = data[startIdx+1], sb = data[startIdx+2];
+  var si = (sy * cW + sx) * 4;
+  var sr = data[si], sg = data[si + 1], sb = data[si + 2];
 
   var fc = hexToRgb(color);
   var fr = fc[0], fg = fc[1], fb = fc[2];
-
-  if (Math.abs(sr-fr)<3 && Math.abs(sg-fg)<3 && Math.abs(sb-fb)<3) return;
+  if (Math.abs(sr - fr) < 3 && Math.abs(sg - fg) < 3 && Math.abs(sb - fb) < 3) return;
 
   var tol = 32;
-  var stack = [sx, sy];
   var visited = new Uint8Array(cW * cH);
+  var stack = [sx, sy];
   var count = 0;
   var limit = cW * cH;
 
@@ -268,55 +336,19 @@ function floodFill(sx, sy, color) {
     var x = stack.pop();
     if (x < 0 || x >= cW || y < 0 || y >= cH) continue;
     var vi = y * cW + x;
-    if (visited[vi] || outlineMask[vi]) continue;
+    if (visited[vi] || !paintableMask[vi]) continue;
     var pi = vi * 4;
-    if (Math.abs(data[pi]-sr)>tol || Math.abs(data[pi+1]-sg)>tol || Math.abs(data[pi+2]-sb)>tol) continue;
+    if (Math.abs(data[pi] - sr) > tol || Math.abs(data[pi + 1] - sg) > tol || Math.abs(data[pi + 2] - sb) > tol) continue;
     visited[vi] = 1;
-    data[pi] = fr; data[pi+1] = fg; data[pi+2] = fb; data[pi+3] = 255;
+    data[pi] = fr; data[pi + 1] = fg; data[pi + 2] = fb; data[pi + 3] = 255;
     count++;
-    stack.push(x+1, y, x-1, y, x, y+1, x, y-1);
+    stack.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1);
   }
 
   paintCtx.putImageData(imgData, 0, 0);
 }
 
-function maskedBrushStroke(x1, y1, x2, y2, color, size) {
-  paintCtx.save();
-  paintCtx.lineWidth = size;
-  paintCtx.strokeStyle = color;
-  paintCtx.globalCompositeOperation = 'source-over';
-  paintCtx.beginPath();
-  paintCtx.moveTo(x1, y1);
-  paintCtx.lineTo(x2, y2);
-  paintCtx.stroke();
-  paintCtx.restore();
-
-  restoreOutlinePixels(
-    Math.max(0, Math.floor(Math.min(x1,x2) - size)),
-    Math.max(0, Math.floor(Math.min(y1,y2) - size)),
-    Math.min(cW, Math.ceil(Math.max(x1,x2) + size)),
-    Math.min(cH, Math.ceil(Math.max(y1,y2) + size))
-  );
-}
-
-function maskedBrushDot(cx, cy, color, size) {
-  paintCtx.save();
-  paintCtx.fillStyle = color;
-  paintCtx.beginPath();
-  paintCtx.arc(cx, cy, size / 2, 0, Math.PI * 2);
-  paintCtx.fill();
-  paintCtx.restore();
-
-  var r = Math.ceil(size / 2) + 2;
-  restoreOutlinePixels(
-    Math.max(0, Math.floor(cx - r)),
-    Math.max(0, Math.floor(cy - r)),
-    Math.min(cW, Math.ceil(cx + r)),
-    Math.min(cH, Math.ceil(cy + r))
-  );
-}
-
-function restoreOutlinePixels(x0, y0, x1, y1) {
+function constrainPaint(x0, y0, x1, y1) {
   if (x1 <= x0 || y1 <= y0) return;
   var w = x1 - x0;
   var h = y1 - y0;
@@ -328,14 +360,52 @@ function restoreOutlinePixels(x0, y0, x1, y1) {
     for (var col = 0; col < w; col++) {
       var gx = x0 + col;
       var gy = y0 + row;
-      if (outlineMask[gy * cW + gx]) {
+      var mi = gy * cW + gx;
+      if (!paintableMask[mi]) {
         var pi = (row * w + col) * 4;
-        d[pi] = 255; d[pi+1] = 255; d[pi+2] = 255; d[pi+3] = 0;
+        d[pi] = EXT_R; d[pi + 1] = EXT_G; d[pi + 2] = EXT_B; d[pi + 3] = 255;
         changed = true;
       }
     }
   }
   if (changed) paintCtx.putImageData(region, x0, y0);
+}
+
+function brushStroke(x1, y1, x2, y2, color, size) {
+  paintCtx.save();
+  paintCtx.lineWidth = size;
+  paintCtx.strokeStyle = color;
+  paintCtx.globalCompositeOperation = 'source-over';
+  paintCtx.beginPath();
+  paintCtx.moveTo(x1, y1);
+  paintCtx.lineTo(x2, y2);
+  paintCtx.stroke();
+  paintCtx.restore();
+
+  var pad = Math.ceil(size / 2) + 2;
+  constrainPaint(
+    Math.max(0, Math.floor(Math.min(x1, x2) - pad)),
+    Math.max(0, Math.floor(Math.min(y1, y2) - pad)),
+    Math.min(cW, Math.ceil(Math.max(x1, x2) + pad)),
+    Math.min(cH, Math.ceil(Math.max(y1, y2) + pad))
+  );
+}
+
+function brushDot(cx, cy, color, size) {
+  paintCtx.save();
+  paintCtx.fillStyle = color;
+  paintCtx.beginPath();
+  paintCtx.arc(cx, cy, size / 2, 0, Math.PI * 2);
+  paintCtx.fill();
+  paintCtx.restore();
+
+  var pad = Math.ceil(size / 2) + 2;
+  constrainPaint(
+    Math.max(0, Math.floor(cx - pad)),
+    Math.max(0, Math.floor(cy - pad)),
+    Math.min(cW, Math.ceil(cx + pad)),
+    Math.min(cH, Math.ceil(cy + pad))
+  );
 }
 
 function getCoords(e) {
@@ -359,7 +429,7 @@ function handleDown(e) {
   }
   if (tgt.classList && tgt.classList.contains('tpl-btn')) {
     currentTemplate = tgt.dataset.template;
-    buildOutlineMask();
+    buildMasks();
     refreshUI();
     var lbl = document.createElement('div');
     lbl.className = 'animal-label';
@@ -379,7 +449,7 @@ function handleDown(e) {
 
   var col = activeTool === 'eraser' ? '#FFFFFF' : currentColor;
   activePointers[e.pointerId] = {x: c.x, y: c.y, color: col};
-  maskedBrushDot(c.x, c.y, col, brushSize);
+  brushDot(c.x, c.y, col, brushSize);
 
   var dot = document.createElement('div');
   dot.className = 'pointer-dot';
@@ -398,7 +468,7 @@ function handleMove(e) {
   var p = activePointers[e.pointerId];
   if (!p) return;
   var c = getCoords(e);
-  maskedBrushStroke(p.x, p.y, c.x, c.y, p.color, brushSize);
+  brushStroke(p.x, p.y, c.x, c.y, p.color, brushSize);
   p.x = c.x;
   p.y = c.y;
   var dot = document.getElementById('pdot-' + e.pointerId);
@@ -478,7 +548,7 @@ function addBtn(id, fn) {
   el.addEventListener('click', function(e){ if (!(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) fn(); });
   el.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); fn(); });
 }
-addBtn('clearBtn', function(){ buildOutlineMask(); });
+addBtn('clearBtn', function(){ buildMasks(); });
 addBtn('backBtn', function(){ location.href = '../index.html'; });
 
 var bg = document.getElementById('jungleBg');
@@ -495,7 +565,7 @@ var bg = document.getElementById('jungleBg');
 });
 
 function drawElephant(ctx, w, h) {
-  var cx = w/2, cy = h/2;
+  var cx=w/2, cy=h/2;
   ctx.strokeStyle='#333'; ctx.lineWidth=5; ctx.fillStyle='white';
   ctx.beginPath(); ctx.ellipse(cx,cy+50,180,150,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.ellipse(cx,cy-120,130,120,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
@@ -628,12 +698,12 @@ function drawFrog(ctx, w, h) {
 sizeCanvases();
 buildColorBar();
 buildTemplatePanel();
-buildOutlineMask();
+buildMasks();
 refreshUI();
 
 window.addEventListener('resize', function() {
   sizeCanvases();
-  buildOutlineMask();
+  buildMasks();
 });
 
 })();
