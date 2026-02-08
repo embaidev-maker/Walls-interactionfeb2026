@@ -270,13 +270,13 @@ function loadGame(gameName) {
                 window.location.href = 'games/room-sorter.html?room=table';
                 break;
             case 'arithmetica':
-                window.location.href = 'games/arithmetica.html';
+                window.location.href = 'games/arithmetica-multi.html';
                 break;
             case 'number-crunch':
-                window.location.href = 'games/number-crunch.html';
+                window.location.href = 'games/number-crunch-multi.html';
                 break;
             case 'fruit-math':
-                window.location.href = 'games/fruit-math.html';
+                window.location.href = 'games/fruit-math-multi.html';
                 break;
             case 'word-explorer':
                 window.location.href = 'games/word-explorer.html';
@@ -285,7 +285,7 @@ function loadGame(gameName) {
                 window.location.href = 'games/number-explorer.html';
                 break;
             case 'alphabet-explorer':
-                window.location.href = 'games/alphabet-explorer.html';
+                window.location.href = 'games/alphabet-explorer-multi.html';
                 break;
             case 'word-creator':
                 window.location.href = 'games/word-creator.html';

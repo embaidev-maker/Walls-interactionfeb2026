@@ -310,6 +310,11 @@ bindTouch(document.getElementById('btnBack'), function() { location.href = '../i
 
 showQuestion();
 
+if (new URLSearchParams(window.location.search).get('embed') === '1') {
+  document.getElementById('btnBack').style.display = 'none';
+  document.querySelector('.footer').style.padding = '4px 10px 6px';
+}
+
 var bgP = document.getElementById('bgP');
 for (var i = 0; i < 30; i++) {
   var d = document.createElement('div'); d.className = 'bg-dot';

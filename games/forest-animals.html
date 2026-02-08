@@ -417,7 +417,7 @@ function buildCards() {
       var modelSrc = resolveModelPath(animal.model);
       modelHtml =
         '<div class="model-area" data-idx="' + idx + '">' +
-          '<model-viewer class="animal-viewer" src="' + modelSrc + '" auto-rotate camera-controls interaction-prompt="none" shadow-intensity="0.4" exposure="1.2" camera-orbit="0deg 75deg 2.5m"></model-viewer>' +
+          '<model-viewer class="animal-viewer" src="' + modelSrc + '" auto-rotate camera-controls interaction-prompt="none" shadow-intensity="0.8" exposure="1.5" environment-image="neutral" camera-orbit="0deg 75deg 2.5m" tone-mapping="commerce"></model-viewer>' +
           '<span class="model-badge">3D MODEL</span>' +
         '</div>';
     } else {

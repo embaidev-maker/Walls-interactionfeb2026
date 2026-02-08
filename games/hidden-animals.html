@@ -17,24 +17,27 @@ canvas{position:absolute;inset:0;z-index:0}
 
 .animal-btn{
   position:absolute;z-index:30;
-  font-size:clamp(64px,9vw,100px);
+  font-size:clamp(20px,3vw,32px);
   cursor:pointer;line-height:1;
-  transition:clip-path .5s ease,filter .5s ease,opacity .5s ease,transform .5s ease;
-  filter:saturate(.15) brightness(.35) hue-rotate(60deg);
-  opacity:.45;
+  transition:filter .5s ease,opacity .5s ease,transform .5s ease,font-size .5s ease;
+  filter:saturate(.1) brightness(.5) hue-rotate(60deg);
+  opacity:.2;
+}
+.animal-btn:hover{
+  opacity:.35;
+  filter:saturate(.2) brightness(.6) hue-rotate(40deg);
 }
 .animal-btn.found{
+  font-size:clamp(64px,9vw,100px);
   filter:saturate(1) brightness(1) drop-shadow(0 4px 16px rgba(255,255,255,.6));
   opacity:1;cursor:default;
-  clip-path:inset(0 0 0 0) !important;
   animation:animalPop .5s ease;
   z-index:45;
-  transform:scale(1.15);
 }
 @keyframes animalPop{
   0%{transform:scale(.3);opacity:0}
   50%{transform:scale(1.4)}
-  100%{transform:scale(1.15);opacity:1}
+  100%{transform:scale(1);opacity:1}
 }
 
 .info-popup{
@@ -235,14 +238,6 @@ var ALL_ANIMALS = [
 ];
 
 var GAME_COUNT = 8;
-var CLIP_DIRS = [
-  function(){ return 'inset(0 ' + (55 + Math.random()*15) + '% ' + (50 + Math.random()*15) + '% 0)'; },
-  function(){ return 'inset(0 0 ' + (50 + Math.random()*15) + '% ' + (55 + Math.random()*15) + '%)'; },
-  function(){ return 'inset(' + (50 + Math.random()*15) + '% ' + (55 + Math.random()*15) + '% 0 0)'; },
-  function(){ return 'inset(' + (50 + Math.random()*15) + '% 0 0 ' + (55 + Math.random()*15) + '%)'; },
-  function(){ return 'inset(0 ' + (30 + Math.random()*20) + '% ' + (55 + Math.random()*15) + '% ' + (30 + Math.random()*20) + '%)'; },
-  function(){ return 'inset(' + (55 + Math.random()*15) + '% ' + (30 + Math.random()*20) + '% 0 ' + (30 + Math.random()*20) + '%)'; }
-];
 
 function shuffle(a) {
   var arr = a.slice();
@@ -372,14 +367,12 @@ function placeAnimals() {
       tries++;
     } while (tries < 400 && hiddenAnimals.some(function(a) { return Math.hypot(a.x - x, a.y - y) < minDist; }));
 
-    var clipFn = CLIP_DIRS[Math.floor(Math.random() * CLIP_DIRS.length)];
     hiddenAnimals.push({
       emoji: def.emoji,
       name: def.name,
       desc: def.desc,
       x: x, y: y,
-      found: false,
-      clipPath: clipFn()
+      found: false
     });
   });
 
@@ -387,9 +380,8 @@ function placeAnimals() {
     var el = document.createElement('div');
     el.className = 'animal-btn';
     el.textContent = a.emoji;
-    el.style.left = (a.x - 48) + 'px';
-    el.style.top = (a.y - 48) + 'px';
-    el.style.clipPath = a.clipPath;
+    el.style.left = (a.x - 16) + 'px';
+    el.style.top = (a.y - 16) + 'px';
     a.el = el;
     wrap.appendChild(el);
   });
@@ -559,7 +551,7 @@ function hitTest(px, py) {
   for (var i = 0; i < hiddenAnimals.length; i++) {
     var a = hiddenAnimals[i];
     if (a.found) continue;
-    if (Math.hypot(px - a.x, py - a.y) < 80) return i;
+    if (Math.hypot(px - a.x, py - a.y) < 50) return i;
   }
   return -1;
 }

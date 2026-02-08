@@ -164,7 +164,6 @@ var COLORS = [
 var currentColor = COLORS[0];
 var brushSize = 25;
 var isEraser = false;
-var isFillMode = true;
 var currentTemplate = 'elephant';
 var scale = 1;
 var offsetX = 0, offsetY = 0;
@@ -200,12 +199,6 @@ function buildColorBar() {
   var div2 = document.createElement('div');
   div2.className = 'bar-divider';
   bar.appendChild(div2);
-
-  var fillBtn = document.createElement('button');
-  fillBtn.className = 'tool-btn' + (isFillMode && !isEraser ? ' active' : '');
-  fillBtn.textContent = '\uD83C\uDFA8';
-  fillBtn.id = 'fillBtn';
-  bar.appendChild(fillBtn);
 
   var eraser = document.createElement('button');
   eraser.className = 'tool-btn' + (isEraser ? ' active' : '');
@@ -275,7 +268,7 @@ function floodFill(startX, startY, fillColor) {
 
   if (sr === fr && sg === fg && sb === fb && sa === fa) return;
 
-  var tolerance = 40;
+  var tolerance = 30;
   function match(i) {
     return Math.abs(data[i] - sr) <= tolerance &&
            Math.abs(data[i+1] - sg) <= tolerance &&
@@ -283,15 +276,20 @@ function floodFill(startX, startY, fillColor) {
            Math.abs(data[i+3] - sa) <= tolerance;
   }
 
-  var stack = [[startX, startY]];
-  var visited = new Uint8Array(w * canvas.height);
-  var maxPixels = canvas.width * canvas.height * 0.5;
+  var h = canvas.height;
+  var visited = new Uint8Array(w * h);
+  var maxPixels = w * h * 0.5;
   var filled = 0;
 
-  while (stack.length > 0 && filled < maxPixels) {
-    var pt = stack.pop();
-    var px = pt[0], py = pt[1];
-    if (px < 0 || px >= w || py < 0 || py >= canvas.height) continue;
+  var stack = new Int32Array(w * h * 2);
+  var sPtr = 0;
+  stack[sPtr++] = startX;
+  stack[sPtr++] = startY;
+
+  while (sPtr > 0 && filled < maxPixels) {
+    var py = stack[--sPtr];
+    var px = stack[--sPtr];
+    if (px < 0 || px >= w || py < 0 || py >= h) continue;
     var vi = py * w + px;
     if (visited[vi]) continue;
     var pi = vi * 4;
@@ -299,7 +297,10 @@ function floodFill(startX, startY, fillColor) {
     visited[vi] = 1;
     data[pi] = fr; data[pi+1] = fg; data[pi+2] = fb; data[pi+3] = fa;
     filled++;
-    stack.push([px+1, py], [px-1, py], [px, py+1], [px, py-1]);
+    stack[sPtr++] = px + 1; stack[sPtr++] = py;
+    stack[sPtr++] = px - 1; stack[sPtr++] = py;
+    stack[sPtr++] = px; stack[sPtr++] = py + 1;
+    stack[sPtr++] = px; stack[sPtr++] = py - 1;
   }
 
   ctx.putImageData(imgData, 0, 0);
@@ -337,23 +338,10 @@ function handlePointerDown(e) {
     target.classList.add('active');
     var eb = document.getElementById('eraserBtn');
     if (eb) eb.classList.remove('active');
-    var fb = document.getElementById('fillBtn');
-    if (fb) fb.classList.toggle('active', isFillMode);
-    return;
-  }
-  if (target.id === 'fillBtn') {
-    isFillMode = !isFillMode;
-    isEraser = false;
-    var eb = document.getElementById('eraserBtn');
-    if (eb) eb.classList.remove('active');
-    target.classList.toggle('active', isFillMode);
     return;
   }
   if (target.id === 'eraserBtn') {
     isEraser = !isEraser;
-    isFillMode = false;
-    var fb = document.getElementById('fillBtn');
-    if (fb) fb.classList.remove('active');
     target.classList.toggle('active');
     if (isEraser) document.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active') });
     return;
@@ -375,12 +363,12 @@ function handlePointerDown(e) {
 
   var coords = getCanvasCoords(e.clientX, e.clientY);
 
-  if (isFillMode && !isEraser) {
+  if (!isEraser) {
     floodFill(Math.round(coords.x), Math.round(coords.y), currentColor);
     return;
   }
 
-  activePointers[e.pointerId] = { x: coords.x, y: coords.y, color: isEraser ? 'white' : currentColor };
+  activePointers[e.pointerId] = { x: coords.x, y: coords.y, color: 'white' };
 
   var dot = document.getElementById('pdot-' + e.pointerId);
   if (!dot) {
@@ -511,15 +499,65 @@ function drawParrot() {
 function drawSnake() {
   var cx = canvas.width / 2, cy = canvas.height / 2;
   ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.moveTo(cx, cy - 200);
-  for (var i = 0; i < 5; i++) { var y = cy - 200 + i * 70; ctx.bezierCurveTo(cx + 150, y + 20, cx + 150, y + 50, cx, y + 70); ctx.bezierCurveTo(cx - 150, y + 90, cx - 150, y + 120, cx, y + 140); }
-  ctx.lineWidth = 80; ctx.stroke(); ctx.lineWidth = 6;
-  ctx.beginPath(); ctx.ellipse(cx, cy - 240, 70, 60, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+  var bodyW = 38;
+  var pts = [];
+  var segs = 80;
+  for (var i = 0; i <= segs; i++) {
+    var t = i / segs;
+    var y = cy - 180 + t * 480;
+    var x = cx + Math.sin(t * Math.PI * 3) * 140;
+    pts.push({x: x, y: y});
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x - bodyW, pts[0].y);
+  for (var i = 1; i <= segs; i++) {
+    var dx = pts[i].x - pts[i-1].x;
+    var dy = pts[i].y - pts[i-1].y;
+    var len = Math.sqrt(dx*dx + dy*dy);
+    var nx = -dy / len * bodyW;
+    var ny = dx / len * bodyW;
+    ctx.lineTo(pts[i].x + nx, pts[i].y + ny);
+  }
+  var tailTip = pts[segs];
+  ctx.lineTo(tailTip.x, tailTip.y + 15);
+  for (var i = segs; i >= 0; i--) {
+    var dx = i > 0 ? pts[i].x - pts[i-1].x : pts[1].x - pts[0].x;
+    var dy = i > 0 ? pts[i].y - pts[i-1].y : pts[1].y - pts[0].y;
+    var len = Math.sqrt(dx*dx + dy*dy);
+    var nx = -dy / len * bodyW;
+    var ny = dx / len * bodyW;
+    ctx.lineTo(pts[i].x - nx, pts[i].y - ny);
+  }
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  for (var i = 8; i < segs - 5; i += 6) {
+    var p = pts[i];
+    ctx.beginPath();
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.moveTo(0, -12); ctx.lineTo(10, 0); ctx.lineTo(0, 12); ctx.lineTo(-10, 0);
+    ctx.closePath();
+    ctx.restore();
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 3; ctx.stroke();
+  }
+
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 6; ctx.fillStyle = 'white';
+  var headCx = pts[0].x, headCy = pts[0].y - 35;
+  ctx.beginPath(); ctx.ellipse(headCx, headCy, 55, 45, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#333';
-  ctx.beginPath(); ctx.arc(cx - 25, cy - 250, 15, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 25, cy - 250, 15, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#FF1493'; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.moveTo(cx, cy - 200); ctx.lineTo(cx - 10, cy - 160); ctx.moveTo(cx, cy - 200); ctx.lineTo(cx + 10, cy - 160); ctx.stroke();
+  ctx.beginPath(); ctx.arc(headCx - 20, headCy - 8, 10, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(headCx + 20, headCy - 8, 10, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.arc(headCx - 18, headCy - 10, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(headCx + 22, headCy - 10, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(headCx, headCy + 10, 18, 0.2, Math.PI - 0.2); ctx.stroke();
+  ctx.strokeStyle = '#FF1493'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(headCx, headCy + 28); ctx.lineTo(headCx - 8, headCy + 42);
+  ctx.moveTo(headCx, headCy + 28); ctx.lineTo(headCx + 8, headCy + 42); ctx.stroke();
 }
 
 function drawTiger() {

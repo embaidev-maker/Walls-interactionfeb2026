@@ -253,6 +253,10 @@ bindTouch(document.getElementById('btnBack'), function() { location.href = '../i
 buildList();
 showLetter(0);
 
+if (new URLSearchParams(window.location.search).get('embed') === '1') {
+  document.getElementById('btnBack').style.display = 'none';
+}
+
 var bgP = document.getElementById('bgP');
 for (var i = 0; i < 30; i++) {
   var d = document.createElement('div'); d.className = 'bg-dot';
