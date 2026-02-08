@@ -1,160 +1,309 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Interactive Wall Games</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background:#0a1628}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Auticare Blue Room</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            margin: 0; padding: 0; overflow: hidden;
+            background: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-user-select: none; user-select: none;
+        }
 
-#scene{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 1000;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: #000;
+            transition: opacity 1s ease-out;
+        }
+        #canvas-3d {
+            position: absolute; inset: 0; z-index: 0;
+        }
+        #particle-canvas {
+            position: absolute; inset: 0; z-index: 1;
+        }
+        .loading-text {
+            position: relative; z-index: 2;
+            font-size: clamp(32px, 5vw, 56px); font-weight: 800;
+            background: linear-gradient(135deg, #BAE1FF, #FFB3BA, #BAFFC9);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            animation: loadPulse 2s ease-in-out infinite;
+        }
+        .loading-sub {
+            position: relative; z-index: 2;
+            font-size: clamp(12px, 1.8vw, 18px); font-weight: 600;
+            color: rgba(255,255,255,.4); margin-top: 8px;
+        }
+        @keyframes loadPulse {
+            0%,100% { opacity: .7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.03); }
+        }
 
-canvas#bg{position:fixed;inset:0;z-index:0}
+        #main-menu {
+            position: fixed; inset: 0; z-index: 100;
+            display: none; opacity: 0;
+            transition: opacity 1s ease-in;
+            overflow-y: auto; overflow-x: hidden;
+        }
+        #menu-canvas {
+            position: fixed; inset: 0; z-index: 0;
+        }
 
-.content{position:relative;z-index:10;text-align:center;padding:24px}
+        .menu-content {
+            position: relative; z-index: 10;
+            max-width: 1200px; margin: 0 auto;
+            padding: clamp(32px, 5vh, 60px) clamp(16px, 3vw, 40px) 40px;
+        }
 
-h1{
-  font-size:clamp(36px,6vw,64px);font-weight:900;
-  background:linear-gradient(135deg,#64d2ff,#48a9fe,#76e0c2);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  letter-spacing:-1px;margin-bottom:4px;
-}
-.subtitle{
-  font-size:clamp(14px,2vw,20px);font-weight:600;
-  color:rgba(255,255,255,.5);margin-bottom:clamp(24px,4vh,48px);
-}
+        .menu-header {
+            text-align: center;
+            margin-bottom: clamp(24px, 4vh, 48px);
+        }
+        .menu-header h1 {
+            font-size: clamp(28px, 4.5vw, 52px); font-weight: 900;
+            color: #1a1a2e; letter-spacing: -1px;
+            text-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .menu-header p {
+            font-size: clamp(12px, 1.5vw, 18px); font-weight: 600;
+            color: rgba(26,26,46,.4); margin-top: 4px;
+        }
 
-.card-grid{
-  display:grid;grid-template-columns:repeat(2,1fr);
-  gap:clamp(16px,2.5vw,28px);max-width:720px;width:90%;margin:0 auto;
-}
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(clamp(160px, 20vw, 240px), 1fr));
+            gap: clamp(12px, 2vw, 20px);
+        }
 
-.game-card{
-  position:relative;border-radius:24px;
-  padding:clamp(28px,4vh,44px) clamp(20px,2vw,32px);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;overflow:hidden;
-  border:2px solid rgba(255,255,255,.08);
-  transition:transform .4s cubic-bezier(.175,.885,.32,1.275),box-shadow .4s,border-color .4s;
-}
-.game-card::before{
-  content:'';position:absolute;inset:0;border-radius:inherit;
-  background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 60%);
-  pointer-events:none;
-}
-.game-card:hover{
-  transform:translateY(-8px) scale(1.03);
-  border-color:rgba(255,255,255,.15);
-}
-.game-card:active{transform:translateY(-2px) scale(.97)}
+        .game-card {
+            background: white;
+            border-radius: 20px;
+            padding: clamp(20px, 3vh, 32px) clamp(14px, 1.5vw, 20px);
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid rgba(0,0,0,.04);
+            box-shadow: 0 2px 12px rgba(0,0,0,.04);
+            transition: transform .35s cubic-bezier(.175,.885,.32,1.275), box-shadow .35s, border-color .35s;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-card::before {
+            content: ''; position: absolute; inset: 0; border-radius: inherit;
+            background: linear-gradient(135deg, rgba(255,255,255,.5) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .game-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 12px 36px rgba(0,0,0,.1);
+            border-color: rgba(0,0,0,.08);
+        }
+        .game-card:active { transform: translateY(-2px) scale(.97); }
 
-.card-coloring{
-  background:linear-gradient(135deg,#1a3a2a,#0d2e1e);
-  box-shadow:0 8px 32px rgba(16,185,129,.1);
-}
-.card-coloring:hover{box-shadow:0 16px 48px rgba(16,185,129,.2)}
+        .card-icon {
+            font-size: clamp(40px, 5.5vw, 64px); line-height: 1;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 3px 8px rgba(0,0,0,.1));
+            transition: transform .35s cubic-bezier(.175,.885,.32,1.275);
+        }
+        .game-card:hover .card-icon { transform: scale(1.12) rotate(-4deg); }
 
-.card-ocean{
-  background:linear-gradient(135deg,#0d2a4a,#0a1e3d);
-  box-shadow:0 8px 32px rgba(100,210,255,.1);
-}
-.card-ocean:hover{box-shadow:0 16px 48px rgba(100,210,255,.2)}
+        .card-name {
+            font-size: clamp(13px, 1.6vw, 17px); font-weight: 800;
+            color: #1a1a2e; margin-bottom: 3px;
+        }
+        .card-desc {
+            font-size: clamp(10px, 1.1vw, 12px); font-weight: 600;
+            color: rgba(26,26,46,.35);
+        }
 
-.card-icon{
-  font-size:clamp(48px,7vw,80px);line-height:1;margin-bottom:12px;
-  filter:drop-shadow(0 4px 12px rgba(0,0,0,.3));
-  transition:transform .4s cubic-bezier(.175,.885,.32,1.275);
-}
-.game-card:hover .card-icon{transform:scale(1.15) rotate(-5deg)}
+        .card-accent {
+            position: absolute; bottom: -20px; right: -20px;
+            width: 80px; height: 80px; border-radius: 50%;
+            filter: blur(30px); opacity: .2; pointer-events: none;
+        }
 
-.card-name{
-  font-size:clamp(16px,2.2vw,22px);font-weight:800;
-  color:rgba(255,255,255,.9);margin-bottom:4px;
-}
-.card-desc{
-  font-size:clamp(11px,1.4vw,14px);font-weight:600;
-  color:rgba(255,255,255,.4);
-}
+        .game-card.locked {
+            opacity: .4; pointer-events: none;
+        }
+        .game-card.locked::after {
+            content: '\uD83D\uDD12'; position: absolute; top: 8px; right: 10px; font-size: 14px;
+        }
 
-.card-glow{
-  position:absolute;width:200px;height:200px;border-radius:50%;
-  filter:blur(60px);opacity:.15;pointer-events:none;
-}
-.card-coloring .card-glow{background:#10b981;bottom:-40px;right:-40px}
-.card-ocean .card-glow{background:#0ea5e9;bottom:-40px;right:-40px}
-</style>
+        #submenu-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,.5); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity .35s;
+        }
+        #submenu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .submenu-panel {
+            background: white; border-radius: 24px;
+            padding: 28px 24px; max-width: 420px; width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,.18);
+            transform: scale(.9); transition: transform .35s cubic-bezier(.175,.885,.32,1.275);
+        }
+        #submenu-overlay.active .submenu-panel { transform: scale(1); }
+
+        .submenu-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        #submenu-title { font-size: 22px; font-weight: 800; color: #1a1a2e; }
+        #submenu-close {
+            width: 36px; height: 36px; border-radius: 50%;
+            border: none; background: rgba(0,0,0,.05);
+            font-size: 18px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+            transition: background .2s; color: #64748b;
+        }
+        #submenu-close:hover { background: rgba(0,0,0,.1); }
+
+        #submenu-options { display: flex; flex-direction: column; gap: 8px; }
+        .submenu-option {
+            padding: 14px 18px; border-radius: 14px;
+            background: #f8fafc; border: 2px solid rgba(0,0,0,.04);
+            font-size: 15px; font-weight: 700; color: #334155;
+            cursor: pointer; transition: all .2s;
+            text-align: center;
+        }
+        .submenu-option:hover {
+            background: #eff6ff; border-color: rgba(59,130,246,.15);
+            transform: translateY(-2px);
+        }
+
+        @keyframes touchRingPop {
+            0% { transform: translate(-50%,-50%) scale(0); opacity: .6; }
+            100% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
+        }
+    </style>
 </head>
 <body>
-<div id="scene">
-  <canvas id="bg"></canvas>
-  <div class="content">
-    <h1>Auticare Blue Room</h1>
-    <p class="subtitle">Tap a card to start exploring!</p>
-    <div class="card-grid">
-      <a href="games/coloring-book.html" class="game-card card-coloring">
-        <div class="card-glow"></div>
-        <div class="card-icon">&#x1F58D;&#xFE0F;</div>
-        <div class="card-name">Coloring Book</div>
-        <div class="card-desc">Draw on an infinite canvas</div>
-      </a>
-      <a href="games/underwater-explorer.html" class="game-card card-ocean">
-        <div class="card-glow"></div>
-        <div class="card-icon">&#x1F30A;</div>
-        <div class="card-name">Underwater Explorer</div>
-        <div class="card-desc">Discover amazing sea life</div>
-      </a>
-    </div>
-  </div>
+
+<div id="loading-screen">
+    <canvas id="canvas-3d"></canvas>
+    <canvas id="particle-canvas"></canvas>
+    <div class="loading-text">Auticare Blue Room</div>
+    <div class="loading-sub">Loading your adventure...</div>
 </div>
 
-<script>
-(function(){
-  var c = document.getElementById('bg');
-  var ctx = c.getContext('2d');
-  var stars = [];
-  var W, H;
+<div id="main-menu">
+    <canvas id="menu-canvas"></canvas>
+    <div class="menu-content">
+        <div class="menu-header">
+            <h1>Auticare Blue Room</h1>
+            <p>Tap a card to start exploring!</p>
+        </div>
 
-  function resize(){
-    W = c.width = window.innerWidth;
-    H = c.height = window.innerHeight;
-  }
+        <div class="card-grid">
+            <div class="game-card" data-category="jungle">
+                <div class="card-accent" style="background:#4caf50"></div>
+                <div class="card-icon">&#x1F333;</div>
+                <div class="card-name">Jungle</div>
+                <div class="card-desc">Explore the wild</div>
+            </div>
 
-  function init(){
-    resize();
-    stars = [];
-    for(var i = 0; i < 120; i++){
-      stars.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        r: .3 + Math.random() * 1.5,
-        speed: .1 + Math.random() * .3,
-        phase: Math.random() * Math.PI * 2,
-        brightness: .3 + Math.random() * .7
-      });
-    }
-  }
+            <div class="game-card" data-category="daily-skills">
+                <div class="card-accent" style="background:#ff9800"></div>
+                <div class="card-icon">&#x1F3E0;</div>
+                <div class="card-name">Daily Skills</div>
+                <div class="card-desc">Learn everyday tasks</div>
+            </div>
 
-  function draw(){
-    ctx.fillStyle = '#0a1628';
-    ctx.fillRect(0, 0, W, H);
-    var t = Date.now() * .001;
-    stars.forEach(function(s){
-      var flicker = .5 + .5 * Math.sin(t * s.speed + s.phase);
-      var alpha = s.brightness * (.4 + .6 * flicker);
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(180,210,255,' + alpha + ')';
-      ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
+            <div class="game-card" data-category="learning">
+                <div class="card-accent" style="background:#2196f3"></div>
+                <div class="card-icon">&#x1F4DA;</div>
+                <div class="card-name">Learning</div>
+                <div class="card-desc">Maths &amp; Alphabets</div>
+            </div>
 
-  window.addEventListener('resize', init);
-  init();
-  draw();
-})();
-</script>
+            <div class="game-card" data-game="underwater-explorer">
+                <div class="card-accent" style="background:#0097a7"></div>
+                <div class="card-icon">&#x1F30A;</div>
+                <div class="card-name">Underwater Explorer</div>
+                <div class="card-desc">Discover sea life</div>
+            </div>
+
+            <div class="game-card" data-game="canvas">
+                <div class="card-accent" style="background:#e91e63"></div>
+                <div class="card-icon">&#x1F58C;&#xFE0F;</div>
+                <div class="card-name">Free Canvas</div>
+                <div class="card-desc">Draw freely</div>
+            </div>
+
+            <div class="game-card" data-game="coloring-book">
+                <div class="card-accent" style="background:#10b981"></div>
+                <div class="card-icon">&#x1F58D;&#xFE0F;</div>
+                <div class="card-name">Coloring Book</div>
+                <div class="card-desc">Infinite canvas coloring</div>
+            </div>
+
+            <div class="game-card" data-game="solar-system">
+                <div class="card-accent" style="background:#1565c0"></div>
+                <div class="card-icon">&#x1FA90;</div>
+                <div class="card-name">Solar System</div>
+                <div class="card-desc">Explore the planets</div>
+            </div>
+
+            <div class="game-card" data-game="forest-animals">
+                <div class="card-accent" style="background:#689f38"></div>
+                <div class="card-icon">&#x1F98C;</div>
+                <div class="card-name">Forest Animals</div>
+                <div class="card-desc">Meet woodland friends</div>
+            </div>
+
+            <div class="game-card" data-game="particle-playground">
+                <div class="card-accent" style="background:#00bcd4"></div>
+                <div class="card-icon">&#x2728;</div>
+                <div class="card-name">Particle Playground</div>
+                <div class="card-desc">Play with particles</div>
+            </div>
+
+            <div class="game-card" data-game="goalkeeper">
+                <div class="card-accent" style="background:#f44336"></div>
+                <div class="card-icon">&#x26BD;</div>
+                <div class="card-name">Goalkeeper</div>
+                <div class="card-desc">Save the goals</div>
+            </div>
+
+            <div class="game-card" data-game="fruit-ninja">
+                <div class="card-accent" style="background:#ff5722"></div>
+                <div class="card-icon">&#x1F349;</div>
+                <div class="card-name">Fruit Ninja</div>
+                <div class="card-desc">Slice the fruit</div>
+            </div>
+
+            <div class="game-card" data-game="hidden-animals">
+                <div class="card-accent" style="background:#795548"></div>
+                <div class="card-icon">&#x1F50D;</div>
+                <div class="card-name">Hidden Animals</div>
+                <div class="card-desc">Find hidden creatures</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="submenu-overlay">
+    <div class="submenu-panel">
+        <div class="submenu-header">
+            <span id="submenu-title"></span>
+            <button id="submenu-close">&#x2715;</button>
+        </div>
+        <div id="submenu-options"></div>
+    </div>
+</div>
+
+<script src="js/loading-animation.js"></script>
+<script src="js/hyperdrive-animation.js"></script>
+<script src="js/menu-background.js"></script>
+<script src="js/game-loader.js"></script>
+
 </body>
 </html>

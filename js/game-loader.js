@@ -230,6 +230,9 @@ function loadGame(gameName) {
             case 'coloring-book':
                 window.location.href = 'games/coloring-book.html';
                 break;
+            case 'underwater-explorer':
+                window.location.href = 'games/underwater-explorer.html';
+                break;
             case 'particle-playground':
                 window.location.href = 'games/particle-playground.html';
                 break;
