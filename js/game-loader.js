@@ -211,6 +211,12 @@ document.getElementById('submenu-overlay').addEventListener('touchend', (e) => {
 
 function loadGame(gameName) {
     const mainMenu = document.getElementById('main-menu');
+    const menuAudio = document.getElementById('menu-audio');
+
+    // Pause menu audio when loading a game
+    if (menuAudio) {
+        menuAudio.pause();
+    }
 
     // Fade out menu
     mainMenu.style.transition = 'opacity 0.5s ease-out';

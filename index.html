@@ -189,11 +189,17 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 
 <div id="loading-screen">
   <canvas id="particle-canvas"></canvas>
+  <audio id="loading-audio" preload="auto">
+    <source src="./assets/Audio/Loading.mp3" type="audio/mpeg">
+  </audio>
 </div>
 
 <div id="main-menu">
   <canvas id="menu-canvas"></canvas>
   <canvas id="bubble-canvas"></canvas>
+  <audio id="menu-audio" preload="auto" loop>
+    <source src="./assets/Audio/idoberg-space-chords-loop-310493.mp3" type="audio/mpeg">
+  </audio>
 
   <div id="floatingShapes"></div>
 
@@ -473,11 +479,15 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 
 (function centerBtn() {
   var btn = document.getElementById('center-button');
+  var menuAudio = document.getElementById('menu-audio');
+  
   btn.addEventListener('click', function(e) {
+    if (menuAudio) menuAudio.pause();
     if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
     location.href = 'intro.html';
   });
   btn.addEventListener('touchend', function(e) {
+    if (menuAudio) menuAudio.pause();
     e.preventDefault();
     location.href = 'intro.html';
   });
@@ -486,10 +496,32 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI'
 window.addEventListener('load', function() {
   var loading = document.getElementById('loading-screen');
   var menu = document.getElementById('main-menu');
+  var loadingAudio = document.getElementById('loading-audio');
+  var menuAudio = document.getElementById('menu-audio');
+
+  // Attempt to play loading audio
+  if (loadingAudio) {
+    loadingAudio.volume = 0.6;
+    loadingAudio.play().catch(function(e) {
+      console.log('Audio autoplay prevented:', e);
+    });
+  }
 
   setTimeout(function() {
     loading.style.display = 'none';
     menu.style.display = 'flex';
+
+    // Stop loading audio and play menu audio
+    if (loadingAudio) {
+      loadingAudio.pause();
+      loadingAudio.currentTime = 0;
+    }
+    if (menuAudio) {
+      menuAudio.volume = 0.5;
+      menuAudio.play().catch(function(e) {
+        console.log('Audio autoplay prevented:', e);
+      });
+    }
 
     if (window._startBubbles) window._startBubbles();
 
