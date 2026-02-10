@@ -33,6 +33,9 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            background: #373B44;
+            background: -webkit-linear-gradient(to bottom, #4286f4, #373B44);
+            background: linear-gradient(to bottom, #4286f4, #373B44);
         }
         
         /* Game UI */
@@ -87,16 +90,26 @@
         }
         
         .lives {
-            display: flex;
+            display: none;
             gap: 8px;
             align-items: center;
         }
-        
+
+        .lives.show {
+            display: flex;
+        }
+
         .heart {
             font-size: 32px;
             filter: drop-shadow(1px 1px 3px rgba(0, 0, 0, 0.5));
             transition: all 0.3s;
             color: #ff6b6b;
+            animation: heartBeat 0.5s ease-in-out;
+        }
+
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
         }
         
         /* Start Screen */
@@ -322,6 +335,65 @@
             border-radius: 50%;
             top: 2px;
             left: 2px;
+        }
+
+        /* Jellyfish Styles */
+        .jellyfish {
+            position: absolute;
+            cursor: pointer;
+            z-index: 25;
+            pointer-events: none;
+            filter: drop-shadow(2px 2px 8px rgba(255, 0, 100, 0.5));
+            animation: jellyfishFloat 2s ease-in-out infinite;
+        }
+
+        @keyframes jellyfishFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+
+        .jellyfish-body {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 105, 180, 0.9), rgba(186, 85, 211, 0.7));
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            animation: jellyfishPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes jellyfishPulse {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.1); }
+        }
+
+        .jellyfish-tentacle {
+            position: absolute;
+            bottom: -20px;
+            width: 3px;
+            height: 20px;
+            background: linear-gradient(to bottom, rgba(255, 105, 180, 0.8), transparent);
+            border-radius: 50%;
+            animation: tentacleWave 1s ease-in-out infinite;
+        }
+
+        .jellyfish-tentacle:nth-child(1) { left: 10px; animation-delay: 0s; }
+        .jellyfish-tentacle:nth-child(2) { left: 20px; animation-delay: 0.1s; }
+        .jellyfish-tentacle:nth-child(3) { left: 30px; animation-delay: 0.2s; }
+        .jellyfish-tentacle:nth-child(4) { left: 40px; animation-delay: 0.3s; }
+
+        @keyframes tentacleWave {
+            0%, 100% { transform: rotate(0deg) scaleY(1); }
+            50% { transform: rotate(10deg) scaleY(1.2); }
+        }
+
+        .jellyfish.hit {
+            animation: jellyfishHit 0.5s forwards;
+        }
+
+        @keyframes jellyfishHit {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(0); opacity: 0; }
         }
         
         /* Catch Effect */
@@ -865,7 +937,13 @@
                     onResize();
                 });
 
-                // Don't add fish on click for game, but keep for background effect
+                // Add more initial background fish
+                for (var i = 0; i < 50; i++) {
+                    var fish = new Fish(ctx, rand(0, X), rand(0, Y), rand(5, 20), fishDir[rand(0, 1)], fishColors[rand(0, fishColors.length - 1)]);
+                    fishes.push(fish);
+                }
+
+                // Add fish on click for background effect
                 canvas.addEventListener('click', function(e) {
                     mouseX = e.clientX;
                     mouseY = e.clientY;
@@ -885,11 +963,15 @@
         let gameRunning = false;
         let gameStarted = false;
         let interactiveFishes = [];
+        let jellyfishes = [];
         let combo = 0;
         let comboTimer = 0;
         let highScore = localStorage.getItem('fishHighScore') || 0;
         let spawnTimer = null;
         let clockTimer = null;
+        let jellyfishTimer = null;
+        let mousePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let livesShown = false;
         
         // Fish types and colors
         const fishTypes = [
@@ -922,30 +1004,39 @@
         function startGame() {
             gameStarted = true;
             gameRunning = true;
-            
+
             // Hide start screen
             startScreen.style.display = 'none';
-            
+
             // Reset game variables
             score = 0;
             lives = 3;
             timeLeft = 60;
             interactiveFishes = [];
+            jellyfishes = [];
             combo = 0;
-            
+            livesShown = false;
+
+            // Hide lives initially
+            livesDisplay.parentElement.classList.remove('show');
+
             // Update UI
             updateScore();
             updateTimer();
             updateLives();
-            
-            // Start game timers
-            spawnTimer = setInterval(spawnInteractiveFish, 1000);
+
+            // Start game timers - spawn fish more frequently
+            spawnTimer = setInterval(spawnInteractiveFish, 800);
             clockTimer = setInterval(updateGameClock, 1000);
-            
+            jellyfishTimer = setInterval(spawnJellyfish, 5000);
+
             // Create initial fish
-            for (let i = 0; i < 5; i++) {
-                setTimeout(() => spawnInteractiveFish(), i * 400);
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => spawnInteractiveFish(), i * 300);
             }
+
+            // First jellyfish after 10 seconds
+            setTimeout(() => spawnJellyfish(), 10000);
         }
         
         // Spawn an interactive fish
@@ -1129,31 +1220,201 @@
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-                
+
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-                
+
                 oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
                 oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.2);
-                
+
                 gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-                
+
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + 0.2);
             } catch (e) {
                 console.log('Audio context not available');
             }
         }
+
+        // Play jellyfish sting sound
+        function playStingSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                console.log('Audio context not available');
+            }
+        }
+
+        // Play combo sound
+        function playComboSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const frequencies = [523, 659, 784];
+
+                frequencies.forEach((freq, i) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.frequency.value = freq;
+                    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime + i * 0.1);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + i * 0.1 + 0.3);
+
+                    oscillator.start(audioContext.currentTime + i * 0.1);
+                    oscillator.stop(audioContext.currentTime + i * 0.1 + 0.3);
+                });
+            } catch (e) {
+                console.log('Audio context not available');
+            }
+        }
+
+        // Spawn jellyfish
+        function spawnJellyfish() {
+            if (!gameRunning) return;
+
+            const jellyfishContainer = document.createElement('div');
+            jellyfishContainer.className = 'jellyfish';
+
+            // Random position from edges
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+
+            switch(side) {
+                case 0: // Left
+                    x = -60;
+                    y = Math.random() * window.innerHeight;
+                    break;
+                case 1: // Top
+                    x = Math.random() * window.innerWidth;
+                    y = -60;
+                    break;
+                case 2: // Right
+                    x = window.innerWidth + 60;
+                    y = Math.random() * window.innerHeight;
+                    break;
+                case 3: // Bottom
+                    x = Math.random() * window.innerWidth;
+                    y = window.innerHeight + 60;
+                    break;
+            }
+
+            jellyfishContainer.style.left = `${x}px`;
+            jellyfishContainer.style.top = `${y}px`;
+
+            // Create jellyfish HTML structure
+            jellyfishContainer.innerHTML = `
+                <div class="jellyfish-body">
+                    <div class="jellyfish-tentacle"></div>
+                    <div class="jellyfish-tentacle"></div>
+                    <div class="jellyfish-tentacle"></div>
+                    <div class="jellyfish-tentacle"></div>
+                </div>
+            `;
+
+            gameArea.appendChild(jellyfishContainer);
+
+            const speed = 1.5 + Math.random() * 1;
+
+            jellyfishes.push({
+                element: jellyfishContainer,
+                x: x,
+                y: y,
+                speed: speed
+            });
+
+            // Remove jellyfish after timeout
+            setTimeout(() => {
+                if (jellyfishContainer.parentNode && gameRunning) {
+                    jellyfishContainer.remove();
+                    jellyfishes = jellyfishes.filter(j => j.element !== jellyfishContainer);
+                }
+            }, 20000);
+        }
+
+        // Check jellyfish collision
+        function checkJellyfishCollision() {
+            if (!gameRunning) return;
+
+            jellyfishes.forEach((jellyfish, index) => {
+                const dx = mousePosition.x - jellyfish.x;
+                const dy = mousePosition.y - jellyfish.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 50) {
+                    // Collision!
+                    jellyfish.element.classList.add('hit');
+                    playStingSound();
+
+                    // Show lives UI
+                    if (!livesShown) {
+                        livesDisplay.parentElement.classList.add('show');
+                        livesShown = true;
+                    }
+
+                    // Lose a life
+                    lives--;
+                    updateLives();
+
+                    // Create danger flash
+                    const flash = document.createElement('div');
+                    flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,0.3);pointer-events:none;z-index:500;animation:dangerFlash 0.5s';
+                    document.body.appendChild(flash);
+                    setTimeout(() => flash.remove(), 500);
+
+                    // Remove jellyfish
+                    setTimeout(() => {
+                        if (jellyfish.element.parentNode) {
+                            jellyfish.element.remove();
+                        }
+                    }, 500);
+
+                    jellyfishes.splice(index, 1);
+
+                    if (lives <= 0) {
+                        endGame();
+                    }
+                }
+            });
+        }
+
+        // Add danger flash animation
+        const dangerFlashStyle = document.createElement('style');
+        dangerFlashStyle.textContent = `
+            @keyframes dangerFlash {
+                0%, 100% { opacity: 0; }
+                50% { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(dangerFlashStyle);
         
         // Show combo display
         function showCombo(comboCount) {
+            playComboSound();
+
             const comboDisplay = document.createElement('div');
             comboDisplay.className = 'combo-display';
             comboDisplay.textContent = `${comboCount}x COMBO!`;
             comboDisplay.style.left = `${Math.random() * 60 + 20}%`;
             document.body.appendChild(comboDisplay);
-            
+
             setTimeout(() => {
                 comboDisplay.remove();
             }, 1000);
@@ -1210,7 +1471,7 @@
         // End game
         function endGame() {
             gameRunning = false;
-            
+
             // Clear timers
             if (spawnTimer) {
                 clearInterval(spawnTimer);
@@ -1220,7 +1481,11 @@
                 clearInterval(clockTimer);
                 clockTimer = null;
             }
-            
+            if (jellyfishTimer) {
+                clearInterval(jellyfishTimer);
+                jellyfishTimer = null;
+            }
+
             // Remove all interactive fish
             interactiveFishes.forEach(fish => {
                 if (fish.element.parentNode) {
@@ -1228,10 +1493,18 @@
                 }
             });
             interactiveFishes = [];
-            
+
+            // Remove all jellyfish
+            jellyfishes.forEach(jelly => {
+                if (jelly.element.parentNode) {
+                    jelly.element.remove();
+                }
+            });
+            jellyfishes = [];
+
             // Update final score
             finalScoreElement.textContent = score;
-            
+
             // Update high score if needed
             if (score > highScore) {
                 highScore = score;
@@ -1242,7 +1515,7 @@
                 highScoreElement.textContent = `High Score: ${highScore}`;
                 highScoreElement.style.color = '#4fc3f7';
             }
-            
+
             // Show game over screen
             gameOverScreen.classList.add('show');
         }
@@ -1257,11 +1530,11 @@
         function returnToMenu() {
             gameOverScreen.classList.remove('show');
             startScreen.style.display = 'flex';
-            
+
             // Reset game state
             gameRunning = false;
             gameStarted = false;
-            
+
             // Clear timers
             if (spawnTimer) {
                 clearInterval(spawnTimer);
@@ -1271,7 +1544,11 @@
                 clearInterval(clockTimer);
                 clockTimer = null;
             }
-            
+            if (jellyfishTimer) {
+                clearInterval(jellyfishTimer);
+                jellyfishTimer = null;
+            }
+
             // Remove all interactive fish
             interactiveFishes.forEach(fish => {
                 if (fish.element.parentNode) {
@@ -1279,7 +1556,15 @@
                 }
             });
             interactiveFishes = [];
-            
+
+            // Remove all jellyfish
+            jellyfishes.forEach(jelly => {
+                if (jelly.element.parentNode) {
+                    jelly.element.remove();
+                }
+            });
+            jellyfishes = [];
+
             // Reset timer display
             timeLeft = 60;
             updateTimer();
@@ -1292,33 +1577,34 @@
                 requestAnimationFrame(animateFish);
                 return;
             }
-            
+
+            // Move interactive fish
             interactiveFishes.forEach(fish => {
                 fish.time++;
                 fish.wobblePhase += fish.wobbleSpeed;
-                
+
                 // Update wobble offset
                 const wobbleX = Math.sin(fish.wobblePhase) * fish.wobbleAmount;
                 const wobbleY = Math.cos(fish.wobblePhase * 1.5) * (fish.wobbleAmount * 0.5);
-                
+
                 // Move toward target with wobble
                 const dx = fish.targetX - fish.x + wobbleX;
                 const dy = fish.targetY - fish.y + wobbleY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                
+
                 if (distance > 20) {
                     // Smooth movement with some randomness
                     const angle = Math.atan2(dy, dx);
                     const randomDeviation = (Math.random() - 0.5) * 0.2;
                     const actualAngle = angle + randomDeviation;
-                    
+
                     fish.x += Math.cos(actualAngle) * fish.speed;
                     fish.y += Math.sin(actualAngle) * fish.speed;
-                    
+
                     // Update fish position
                     fish.element.style.left = `${fish.x}px`;
                     fish.element.style.top = `${fish.y}px`;
-                    
+
                     // Update direction based on movement
                     if (dx > 0 && fish.direction === 'left') {
                         fish.direction = 'right';
@@ -1335,10 +1621,52 @@
                     fish.targetY = Math.random() * (window.innerHeight - 100) + 50;
                 }
             });
-            
+
+            // Move jellyfish toward mouse position
+            jellyfishes.forEach(jellyfish => {
+                const dx = mousePosition.x - jellyfish.x;
+                const dy = mousePosition.y - jellyfish.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > 5) {
+                    const angle = Math.atan2(dy, dx);
+                    jellyfish.x += Math.cos(angle) * jellyfish.speed;
+                    jellyfish.y += Math.sin(angle) * jellyfish.speed;
+
+                    jellyfish.element.style.left = `${jellyfish.x}px`;
+                    jellyfish.element.style.top = `${jellyfish.y}px`;
+                }
+            });
+
+            // Check jellyfish collisions
+            checkJellyfishCollision();
+
             requestAnimationFrame(animateFish);
         }
         
+        // Track mouse position for jellyfish chasing
+        document.addEventListener('mousemove', function(e) {
+            if (gameRunning) {
+                mousePosition.x = e.clientX;
+                mousePosition.y = e.clientY;
+            }
+        });
+
+        // Track touch position for jellyfish chasing
+        document.addEventListener('touchmove', function(e) {
+            if (gameRunning && e.touches.length > 0) {
+                mousePosition.x = e.touches[0].clientX;
+                mousePosition.y = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchstart', function(e) {
+            if (gameRunning && e.touches.length > 0) {
+                mousePosition.x = e.touches[0].clientX;
+                mousePosition.y = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
         // Event listeners
         startBtn.addEventListener('click', startGame);
         startBtn.addEventListener('touchstart', function(e) {
