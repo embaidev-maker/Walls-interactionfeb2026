@@ -1148,10 +1148,10 @@
                     
                     // Flip direction based on movement
                     if (dx > 0 && fish.direction === -1) {
-                        fish.element.style.transform = `scale(${Math.abs(parseFloat(fish.element.style.transform.match(/scale\(([^)]+)\)/)?.[1] || 0.5)})`;
+                        fish.element.style.transform = `scale(${Math.abs(parseFloat(fish.element.style.transform.match(/scale\(([^)]+)\)/)?.[1] || 0.5))})`;
                         fish.direction = 1;
                     } else if (dx < 0 && fish.direction === 1) {
-                        fish.element.style.transform = `scale(${-Math.abs(parseFloat(fish.element.style.transform.match(/scale\(([^)]+)\)/)?.[1] || 0.5)})`;
+                        fish.element.style.transform = `scale(${-Math.abs(parseFloat(fish.element.style.transform.match(/scale\(([^)]+)\)/)?.[1] || 0.5))})`;
                         fish.direction = -1;
                     }
                 } else {
