@@ -308,6 +308,24 @@ function loadGame(gameName) {
             case 'butterfly-tracker':
                 window.location.href = 'games/butterfly-tracker.html';
                 break;
+            case 'balloon-popper':
+                window.location.href = 'games/balloon-popper.html';
+                break;
+            case 'fish-it':
+                window.location.href = 'games/fish-it.html';
+                break;
+            case 'puzzle-balance':
+                window.location.href = 'games/puzzle-balance.html';
+                break;
+            case '3d-viewer':
+                window.location.href = 'games/3d-viewer.html';
+                break;
+            case 'memory-match':
+                window.location.href = 'games/memory-match.html';
+                break;
+            case 'shape-sorter':
+                window.location.href = 'games/shape-sorter.html';
+                break;
             default:
                 console.log('Game not found:', gameName);
                 mainMenu.style.display = 'block';
